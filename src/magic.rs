@@ -20,7 +20,7 @@ pub const fn coord_to_int(rank: u8, file: u8) -> u8 {
 pub const fn coord_bit(x: u8, y: u8) -> u64 {
     square_num_to_bitboard(coord_to_int(x, y))
 }
-
+#[inline]
 pub const fn square_num_to_bitboard(square: u8) -> u64 {
     1 << square
 }
@@ -29,9 +29,6 @@ pub fn bitboard_to_square_num(x: u64) -> u8 {
     lsb(x)
 }
 
-pub fn same_rank(x: u64, y: u64) -> bool {
-    (x / 8) as u64 == (y / 8) as u64
-}
 
 pub fn int_to_coord(square: u8) -> (u8, u8) {
     (square / 8, square % 8)

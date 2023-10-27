@@ -9,7 +9,7 @@ macro_rules! debug {
 
 use crate::board::{Board, empty_board, from_fen, from_startpos};
 
-
+use crate::r#move::Move;
 #[path = "helpers.rs"]
 mod helpers;
 
@@ -24,7 +24,7 @@ pub struct OrchestraDirector {
 
 pub fn new_orchestra_director() -> OrchestraDirector {
     OrchestraDirector {
-        eng: Engine { board: empty_board() },
+        eng: new_engine(empty_board()),
     }
 }
 
@@ -110,9 +110,11 @@ impl OrchestraDirector {
         }
 
 
-        let mov = self.eng.search(6);
+        let res = self.eng.search(20);
+        let mov = res.1;
+        let score = res.0;
 
-        println!("bestmove {}", mov.to_string());
+        println!("bestmove {}", mov.to_uci_string());
     }
 
     fn uci_handle_stop(&self) {

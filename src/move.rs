@@ -1,5 +1,4 @@
-use crate::constants::{COLOR, PieceType};
-use crate::board::Board;
+use crate::constants::{PieceType};
 
 
 fn index_to_string(index: u8) -> String {
@@ -45,7 +44,7 @@ pub struct Move {
 }
 
 impl Move {
-    pub fn to_string(&self) -> String {
+    pub fn to_uci_string(&self) -> String {
         let a = index_to_string(self.start_square);
         let b = index_to_string(self.end_square);
         let c: String;
