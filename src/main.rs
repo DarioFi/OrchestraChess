@@ -17,14 +17,18 @@ use crate::magic::{square_num_to_bitboard, hash_on_mask, inverse_hash_on_mask};
 use crate::r#move::{Move};
 
 fn main() {
+
+    // todo: known bug
+    // 8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1
+    // at depth 6 this position gives perft = 11030082 but it should give 11030083
+
+
     let start_time = Instant::now(); // Record the start time
 
     let x: u64 = 4503599627370560;
     println!("{:064b}", x);
 
-    // let fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    let fen = "\
-   8/8/3p4/KPp3kr/1R2Pp2/8/6P1/8 w - c6 0 3";
+    let fen = "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1";
 
     let mut orchestra_director = orchestradirector::new_orchestra_director();
 
@@ -36,7 +40,7 @@ fn main() {
 
     let start_time = Instant::now();
 
-    let depth = 1;
+    let depth = 6;
     let x = orchestra_director.eng.perft(depth, depth);
     println!("Perft: {:}", x);
 

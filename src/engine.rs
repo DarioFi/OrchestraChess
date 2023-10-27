@@ -20,9 +20,9 @@ impl Engine {
     pub fn perft(&mut self, depth: i32, sd: i32) -> u64 {
         let moves = self.board.generate_moves(false);
 
-        if depth == 0 {
-            return 1;
-            // return moves.len() as u64;
+        if depth == 1 {
+            // return 1;
+            return moves.len() as u64;
         }
         let mut counter: u64 = 0;
 

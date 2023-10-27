@@ -185,13 +185,15 @@ enum GenType {
     CAPTURES,
     EVASIONS,
 }
-fn square_string_to_int(s: &str) -> u8{
+
+fn square_string_to_int(s: &str) -> u8 {
     // trasform a1 into 0, h8 into 63
     let mut chars = s.chars();
     let file = char_to_int(chars.next().unwrap());
     let rank = chars.next().unwrap().to_digit(10).unwrap() as u8 - 1;
     rank * 8 + file
 }
+
 pub fn from_fen(fen: &str) -> Board {
     let mut board = empty_board();
 
@@ -861,10 +863,20 @@ impl Board {
 
             // check capture
             if !pinned_ns {
-                let capture_mask_total: u64 = self.magics.get_pawn_captures(sq, self.color_to_move) & land_mask;
+                let capture_mask_pre_land_mask: u64 = self.magics.get_pawn_captures(sq, self.color_to_move);
+                let capture_mask_total = capture_mask_pre_land_mask & land_mask;
                 let mut en_passant_mask: u64;
                 if self.en_passant_square != 0 {
-                    en_passant_mask = square_num_to_bitboard(self.en_passant_square) & capture_mask_total;
+                    // gotta shift the land mask
+                    let enpmld;
+                    if direction > 0{
+                        enpmld = land_mask << direction;
+                    }
+                    else {
+                        enpmld = land_mask >> (-direction); // todo verify this right direction
+                    }
+                    en_passant_mask = square_num_to_bitboard(self.en_passant_square) & capture_mask_pre_land_mask & enpmld;
+
                 } else {
                     en_passant_mask = 0;
                 }
@@ -872,7 +884,7 @@ impl Board {
 
                 let mut capture_mask = capture_mask_total & self.utility.opponent_occupancy;
                 let pinned_we = (self.utility.pinned_WE & square_num_to_bitboard(sq)) != 0;
-                if pinned_we{
+                if pinned_we {
                     sq = lsb(pawns);
                     pawns = remove_lsb(pawns);
                     continue;
@@ -1058,8 +1070,8 @@ impl Board {
         //     return true;
         // }
 
-        if ! (bitboard_to_square_num(ks)/8 == mov.start_square / 8) {
-            return true
+        if !(bitboard_to_square_num(ks) / 8 == mov.start_square / 8) {
+            return true;
         }
 
         // loop over line by adding to ks
@@ -1095,8 +1107,12 @@ impl Board {
                     } else {
                         found_another_pawn = true;
                     }
-                } else if (self.opponent_pieces.rook & x != 0) || (self.opponent_pieces.queen & x != 0) {
-                    return false;
+                } else {
+                    if (self.opponent_pieces.rook & x != 0) || (self.opponent_pieces.queen & x != 0) {
+                        return false;
+                    } else {
+                        return true;
+                    }
                 }
             }
             king_file += direction;
