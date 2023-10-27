@@ -46,7 +46,15 @@ impl Engine {
             let x = self.negamax(dep, -MATING_SCORE, MATING_SCORE, self.board.color_to_move);
             best_move = x.1;
             score = x.0;
-            println!("info depth {} score cp {} nodes {} pv {}", dep, score, self.node_count, best_move.to_uci_string());
+            let score_string;
+            if score > MATING_SCORE - 100 {
+                score_string = format!("mate {}", (MATING_SCORE - score) / 2);
+            } else if score < -MATING_SCORE+100 {
+                score_string = format!("mate {}", (-MATING_SCORE - score) / 2);
+            } else {
+                score_string = format!("cp {}", score);
+            }
+            println!("info depth {} score {} nodes {} pv {}", dep, score_string, self.node_count, best_move.to_uci_string());
             let end_time = std::time::Instant::now();
             let elapsed_time = end_time.duration_since(start_time); // Calculate the elapsed time
             if elapsed_time.as_secs_f64() > 0.5 {

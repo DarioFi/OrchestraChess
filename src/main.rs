@@ -29,23 +29,7 @@ fn main() {
     //
     let mut orchestra_director = orchestradirector::new_orchestra_director();
     //
-    // orchestra_director.eng.board = board::from_fen(fen);
-    //
-    // let end_time = Instant::now(); // Record the end time
-    // let elapsed_time = end_time.duration_since(start_time); // Calculate the elapsed time
-    // println!("Process time: {:?}", elapsed_time);
-    //
-    // let start_time = Instant::now();
-    //
-    // let depth = 5;
-    // let x = orchestra_director.eng.perft(depth, depth);
-    // println!("Perft: {:}", x);
-    //
-    // let end_time = Instant::now(); // Record the end time
-    // let elapsed_time = end_time.duration_since(start_time); // Calculate the elapsed time
-    // println!("Process time: {:?}", elapsed_time);
-    //
-    // println!("Knodes per second {:}", x as f64 / elapsed_time.as_secs_f64() / 1000.0);
+
 
 
     // }
