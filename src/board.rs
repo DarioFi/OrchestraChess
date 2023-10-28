@@ -177,7 +177,9 @@ pub struct Board {
 
 impl Board {
     pub(crate) fn is_check(&self) -> bool {
-        return true;
+        // assume self.generate_moves was ran
+        // => self.update_utilities() was ran
+        return self.utility.checkers != 0
     }
 }
 
@@ -1198,7 +1200,7 @@ impl Board {
 
     pub(crate) fn is_3fold(&self) -> bool {
         let hash = self.zobrist.hash;
-        self.zobrist_stack.iter().fold(0, |acc, x| if *x == hash { acc + 1 } else { acc }) == 3
+        self.zobrist_stack.iter().fold(0, |acc, x| if *x == hash { acc + 1 } else { acc }) >= 3
     }
 }
 

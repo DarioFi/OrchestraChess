@@ -4,6 +4,9 @@ use crate::board::Board;
 use crate::constants::{COLOR, PieceType};
 use crate::r#move::{Move, create_move};
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::{Duration, Instant};
 
 const MATING_SCORE: i32 = 250000;
 
@@ -16,6 +19,7 @@ pub struct Engine {
     node_count: u64,
     max_selective: i32,
     transposition_table: HashMap<u64, (u64, i32, Move, bool)>,
+    stop_search: Arc<Mutex<bool>>,
 }
 
 pub fn new_engine(board: Board) -> Engine {
@@ -24,6 +28,7 @@ pub fn new_engine(board: Board) -> Engine {
         node_count: 0,
         max_selective: 0,
         transposition_table: HashMap::new(),
+        stop_search: Arc::new(Mutex::new(false)),
     }
 }
 
@@ -40,8 +45,28 @@ fn move_score(m: &Move) -> i32 {
     }
 }
 
+async fn wait_and_stop(mutex: &Arc<Mutex<bool>>, time_millis: u64) {
+    tokio::time::sleep(Duration::from_millis(time_millis));
+    println!("Stopped search by setting mutex");
+    let mut state = mutex.lock().expect("Could not lock mutex");
+    *state = true;
+}
+
 impl Engine {
     pub fn search(&mut self, depth: u64) -> (i32, Move) {
+        let stop_search = Arc::new(Mutex::new(false));
+        // Clone the Arc for the timer thread
+        let timer_mutex = Arc::clone(&stop_search);
+        let max_duration = 2000;
+
+        // Spawn a timer thread
+        thread::spawn(move || {
+            // Sleep for x milliseconds
+            thread::sleep(Duration::from_millis(max_duration)); // Change the duration as needed
+            // Set the mutex to true after the specified time
+            *timer_mutex.lock().unwrap() = true;
+        });
+
         self.transposition_table = HashMap::new();
 
         let mut best_move = null_move();
@@ -49,36 +74,51 @@ impl Engine {
         self.node_count = 0;
         self.max_selective = 0;
 
-        let start_time = std::time::Instant::now();
-        for dep in 1..(depth + 1) {
-            let x = self.negamax(dep, -MATING_SCORE, MATING_SCORE, self.board.color_to_move);
+
+        for dep_it in 1..(depth + 1) {
+            let dep = dep_it*2;
+            let x = self.negamax(dep, -MATING_SCORE, MATING_SCORE, self.board.color_to_move, &stop_search);
+
+            if *stop_search.lock().unwrap() {
+                println!("Stopped search");
+                break;
+            }
+
             best_move = x.1;
             score = x.0;
             let score_string;
             if score > MATING_SCORE - 100 {
-                score_string = format!("mate {}", (MATING_SCORE - score) / 2);
+                score_string = format!("mate {}", (MATING_SCORE - score + 1) / 2);
             } else if score < -MATING_SCORE + 100 {
-                score_string = format!("mate {}", (-MATING_SCORE - score) / 2);
+                score_string = format!("mate {}", (-MATING_SCORE - score - 1) / 2);
             } else {
                 score_string = format!("cp {}", score);
             }
             println!("info depth {} seldepth {} score {} nodes {} pv {}", dep, self.max_selective, score_string, self.node_count, best_move.to_uci_string());
-
             println!("Transposition table size {}", self.transposition_table.len());
-            let end_time = std::time::Instant::now();
-            let elapsed_time = end_time.duration_since(start_time); // Calculate the elapsed time
-            if elapsed_time.as_secs_f64() > 0.1 {
-                break;
-            }
+
+
+            // let end_time = std::time::Instant::now();
+            // let elapsed_time = end_time.duration_since(start_time); // Calculate the elapsed time
+            // if elapsed_time.as_secs_f64() > 0.5 {
+            //     break;
         }
 
         return (score, best_move);
     }
 
-    fn negamax(&mut self, depth: u64, alpha: i32, beta: i32, color: COLOR) -> (i32, Move) {
+    fn negamax(&mut self, depth: u64, alpha: i32, beta: i32, color: COLOR, stop_search: &Arc<Mutex<bool>>) -> (i32, Move) {
+        if *stop_search.lock().unwrap() {
+            return (0, null_move());
+        }
+
         self.node_count += 1;
 
         let hash = self.board.zobrist.hash;
+        if self.board.is_3fold() {
+            return (0, null_move());
+        }
+
         if self.transposition_table.contains_key(&hash) {
             let result = self.transposition_table[&hash];
             let old_depth = result.0;
@@ -88,17 +128,18 @@ impl Engine {
 
             if old_depth >= depth {
                 if old_exact || old_score >= beta {
+                    if old_score > MATING_SCORE - 100 {
+                        return (old_score - 1, old_move);
+                    }
                     return (old_score, old_move);
                 }
             }
         }
 
-        if self.board.is_3fold() {
-            return (0, null_move());
-        }
 
         if depth == 0 {
-            let eval = self.quiescence_search(alpha, beta, 0);
+            // let eval = self.quiescence_search(alpha, beta, 0);
+            let eval = self.board.static_evaluation();
             return (eval, null_move());
         }
 
@@ -113,7 +154,7 @@ impl Engine {
 
         if moves.len() == 0 {
             if self.board.is_check() {
-                return (-MATING_SCORE + depth as i32, null_move());
+                return (-MATING_SCORE, null_move());
             } else {
                 return (0, null_move());
             }
@@ -121,7 +162,7 @@ impl Engine {
 
         for mov in moves {
             self.board.make_move(mov);
-            let score = -self.negamax(depth - 1, -beta, -alpha, color.flip()).0;
+            let score = -self.negamax(depth - 1, -beta, -alpha, color.flip(), &stop_search).0;
             self.board.unmake_move();
 
             if score > best_score {

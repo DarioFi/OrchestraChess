@@ -34,8 +34,8 @@ fn main() {
     orchestra_director.eng.board = from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
     // orchestra_director.eng.benchmark_perf(6);
-    orchestra_director.handle_command("position", "startpos");
-    orchestra_director.handle_command("go", "");
+    // orchestra_director.handle_command("position", "startpos moves e2e4");
+    // orchestra_director.handle_command("go", "");
 
 
 
