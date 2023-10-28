@@ -6,6 +6,8 @@ use crate::constants::COLOR::{WHITE, BLACK};
 use crate::helpers::{pop_count, lsb, remove_lsb};
 use crate::magic::{Magics, DIRECTIONS, DIAGONAL_DIRS, STRAIGHT_DIRS, square_num_to_bitboard, coord_to_int, coord_bit, new_magic, bitboard_to_square_num, int_to_coord};
 use crate::magic::DIRECTIONS::{NE, NW, SE, SW};
+use crate::zobrist::ZobristHashHandler;
+use crate::zobrist_impl::init_zobrist;
 
 #[derive(Clone, Copy, Debug)]
 pub struct PieceBitBoards {
@@ -164,11 +166,13 @@ pub struct Board {
     castling_rights: CastlingRights,
 
     moves_stack: Vec<Move>,
-    zobrist_stack: Vec<String>,
+    zobrist_stack: Vec<u64>,
     en_passant_stack: Vec<u8>,
     castling_stack: Vec<CastlingRights>,
 
     magics: Magics,
+
+    pub(crate) zobrist: ZobristHashHandler,
 }
 
 impl Board {
@@ -287,6 +291,7 @@ pub fn from_fen(fen: &str) -> Board {
     let fifty_move_rule = parts[4];
     let half_move_clock = parts[5];
 
+    board.init_hash();
     board
 }
 
@@ -308,6 +313,7 @@ pub fn empty_board() -> Board {
         en_passant_stack: vec![],
         castling_stack: vec![],
         magics: new_magic(),
+        zobrist: init_zobrist(),
     }
 }
 
@@ -521,10 +527,10 @@ impl Board {
             is_castling = false
         }
         let is_enpassant;
-        if piece_moved== PieceType::Pawn && end_square == self.en_passant_square {
-            is_enpassant= true;
-        }else {
-            is_enpassant=false;
+        if piece_moved == PieceType::Pawn && end_square == self.en_passant_square {
+            is_enpassant = true;
+        } else {
+            is_enpassant = false;
         }
 
         create_move(
@@ -574,10 +580,10 @@ impl Board {
                 moves.extend(self.gen_castle());
 
                 // pawns
-                moves.extend(self.gen_pawns_legal(MASK_ONES));
+                moves.extend(self.gen_pawns_legal(cap_mask));
 
                 // normal pieces
-                moves.extend(self.gen_moves_land_mask_normal_pieces(MASK_ONES));
+                moves.extend(self.gen_moves_land_mask_normal_pieces(cap_mask));
             }
         }
 
@@ -639,48 +645,63 @@ impl Board {
         moves
     }
     fn get_opponent_piece_on_square(&self, index: u8) -> PieceType {
-        if (self.opponent_pieces.pawns & square_num_to_bitboard(index)) != 0 {
+        let sqntb = square_num_to_bitboard(index);
+        if (self.opponent_pieces.pawns & sqntb) != 0 {
             return PieceType::Pawn;
         }
-        if (self.opponent_pieces.knight & square_num_to_bitboard(index)) != 0 {
+        if (self.opponent_pieces.knight & sqntb) != 0 {
             return PieceType::Knight;
         }
-        if (self.opponent_pieces.bishop & square_num_to_bitboard(index)) != 0 {
+        if (self.opponent_pieces.bishop & sqntb) != 0 {
             return PieceType::Bishop;
         }
-        if (self.opponent_pieces.rook & square_num_to_bitboard(index)) != 0 {
+        if (self.opponent_pieces.rook & sqntb) != 0 {
             return PieceType::Rook;
         }
-        if (self.opponent_pieces.queen & square_num_to_bitboard(index)) != 0 {
+        if (self.opponent_pieces.queen & sqntb) != 0 {
             return PieceType::Queen;
         }
-        if (self.opponent_pieces.king & square_num_to_bitboard(index)) != 0 {
+        if (self.opponent_pieces.king & sqntb) != 0 {
             return PieceType::King;
         }
         return PieceType::Null;
     }
 
 
-    fn get_my_piece_on_square(&self, index: u8) -> PieceType {
-        if (self.my_pieces.pawns & square_num_to_bitboard(index)) != 0 {
+    pub(crate) fn get_my_piece_on_square(&self, index: u8) -> PieceType {
+        let sqntb = square_num_to_bitboard(index);
+        if (self.my_pieces.pawns & sqntb) != 0 {
             return PieceType::Pawn;
         }
-        if (self.my_pieces.knight & square_num_to_bitboard(index)) != 0 {
+        if (self.my_pieces.knight & sqntb) != 0 {
             return PieceType::Knight;
         }
-        if (self.my_pieces.bishop & square_num_to_bitboard(index)) != 0 {
+        if (self.my_pieces.bishop & sqntb) != 0 {
             return PieceType::Bishop;
         }
-        if (self.my_pieces.rook & square_num_to_bitboard(index)) != 0 {
+        if (self.my_pieces.rook & sqntb) != 0 {
             return PieceType::Rook;
         }
-        if (self.my_pieces.queen & square_num_to_bitboard(index)) != 0 {
+        if (self.my_pieces.queen & sqntb) != 0 {
             return PieceType::Queen;
         }
-        if (self.my_pieces.king & square_num_to_bitboard(index)) != 0 {
+        if (self.my_pieces.king & sqntb) != 0 {
             return PieceType::King;
         }
         return PieceType::Null;
+    }
+
+    pub(crate) fn get_piece_on_square(&self, index: u8) -> (PieceType, COLOR) {
+        let x = self.get_my_piece_on_square(index);
+        if x != PieceType::Null {
+            return (x, self.color_to_move);
+        }
+        let x = self.get_opponent_piece_on_square(index);
+        if x != PieceType::Null {
+            return (x, self.color_to_move.flip());
+        }
+
+        (PieceType::Null, COLOR::WHITE)
     }
 
     fn gen_king_moves(&self, square: u8, captures: bool) -> Vec<Move> {
@@ -700,21 +721,22 @@ impl Board {
     }
     fn gen_rook_moves(&self, square: u8, mut land_mask: u64) -> Vec<Move> {
         // compute land mask from pinned logic
-        let pinned = (self.utility.pinned & square_num_to_bitboard(square)) != 0;
+        let sqntb = square_num_to_bitboard(square);
+        let pinned = (self.utility.pinned & sqntb) != 0;
         if pinned {
-            let diag_pin = (self.utility.pinned_nwse & square_num_to_bitboard(square)) != 0;
-            let diag2_pin = (self.utility.pinned_swne & square_num_to_bitboard(square)) != 0;
+            let diag_pin = (self.utility.pinned_nwse & sqntb) != 0;
+            let diag2_pin = (self.utility.pinned_swne & sqntb) != 0;
             if diag2_pin || diag_pin {
                 return Vec::new();
             }
 
-            let pinned_ns = (self.utility.pinned_ns & square_num_to_bitboard(square)) != 0;
+            let pinned_ns = (self.utility.pinned_ns & sqntb) != 0;
 
             if pinned_ns {
                 land_mask &= (self.magics.direction_full_masks[DIRECTIONS::N][square as usize] |
                     self.magics.direction_full_masks[DIRECTIONS::S][square as usize]);
             }
-            let pinned_we = (self.utility.pinned_we & square_num_to_bitboard(square)) != 0;
+            let pinned_we = (self.utility.pinned_we & sqntb) != 0;
             if pinned_we {
                 land_mask &= (self.magics.direction_full_masks[DIRECTIONS::E][square as usize] |
                     self.magics.direction_full_masks[DIRECTIONS::W][square as usize]);
@@ -726,19 +748,20 @@ impl Board {
         return self.loop_over_moves_mask(legal_moves, PieceType::Rook, square);
     }
     fn gen_bishop_moves(&self, square: u8, mut land_mask: u64) -> Vec<Move> {
-        let pinned = (self.utility.pinned & square_num_to_bitboard(square)) != 0;
+        let sqntb = square_num_to_bitboard(square);
+        let pinned = (self.utility.pinned & sqntb) != 0;
         if pinned {
-            let pinned_ns = (self.utility.pinned_ns & square_num_to_bitboard(square)) != 0;
+            let pinned_ns = (self.utility.pinned_ns & sqntb) != 0;
 
             if pinned_ns {
                 return Vec::new();
             }
-            let pinned_we = (self.utility.pinned_we & square_num_to_bitboard(square)) != 0;
+            let pinned_we = (self.utility.pinned_we & sqntb) != 0;
             if pinned_we {
                 return Vec::new();
             }
-            let pinned_nwse = (self.utility.pinned_nwse & square_num_to_bitboard(square)) != 0;
-            let pinned_swne = (self.utility.pinned_swne & square_num_to_bitboard(square)) != 0;
+            let pinned_nwse = (self.utility.pinned_nwse & sqntb) != 0;
+            let pinned_swne = (self.utility.pinned_swne & sqntb) != 0;
             if pinned_nwse {
                 land_mask &= (self.magics.direction_full_masks[DIRECTIONS::NW][square as usize] |
                     self.magics.direction_full_masks[DIRECTIONS::SE][square as usize]);
@@ -753,24 +776,25 @@ impl Board {
     }
 
     fn gen_queen_moves(&self, square: u8, mut land_mask: u64) -> Vec<Move> {
-        let pinned = (self.utility.pinned & square_num_to_bitboard(square)) != 0;
+        let sqntb = square_num_to_bitboard(square);
+        let pinned = (self.utility.pinned & sqntb) != 0;
         if pinned {
-            let pinned_ns = (self.utility.pinned_ns & square_num_to_bitboard(square)) != 0;
+            let pinned_ns = (self.utility.pinned_ns & sqntb) != 0;
             if pinned_ns {
                 land_mask &= (self.magics.direction_full_masks[DIRECTIONS::N][square as usize] |
                     self.magics.direction_full_masks[DIRECTIONS::S][square as usize]);
             }
-            let pinned_we = (self.utility.pinned_we & square_num_to_bitboard(square)) != 0;
+            let pinned_we = (self.utility.pinned_we & sqntb) != 0;
             if pinned_we {
                 land_mask &= (self.magics.direction_full_masks[DIRECTIONS::E][square as usize] |
                     self.magics.direction_full_masks[DIRECTIONS::W][square as usize]);
             }
-            let pinned_nwse = (self.utility.pinned_nwse & square_num_to_bitboard(square)) != 0;
+            let pinned_nwse = (self.utility.pinned_nwse & sqntb) != 0;
             if pinned_nwse {
                 land_mask &= (self.magics.direction_full_masks[DIRECTIONS::NW][square as usize] |
                     self.magics.direction_full_masks[DIRECTIONS::SE][square as usize]);
             }
-            let pinned_swne = (self.utility.pinned_swne & square_num_to_bitboard(square)) != 0;
+            let pinned_swne = (self.utility.pinned_swne & sqntb) != 0;
 
             if pinned_swne {
                 land_mask &= (self.magics.direction_full_masks[DIRECTIONS::SW][square as usize] |
@@ -852,10 +876,11 @@ impl Board {
         let mut sq = lsb(pawns);
         pawns = remove_lsb(pawns);
         while sq != 64 {
+            let sqntb = square_num_to_bitboard(sq);
             // check push
             let push = square_num_to_bitboard((sq as i32 + direction) as u8);
-            let pinned = (self.utility.pinned & square_num_to_bitboard(sq)) != 0;
-            let pinned_ns = (self.utility.pinned_ns & square_num_to_bitboard(sq)) != 0;
+            let pinned = (self.utility.pinned & sqntb) != 0;
+            let pinned_ns = (self.utility.pinned_ns & sqntb) != 0;
             if push != 0
             {
                 let can_move_vert;
@@ -933,14 +958,14 @@ impl Board {
 
 
                 let mut capture_mask = capture_mask_total & self.utility.opponent_occupancy;
-                let pinned_we = (self.utility.pinned_we & square_num_to_bitboard(sq)) != 0;
+                let pinned_we = (self.utility.pinned_we & sqntb) != 0;
                 if pinned_we {
                     sq = lsb(pawns);
                     pawns = remove_lsb(pawns);
                     continue;
                 }
-                let pinned_diag_swne = (self.utility.pinned_swne & square_num_to_bitboard(sq)) != 0;
-                let pinned_diag_nwse = (self.utility.pinned_nwse & square_num_to_bitboard(sq)) != 0;
+                let pinned_diag_swne = (self.utility.pinned_swne & sqntb) != 0;
+                let pinned_diag_nwse = (self.utility.pinned_nwse & sqntb) != 0;
                 if pinned_diag_nwse {
                     capture_mask &= self.magics.get_rays_moves(sq, 0, NW) |
                         self.magics.get_rays_moves(sq, 0, SE);
@@ -988,8 +1013,8 @@ impl Board {
                 }
 
                 if en_passant_mask != 0 {
-                    let pinned_diag_swne = (self.utility.pinned_swne & square_num_to_bitboard(sq)) != 0;
-                    let pinned_diag_nwse = (self.utility.pinned_nwse & square_num_to_bitboard(sq)) != 0;
+                    let pinned_diag_swne = (self.utility.pinned_swne & sqntb) != 0;
+                    let pinned_diag_nwse = (self.utility.pinned_nwse & sqntb) != 0;
                     if pinned_diag_nwse {
                         en_passant_mask &= self.magics.get_rays_moves(sq, 0, NW) |
                             self.magics.get_rays_moves(sq, 0, SE);
@@ -1102,6 +1127,8 @@ impl Board {
     }
 
     fn check_legal_en_passant(&self, mov: &Move) -> bool {
+        // todo: probably it still has a minor bug, to reproduce it see todo under main
+
         // (claim) only case where this should not pass the other checks is if there is a horizontal
         // rook and only two squares. Otherwise it would be pinned / land_mask would catch it
         // maybe treating the pawn as a rook, making a ray, checking if it ends up on a sequence
@@ -1168,14 +1195,20 @@ impl Board {
 
         return true;
     }
+
+    pub(crate) fn is_3fold(&self) -> bool {
+        let hash = self.zobrist.hash;
+        self.zobrist_stack.iter().fold(0, |acc, x| if *x == hash { acc + 1 } else { acc }) == 3
+    }
 }
 
 impl Board {
     pub fn make_move(&mut self, mov: Move) {
+        self.update_hash(mov);
         self.moves_stack.push(mov);
         self.castling_stack.push(self.castling_rights.clone());
         self.en_passant_stack.push(self.en_passant_square);
-        self.zobrist_stack.push("todo".parse().unwrap());
+        self.zobrist_stack.push(self.zobrist.hash);
         self.en_passant_square = 0;
 
         match mov.piece_moved {
@@ -1288,9 +1321,11 @@ impl Board {
 
     pub fn unmake_move(&mut self) {
         let mov = self.moves_stack.pop().unwrap();
+
+
         self.castling_rights = self.castling_stack.pop().unwrap();
         self.en_passant_square = self.en_passant_stack.pop().unwrap();
-        self.zobrist_stack.pop().unwrap();
+        self.zobrist.hash = self.zobrist_stack.pop().unwrap();
 
         self.color_to_move = self.color_to_move.flip();
 

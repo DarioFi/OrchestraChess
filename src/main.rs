@@ -6,12 +6,15 @@ mod magic;
 mod orchestradirector;
 mod engine;
 mod evaluation;
+mod zobrist;
+mod zobrist_impl;
 
 use std::time::{Instant, Duration};
 use orchestradirector::OrchestraDirector;
 
 use std::fmt::Debug;
 use std::io;
+use crate::board::from_fen;
 
 fn main() {
 
@@ -28,7 +31,11 @@ fn main() {
     // let fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
     //
     let mut orchestra_director = orchestradirector::new_orchestra_director();
-    //
+    orchestra_director.eng.board = from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+
+    // orchestra_director.eng.benchmark_perf(6);
+    orchestra_director.handle_command("position", "startpos");
+    orchestra_director.handle_command("go", "");
 
 
 
