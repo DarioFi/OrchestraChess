@@ -1,4 +1,6 @@
+use std::io::ErrorKind::TimedOut;
 use std::option::Option;
+use std::sync::{Arc, Mutex};
 #[macro_export]
 macro_rules! debug {
     () => {
@@ -6,10 +8,12 @@ macro_rules! debug {
     };
 }
 
+use crate::timer::{Timer, start_timer};
 
 use crate::board::{Board, empty_board, from_fen, from_startpos};
 
 use crate::r#move::Move;
+
 #[path = "helpers.rs"]
 mod helpers;
 
@@ -20,11 +24,17 @@ use crate::engine::{Engine, new_engine};
 
 pub struct OrchestraDirector {
     pub eng: Engine,
+    timer: Timer,
+    stop_hook: Arc<Mutex<bool>>,
 }
 
 pub fn new_orchestra_director() -> OrchestraDirector {
+    let stop_hook: Arc<Mutex<bool>> = Arc::new(Mutex::new(false));
+
     OrchestraDirector {
         eng: new_engine(empty_board()),
+        timer: Timer::new_timer(),
+        stop_hook,
     }
 }
 
@@ -93,8 +103,11 @@ impl OrchestraDirector {
     }
 
     fn uci_handle_go(&mut self, options: &str) {
+        let hook = Arc::new(Mutex::new(false));
+
         let op_list: Vec<&str> = options.split_whitespace().collect();
         let mut i = 0;
+        let mut movetime: u64 = 1000;
         while i < op_list.len() {
             match op_list[i] {
                 "wtime" | "btime" | "winc" | "binc" | "depth" | "nodes" => {
@@ -103,14 +116,20 @@ impl OrchestraDirector {
                 "infinite" => {
                     i += 1;
                 }
+                "movetime" => {
+                    movetime = op_list[i + 1].parse().unwrap();
+                    i += 2;
+                }
                 _ => {
                     i += 1;
                 }
             }
         }
 
+        self.timer.move_time = movetime;
+        start_timer(self.timer.clone(), hook.clone());
 
-        let res = self.eng.search(20);
+        let res = self.eng.search(20, hook.clone());
         let mov = res.1;
         let score = res.0;
 

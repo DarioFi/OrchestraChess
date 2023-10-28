@@ -164,7 +164,7 @@ impl Board {
         score += self.ev_piece(pbb.knight, end_gameness, is_white, 300, &KNIGHT_SCORES, &KNIGHT_SCORES_ENDGAME);
         score += self.ev_piece(pbb.rook, end_gameness, is_white, 500, &ROOK_SCORES, &ROOK_SCORES_ENDGAME);
         score += self.ev_piece(pbb.queen, end_gameness, is_white, 900, &QUEEN_SCORES, &QUEEN_SCORES_ENDGAME);
-        score += self.ev_piece(pbb.king, end_gameness, is_white, 2500, &KING_SCORES, &KNIGHT_SCORES_ENDGAME);
+        score += self.ev_piece(pbb.king, end_gameness, is_white, 2500, &KING_SCORES, &KING_SCORES_ENDGAME);
 
         score
     }

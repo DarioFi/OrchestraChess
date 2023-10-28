@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
+use crate::timer::Timer;
 
 const MATING_SCORE: i32 = 250000;
 
@@ -19,7 +20,6 @@ pub struct Engine {
     node_count: u64,
     max_selective: i32,
     transposition_table: HashMap<u64, (u64, i32, Move, bool)>,
-    stop_search: Arc<Mutex<bool>>,
 }
 
 pub fn new_engine(board: Board) -> Engine {
@@ -28,7 +28,6 @@ pub fn new_engine(board: Board) -> Engine {
         node_count: 0,
         max_selective: 0,
         transposition_table: HashMap::new(),
-        stop_search: Arc::new(Mutex::new(false)),
     }
 }
 
@@ -53,19 +52,10 @@ async fn wait_and_stop(mutex: &Arc<Mutex<bool>>, time_millis: u64) {
 }
 
 impl Engine {
-    pub fn search(&mut self, depth: u64) -> (i32, Move) {
-        let stop_search = Arc::new(Mutex::new(false));
-        // Clone the Arc for the timer thread
-        let timer_mutex = Arc::clone(&stop_search);
-        let max_duration = 2000;
+    pub fn search(&mut self, depth: u64, stop_hook: Arc<Mutex<bool>>) -> (i32, Move) {
 
-        // Spawn a timer thread
-        thread::spawn(move || {
-            // Sleep for x milliseconds
-            thread::sleep(Duration::from_millis(max_duration)); // Change the duration as needed
-            // Set the mutex to true after the specified time
-            *timer_mutex.lock().unwrap() = true;
-        });
+
+
 
         self.transposition_table = HashMap::new();
 
@@ -77,9 +67,9 @@ impl Engine {
 
         for dep_it in 1..(depth + 1) {
             let dep = dep_it*2;
-            let x = self.negamax(dep, -MATING_SCORE, MATING_SCORE, self.board.color_to_move, &stop_search);
+            let x = self.negamax(dep, -MATING_SCORE, MATING_SCORE, self.board.color_to_move, &stop_hook);
 
-            if *stop_search.lock().unwrap() {
+            if *stop_hook.lock().unwrap() {
                 println!("Stopped search");
                 break;
             }
