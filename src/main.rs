@@ -10,11 +10,11 @@ mod zobrist;
 mod zobrist_impl;
 mod timer;
 
-use std::time::{Instant, Duration};
-use orchestradirector::OrchestraDirector;
 
-use std::fmt::Debug;
-use std::io;
+
+
+
+use std::{io, process::exit};
 use crate::board::from_fen;
 
 fn main() {
@@ -24,11 +24,11 @@ fn main() {
     // at depth 6 this position gives perft = 11030082 but it should give 11030083
 
     let mut orchestra_director = orchestradirector::new_orchestra_director();
+
     orchestra_director.eng.board = from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-
-    // orchestra_director.handle_command("position", "startpos moves e2e4");
-    // orchestra_director.handle_command("go", "");
-
+    orchestra_director.handle_command("position", "startpos moves e2e4");
+    orchestra_director.handle_command("go", "movetime 5000");
+    exit(0);
     loop {
         let mut message = String::new();
 

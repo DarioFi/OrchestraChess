@@ -1,5 +1,3 @@
-use std::io::ErrorKind::TimedOut;
-use std::option::Option;
 use std::sync::{Arc, Mutex};
 #[macro_export]
 macro_rules! debug {
@@ -8,11 +6,9 @@ macro_rules! debug {
     };
 }
 
-use crate::timer::{Timer, start_timer};
+use crate::timer::{start_timer, Timer};
 
-use crate::board::{Board, empty_board, from_fen, from_startpos};
-
-use crate::r#move::Move;
+use crate::board::{empty_board, from_fen, from_startpos};
 
 #[path = "helpers.rs"]
 mod helpers;
@@ -20,21 +16,17 @@ mod helpers;
 #[path = "move.rs"]
 mod r#move;
 
-use crate::engine::{Engine, new_engine};
+use crate::engine::{new_engine, Engine};
 
 pub struct OrchestraDirector {
     pub eng: Engine,
     timer: Timer,
-    stop_hook: Arc<Mutex<bool>>,
 }
 
 pub fn new_orchestra_director() -> OrchestraDirector {
-    let stop_hook: Arc<Mutex<bool>> = Arc::new(Mutex::new(false));
-
     OrchestraDirector {
         eng: new_engine(empty_board()),
         timer: Timer::new_timer(),
-        stop_hook,
     }
 }
 
@@ -131,7 +123,7 @@ impl OrchestraDirector {
 
         let res = self.eng.search(20, hook.clone());
         let mov = res.1;
-        let score = res.0;
+        let _score = res.0;
 
         println!("bestmove {}", mov.to_uci_string());
     }

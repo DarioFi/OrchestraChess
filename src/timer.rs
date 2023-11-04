@@ -25,6 +25,6 @@ pub fn start_timer(x: Timer, hook: Arc<Mutex<bool>>) {
         // Sleep for x milliseconds
         thread::sleep(x.how_much_time()); // Change the duration as needed
         // Set the mutex to true after the specified time
-        *hook.lock().unwrap() = true;
+    *hook.lock().unwrap() = true;   
     });
 }

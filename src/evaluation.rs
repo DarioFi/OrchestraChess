@@ -1,7 +1,6 @@
-use std::arch::x86_64::_popcnt32;
-use std::mem::discriminant;
+
 use crate::board::{Board, PieceBitBoards};
-use crate::constants::{COLOR, PieceType};
+use crate::constants::{COLOR};
 use crate::helpers::{remove_lsb, lsb, pop_count};
 
 const PAWN_SCORES: [i32; 64] = [
@@ -177,7 +176,7 @@ impl Board {
             x = remove_lsb(x);
 
             // Determine the square index (0 to 63)
-            let sq_index = if is_white {
+            let _sq_index = if is_white {
                 sq
             } else {
                 63 - sq

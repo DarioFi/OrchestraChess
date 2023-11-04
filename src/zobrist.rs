@@ -1,4 +1,3 @@
-use rand::{Rng, thread_rng};
 
 pub struct ZobristHashHandler {
     pub table: [[u64; 12]; 64],

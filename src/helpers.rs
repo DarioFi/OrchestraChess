@@ -20,8 +20,8 @@ pub fn split_fen_moves(s: &str) -> (String, String) {
 pub fn lsb(x: u64) -> u8 {
     x.trailing_zeros() as u8
 }
-#[inline]
 
+#[inline]
 pub fn remove_lsb(x: u64) -> u64 {
     if x == 0{
         return 0_u64

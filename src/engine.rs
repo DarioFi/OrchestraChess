@@ -1,13 +1,13 @@
-use std::backtrace::Backtrace;
+
 use std::cmp::max;
 use crate::board::Board;
 use crate::constants::{COLOR, PieceType};
 use crate::r#move::{Move, create_move};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::{Duration, Instant};
-use crate::timer::Timer;
+
+use std::time::{Duration};
+
 
 const MATING_SCORE: i32 = 250000;
 
@@ -42,13 +42,6 @@ fn move_score(m: &Move) -> i32 {
         PieceType::Queen => { 900 }
         PieceType::King => { 2500 }
     }
-}
-
-async fn wait_and_stop(mutex: &Arc<Mutex<bool>>, time_millis: u64) {
-    tokio::time::sleep(Duration::from_millis(time_millis));
-    println!("Stopped search by setting mutex");
-    let mut state = mutex.lock().expect("Could not lock mutex");
-    *state = true;
 }
 
 impl Engine {

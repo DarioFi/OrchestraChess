@@ -1,6 +1,6 @@
 use std::ops::{Index, IndexMut};
-use crate::constants::{PieceType, COLOR};
-use crate::helpers::{get_lsb_masked, get_msb_masked, lsb, pop_count, remove_lsb, remove_msb};
+use crate::constants::{COLOR};
+use crate::helpers::{get_msb_masked, lsb, pop_count, remove_msb};
 
 
 fn usef(x: u64) {
@@ -231,7 +231,7 @@ fn array_vec() -> [Vec<u64>; 64] {
 
 fn array_vec_dm() -> [DirectionMagic; 64] {
     // initialize empty array of new_direction_magic
-    let mut arr = vec![new_direction_magic(); 64].try_into().expect("static");
+    let arr = vec![new_direction_magic(); 64].try_into().expect("static");
     return arr;
 }
 
@@ -301,7 +301,7 @@ impl DIRECTIONS {
 }
 
 
-fn mask_blockers_to_key(mask: u64, blockers: u64) -> u16 {
+fn mask_blockers_to_key(_mask: u64, _blockers: u64) -> u16 {
     todo!()
 }
 
@@ -467,8 +467,8 @@ impl Magics {
     }
 
     fn update_direction_mask(&mut self, sq: u8, dir: DIRECTIONS) {
-        let mut drank: i32;
-        let mut dfile: i32;
+        let drank: i32;
+        let dfile: i32;
         drank = dir.to_pair().0;
         dfile = dir.to_pair().1;
 
@@ -549,8 +549,8 @@ impl Magics {
     fn compute_moves(&self, square: u8, blockers: u64, direction: DIRECTIONS) -> u64 {
         let mut reachable: u64 = 0;
 
-        let mut drank: i32;
-        let mut dfile: i32;
+        let drank: i32;
+        let dfile: i32;
         drank = direction.to_pair().0;
         dfile = direction.to_pair().1;
 
@@ -579,7 +579,7 @@ impl Magics {
         for hash in 0..2_u64.pow(size) {
             let blockers = inverse_hash_on_mask(hash, mask);
 
-            let mut res = self.compute_moves(square as u8, blockers, direction);
+            let res = self.compute_moves(square as u8, blockers, direction);
 
             self.direction_magic[square as usize][direction].push(res);
         }

@@ -1,7 +1,7 @@
 use std::ops::{Index, IndexMut};
 use crate::r#move::{create_move, Move};
 
-use crate::constants::{COLOR, PieceType, MASK_ONES, MASK_ZEROES, MOVING_PIECES};
+use crate::constants::{COLOR, PieceType, MASK_ONES, MOVING_PIECES};
 use crate::constants::COLOR::{WHITE, BLACK};
 use crate::helpers::{pop_count, lsb, remove_lsb};
 use crate::magic::{Magics, DIRECTIONS, DIAGONAL_DIRS, STRAIGHT_DIRS, square_num_to_bitboard, coord_to_int, coord_bit, new_magic, bitboard_to_square_num, int_to_coord};
@@ -264,7 +264,7 @@ pub fn from_fen(fen: &str) -> Board {
         }
         "b" => {
             board.color_to_move = BLACK;
-            let mut tmp = board.my_pieces.clone();
+            let tmp = board.my_pieces.clone();
             board.my_pieces = board.opponent_pieces.clone();
             board.opponent_pieces = tmp.clone();
         }
@@ -290,8 +290,8 @@ pub fn from_fen(fen: &str) -> Board {
         board.en_passant_square = 0;
     }
 
-    let fifty_move_rule = parts[4];
-    let half_move_clock = parts[5];
+    let _fifty_move_rule = parts[4];
+    let _half_move_clock = parts[5];
 
     board.init_hash();
     board
@@ -521,7 +521,7 @@ impl Board {
             _ => PieceType::Null,
         };
         let piece_moved = self.get_my_piece_on_square(start_square);
-        let piece_captured = self.get_opponent_piece_on_square(end_square);
+        let _piece_captured = self.get_opponent_piece_on_square(end_square);
         let is_castling;
         if (piece_moved == PieceType::King) && (end_square as i32 - start_square as i32).abs() == 2 {
             is_castling = true;
@@ -546,10 +546,6 @@ impl Board {
         )
     }
 
-
-    pub fn test(&self) {
-        self.my_pieces[PieceType::Bishop];
-    }
 
     pub fn generate_moves(&mut self, captures: bool) -> Vec<Move> {
         self.update_utilities();
@@ -735,13 +731,13 @@ impl Board {
             let pinned_ns = (self.utility.pinned_ns & sqntb) != 0;
 
             if pinned_ns {
-                land_mask &= (self.magics.direction_full_masks[DIRECTIONS::N][square as usize] |
-                    self.magics.direction_full_masks[DIRECTIONS::S][square as usize]);
+                land_mask &= self.magics.direction_full_masks[DIRECTIONS::N][square as usize] |
+                    self.magics.direction_full_masks[DIRECTIONS::S][square as usize];
             }
             let pinned_we = (self.utility.pinned_we & sqntb) != 0;
             if pinned_we {
-                land_mask &= (self.magics.direction_full_masks[DIRECTIONS::E][square as usize] |
-                    self.magics.direction_full_masks[DIRECTIONS::W][square as usize]);
+                land_mask &= self.magics.direction_full_masks[DIRECTIONS::E][square as usize] |
+                    self.magics.direction_full_masks[DIRECTIONS::W][square as usize];
             }
         }
 
@@ -765,11 +761,11 @@ impl Board {
             let pinned_nwse = (self.utility.pinned_nwse & sqntb) != 0;
             let pinned_swne = (self.utility.pinned_swne & sqntb) != 0;
             if pinned_nwse {
-                land_mask &= (self.magics.direction_full_masks[DIRECTIONS::NW][square as usize] |
-                    self.magics.direction_full_masks[DIRECTIONS::SE][square as usize]);
+                land_mask &= self.magics.direction_full_masks[DIRECTIONS::NW][square as usize] |
+                    self.magics.direction_full_masks[DIRECTIONS::SE][square as usize];
             } else if pinned_swne {
-                land_mask &= (self.magics.direction_full_masks[DIRECTIONS::SW][square as usize] |
-                    self.magics.direction_full_masks[DIRECTIONS::NE][square as usize]);
+                land_mask &= self.magics.direction_full_masks[DIRECTIONS::SW][square as usize] |
+                    self.magics.direction_full_masks[DIRECTIONS::NE][square as usize];
             }
         }
 
@@ -783,24 +779,24 @@ impl Board {
         if pinned {
             let pinned_ns = (self.utility.pinned_ns & sqntb) != 0;
             if pinned_ns {
-                land_mask &= (self.magics.direction_full_masks[DIRECTIONS::N][square as usize] |
-                    self.magics.direction_full_masks[DIRECTIONS::S][square as usize]);
+                land_mask &= self.magics.direction_full_masks[DIRECTIONS::N][square as usize] |
+                    self.magics.direction_full_masks[DIRECTIONS::S][square as usize];
             }
             let pinned_we = (self.utility.pinned_we & sqntb) != 0;
             if pinned_we {
-                land_mask &= (self.magics.direction_full_masks[DIRECTIONS::E][square as usize] |
-                    self.magics.direction_full_masks[DIRECTIONS::W][square as usize]);
+                land_mask &= self.magics.direction_full_masks[DIRECTIONS::E][square as usize] |
+                    self.magics.direction_full_masks[DIRECTIONS::W][square as usize];
             }
             let pinned_nwse = (self.utility.pinned_nwse & sqntb) != 0;
             if pinned_nwse {
-                land_mask &= (self.magics.direction_full_masks[DIRECTIONS::NW][square as usize] |
-                    self.magics.direction_full_masks[DIRECTIONS::SE][square as usize]);
+                land_mask &= self.magics.direction_full_masks[DIRECTIONS::NW][square as usize] |
+                    self.magics.direction_full_masks[DIRECTIONS::SE][square as usize];
             }
             let pinned_swne = (self.utility.pinned_swne & sqntb) != 0;
 
             if pinned_swne {
-                land_mask &= (self.magics.direction_full_masks[DIRECTIONS::SW][square as usize] |
-                    self.magics.direction_full_masks[DIRECTIONS::NE][square as usize]);
+                land_mask &= self.magics.direction_full_masks[DIRECTIONS::SW][square as usize] |
+                    self.magics.direction_full_masks[DIRECTIONS::NE][square as usize];
             }
         }
 
@@ -810,7 +806,7 @@ impl Board {
     fn loop_over_moves_mask(&self, mut mask: u64, piece_moved: PieceType, start_square: u8) -> Vec<Move> {
         let mut moves = Vec::new();
         let mut end_square = lsb(mask);
-        while (end_square != 64) {
+        while end_square != 64 {
             moves.push(Move {
                 start_square,
                 end_square,
