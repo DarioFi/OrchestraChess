@@ -1,4 +1,4 @@
-fn respond_to_uci(message: &str) {
+pub fn respond_to_uci(message: &str) {
     println!("{}", message);
 }
 

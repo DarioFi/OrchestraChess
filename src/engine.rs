@@ -6,7 +6,6 @@ use crate::r#move::{Move, create_move};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use std::time::{Duration};
 
 
 const MATING_SCORE: i32 = 250000;
@@ -63,7 +62,6 @@ impl Engine {
             let x = self.negamax(dep, -MATING_SCORE, MATING_SCORE, self.board.color_to_move, &stop_hook);
 
             if *stop_hook.lock().unwrap() {
-                println!("Stopped search");
                 break;
             }
 
@@ -78,7 +76,7 @@ impl Engine {
                 score_string = format!("cp {}", score);
             }
             println!("info depth {} seldepth {} score {} nodes {} pv {}", dep, self.max_selective, score_string, self.node_count, best_move.to_uci_string());
-            println!("Transposition table size {}", self.transposition_table.len());
+            // println!("Transposition table size {}", self.transposition_table.len());
 
 
             // let end_time = std::time::Instant::now();
@@ -201,19 +199,22 @@ impl Engine {
         alpha
     }
 
-    pub fn perft(&mut self, depth: i32, sd: i32) -> u64 {
+    pub fn perft(&mut self, depth: i32, sd: i32, bulk_count: bool) -> u64 {
         let mut moves = self.board.generate_moves(false);
 
-        if depth == 1 {
-            // return 1;
+
+        if bulk_count && depth == 1 {
             return moves.len() as u64;
+        } else if depth == 0 {
+            return 1;
         }
+
         let mut counter: u64 = 0;
 
         moves.sort_by_key(move_score);
         for mov in moves {
             self.board.make_move(mov);
-            let c = self.perft(depth - 1, sd);
+            let c = self.perft(depth - 1, sd, bulk_count);
             counter += c;
             self.board.unmake_move();
 
@@ -227,7 +228,7 @@ impl Engine {
 
     pub fn benchmark_perf(&mut self, depth: u32) {
         let now = std::time::Instant::now();
-        let res = self.perft(depth as i32, depth as i32);
+        let res = self.perft(depth as i32, depth as i32, true);
         let elapsed = now.elapsed();
         let elapsed_ms = elapsed.as_millis();
         println!("{} nodes in {} ms", res, elapsed_ms);
@@ -251,9 +252,4 @@ impl Engine {
         self.transposition_table.insert(hash, (depth, score, mov, is_exact));
     }
 
-    fn query_transposition_table(&self) {
-        let hash = self.board.zobrist.hash;
-
-        if self.transposition_table.contains_key(&hash) {}
-    }
 }

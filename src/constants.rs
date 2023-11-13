@@ -24,17 +24,6 @@ impl PieceType {
     }
 }
 
-pub fn piece_type_from_string(string: String) -> PieceType {
-    match string.to_lowercase().as_str() {
-        "p" => PieceType::Pawn,
-        "n" => PieceType::Knight,
-        "b" => PieceType::Bishop,
-        "r" => PieceType::Rook,
-        "q" => PieceType::Queen,
-        "k" => PieceType::King,
-        _ => panic!("Invalid piece type"),
-    }
-}
 
 pub const MOVING_PIECES: [PieceType; 4] = [PieceType::Queen, PieceType::Knight, PieceType::Rook, PieceType::Bishop];
 

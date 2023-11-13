@@ -834,10 +834,6 @@ impl Board {
         potential & (!self.utility.my_occupancy)
     }
 
-    fn gen_pawns_captures_bitboard(&self, square: u8, color: COLOR) -> u64 {
-        let potential = self.magics.get_pawn_captures(square, color);
-        potential & (!self.utility.all_occupancy)
-    }
     fn gen_knight_moves_bitboard(&self, square: u8) -> u64 {
         let potential = self.magics.get_knight_moves(square);
         potential & (!self.utility.my_occupancy)
@@ -1166,14 +1162,13 @@ impl Board {
             }
         }
 
-        let mut found_my_pawn = false;
         let mut found_another_pawn = false;
         king_file += direction;
         while 0 <= king_file && king_file < 8 {
             let x = square_num_to_bitboard(coord_to_int(king_rank as u8, king_file as u8));
             if self.utility.all_occupancy & x != 0 {
                 if x == square_num_to_bitboard(mov.start_square) {
-                    found_my_pawn = true;
+                    // found my pawn
                 } else if self.opponent_pieces.pawns & x != 0 {
                     if found_another_pawn {
                         return true;

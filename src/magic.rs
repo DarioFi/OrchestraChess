@@ -3,16 +3,6 @@ use crate::constants::{COLOR};
 use crate::helpers::{get_msb_masked, lsb, pop_count, remove_msb};
 
 
-fn usef(x: u64) {
-    let mut y: u64 = x;
-    let ma = 0b1111_1111;
-    println!("");
-    for _ in 0..8 {
-        println!("{:08b}", y & ma);
-        y /= 2_u64.pow(8);
-    }
-}
-
 pub const fn coord_to_int(rank: u8, file: u8) -> u8 {
     rank * 8 + file
 }
@@ -300,10 +290,6 @@ impl DIRECTIONS {
     }
 }
 
-
-fn mask_blockers_to_key(_mask: u64, _blockers: u64) -> u16 {
-    todo!()
-}
 
 impl Magics {
     pub fn init(&mut self) {

@@ -1,4 +1,5 @@
 use std::sync::{Arc, Mutex};
+use crate::helpers::respond_to_uci;
 #[macro_export]
 macro_rules! debug {
     () => {
@@ -9,6 +10,7 @@ macro_rules! debug {
 use crate::timer::{start_timer, Timer};
 
 use crate::board::{empty_board, from_fen, from_startpos};
+use crate::constants::COLOR::{BLACK, WHITE};
 
 #[path = "helpers.rs"]
 mod helpers;
@@ -33,7 +35,7 @@ pub fn new_orchestra_director() -> OrchestraDirector {
 impl OrchestraDirector {
     pub(crate) fn init_startpos(&mut self) {
         if debug!() {
-            println!("startpos");
+            respond_to_uci("startpos");
         }
         self.eng.board = from_startpos();
     }
@@ -57,9 +59,9 @@ impl OrchestraDirector {
     }
 
     fn uci_handle_uci(&self) {
-        println!("id name Orchestra");
-        println!("id author Dario & Mattia");
-        println!("uciok");
+        respond_to_uci("id name Orchestra");
+        respond_to_uci("id author Dario & Mattia");
+        respond_to_uci("uciok");
     }
 
     fn uci_handle_position(&mut self, options: &str) {
@@ -91,48 +93,75 @@ impl OrchestraDirector {
     }
 
     fn uci_handle_isready(&self) {
-        println!("readyok");
+        respond_to_uci("readyok");
     }
 
     fn uci_handle_go(&mut self, options: &str) {
+        println!("{}", options);
         let hook = Arc::new(Mutex::new(false));
 
         let op_list: Vec<&str> = options.split_whitespace().collect();
         let mut i = 0;
-        let mut movetime: u64 = 1000;
+        let mut movetime: u64 = 0;
         while i < op_list.len() {
             match op_list[i] {
-                "wtime" | "btime" | "winc" | "binc" | "depth" | "nodes" => {
+                "wtime" => {
+                    if self.eng.board.color_to_move == WHITE {
+                        self.timer.msec_left = op_list[i + 1].parse().unwrap();
+                    }
                     i += 2;
                 }
-                "infinite" => {
-                    i += 1;
-                }
-                "movetime" => {
-                    movetime = op_list[i + 1].parse().unwrap();
+                "btime" => {
+                    if self.eng.board.color_to_move == BLACK {
+                        self.timer.msec_left = op_list[i + 1].parse().unwrap();
+                    }
                     i += 2;
                 }
-                _ => {
-                    i += 1;
+
+                "winc" => {
+                    if self.eng.board.color_to_move == WHITE {
+                        self.timer.msec_inc = op_list[i + 1].parse().unwrap();
+                    }
+                    i += 2;
                 }
+                "binc" => {
+                    if self.eng.board.color_to_move == BLACK {
+                        self.timer.msec_inc = op_list[i + 1].parse().unwrap();
+                    }
+                    i += 2;
+                }
+                "depth" | "nodes"
+             => {
+                i += 2;
+            }
+            "infinite" => {
+                i += 1;
+            }
+            "movetime" => {
+                movetime = op_list[i + 1].parse().unwrap();
+                i += 2;
+            }
+            _ => {
+                i += 1;
             }
         }
-
-        self.timer.move_time = movetime;
-        start_timer(self.timer.clone(), hook.clone());
-
-        let res = self.eng.search(20, hook.clone());
-        let mov = res.1;
-        let _score = res.0;
-
-        println!("bestmove {}", mov.to_uci_string());
     }
 
-    fn uci_handle_stop(&self) {
-        panic!("NotImplementedError");
-    }
+    self.timer.move_time = movetime;
+    start_timer( self .timer.clone(), hook.clone());
 
-    fn uci_handle_quit(&self) {
-        std::process::exit(0);
-    }
+    let res = self .eng.search(20, hook.clone());
+    let mov = res.1;
+    let _score = res.0;
+
+    println!("bestmove {}", mov.to_uci_string());
+}
+
+fn uci_handle_stop(&self) {
+    panic!("NotImplementedError");
+}
+
+fn uci_handle_quit(&self) {
+    std::process::exit(0);
+}
 }

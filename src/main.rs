@@ -25,10 +25,10 @@ fn main() {
 
     let mut orchestra_director = orchestradirector::new_orchestra_director();
 
-    orchestra_director.eng.board = from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    orchestra_director.handle_command("position", "startpos moves e2e4");
-    orchestra_director.handle_command("go", "movetime 5000");
-    exit(0);
+    // orchestra_director.eng.board = from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    // orchestra_director.handle_command("position", "startpos moves e2e4");
+    // orchestra_director.handle_command("go", "wtime 180000 btime 180000 winc 2000 binc 2000");
+    // exit(0);
     loop {
         let mut message = String::new();
 
