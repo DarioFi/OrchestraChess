@@ -332,7 +332,9 @@ impl Magics {
         for starting_square in 0..64
         {
             let (rank, file) = int_to_coord(starting_square);
-            for (a, b) in KING_PATTERNS {
+            for (a, b) in KING_PATTERNS.iter() {
+                let a = *a;
+                let b = *b;
                 let (rank, file) = (rank as i32 + a, file as i32 + b);
                 if signed_valid_coord(rank, file) {
                     let ending_square = coord_to_int(rank as u8, file as u8);
@@ -350,7 +352,9 @@ impl Magics {
         for starting_square in 0..64
         {
             let (rank, file) = int_to_coord(starting_square);
-            for (a, b) in KNIGHT_PATTERNS {
+            for (a, b) in KNIGHT_PATTERNS.iter() {
+                let a = *a;
+                let b = *b;
                 let (rank, file) = (rank as i32 + a, file as i32 + b);
                 if signed_valid_coord(rank, file) {
                     let ending_square = coord_to_int(rank as u8, file as u8);
@@ -395,6 +399,7 @@ impl Magics {
     }
     fn init_pawn(&mut self) {
         for dir in [1, -1].iter() {
+            let dir = *dir;
             for ss in 0_u8..64 {
                 let mut res: u64 = 0;
                 let (rank, file) = int_to_coord(ss);

@@ -372,7 +372,8 @@ impl Board {
         self.utility.blocker_squares = self.utility.checkers;
 
         // rays
-        for dir in STRAIGHT_DIRS {
+        for dir in STRAIGHT_DIRS.iter() {
+            let dir = *dir;
             let xray_mask = self.magics.get_rays_moves(king_square, self.utility.opponent_occupancy, dir);
             let pierced_pieces = xray_mask & self.utility.my_occupancy;
             if pop_count(pierced_pieces) > 1 {
@@ -397,7 +398,8 @@ impl Board {
             }
         }
 
-        for dir in DIAGONAL_DIRS {
+        for dir in DIAGONAL_DIRS.iter() {
+            let dir = *dir;
             let xray_mask = self.magics.get_rays_moves(king_square, self.utility.opponent_occupancy, dir);
             let pierced_pieces = xray_mask & self.utility.my_occupancy;
             if pop_count(pierced_pieces) > 1 {
@@ -917,7 +919,8 @@ impl Board {
                         }
                     } else if push & land_mask != 0 {
                         // promotion
-                        for piece_promotion in MOVING_PIECES {
+                        for piece_promotion in MOVING_PIECES.iter() {
+                            let piece_promotion = *piece_promotion;
                             moves.push(create_move(
                                 sq,
                                 (sq as i32 + direction) as u8,
@@ -990,7 +993,8 @@ impl Board {
                         ));
                     } else {
                         // promotion
-                        for piece_promotion in MOVING_PIECES {
+                        for piece_promotion in MOVING_PIECES.iter() {
+                            let piece_promotion = *piece_promotion;
                             moves.push(create_move(
                                 sq,
                                 capture_sq,
