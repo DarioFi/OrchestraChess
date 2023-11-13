@@ -394,7 +394,7 @@ impl Magics {
         }
     }
     fn init_pawn(&mut self) {
-        for dir in [1, -1] {
+        for dir in [1, -1].iter() {
             for ss in 0_u8..64 {
                 let mut res: u64 = 0;
                 let (rank, file) = int_to_coord(ss);
