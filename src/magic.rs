@@ -215,14 +215,15 @@ fn array() -> [u64; 64] {
 }
 
 fn array_vec() -> [Vec<u64>; 64] {
-    let x: [Vec<u64>; 64] = vec![Vec::new(); 64].try_into().expect("static");
-    x
+    // initialize empty array of vecs
+    let arr: [Vec<u64>; 64] = [vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![], ];
+    arr
 }
 
 fn array_vec_dm() -> [DirectionMagic; 64] {
     // initialize empty array of new_direction_magic
-    let arr = vec![new_direction_magic(); 64].try_into().expect("static");
-    return arr;
+    let arr: [DirectionMagic; 64] = [new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic(), new_direction_magic()];
+    arr
 }
 
 
