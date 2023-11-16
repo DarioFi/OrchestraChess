@@ -9,7 +9,8 @@ macro_rules! debug {
 
 use crate::timer::{start_timer, Timer};
 
-use crate::board::{empty_board, from_fen, from_startpos};
+use crate::board::Board;
+use crate::book::OpeningBook;
 use crate::constants::COLOR::{BLACK, WHITE};
 
 #[path = "helpers.rs"]
@@ -23,21 +24,20 @@ use crate::engine::{new_engine, Engine};
 pub struct OrchestraDirector {
     pub eng: Engine,
     timer: Timer,
+
 }
 
 pub fn new_orchestra_director() -> OrchestraDirector {
     OrchestraDirector {
-        eng: new_engine(empty_board()),
+        eng: new_engine(Board::empty_board()),
         timer: Timer::new_timer(),
+
     }
 }
 
 impl OrchestraDirector {
     pub(crate) fn init_startpos(&mut self) {
-        if debug!() {
-            respond_to_uci("startpos");
-        }
-        self.eng.board = from_startpos();
+        self.eng.board = Board::from_startpos();
     }
 
     pub fn handle_command(&mut self, command: &str, options: &str) {
@@ -65,12 +65,15 @@ impl OrchestraDirector {
     }
 
     fn uci_handle_position(&mut self, options: &str) {
-        if options.starts_with("startpos") {
+        if options.starts_with("startpos") { // todo: review this because the string editing is done in two different places
             self.init_startpos();
             let w = options.split("moves").collect::<Vec<_>>();
             if w.len() > 1 {
                 self.execute_moves(w[1]);
+                self.eng.moves_loaded = w[1].to_string();
             }
+            self.eng.position_loaded = "startpos".to_string();
+
         } else {
             let (fen, moves) = helpers::split_fen_moves(options); // Assuming helpers module is available
             self.init_from_fen(&fen);
@@ -89,7 +92,7 @@ impl OrchestraDirector {
     fn init_from_fen(&mut self, fen: &str) {
         // todo: review this because the string editing is done in two different places
         // fen = options[options.find("[") + 1:options.find("]")]
-        self.eng.board = from_fen(fen);
+        self.eng.board = Board::from_fen(fen);
     }
 
     fn uci_handle_isready(&self) {

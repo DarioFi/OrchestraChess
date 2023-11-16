@@ -179,7 +179,7 @@ impl Board {
     pub(crate) fn is_check(&self) -> bool {
         // assume self.generate_moves was ran
         // => self.update_utilities() was ran
-        return self.utility.checkers != 0
+        return self.utility.checkers != 0;
     }
 }
 
@@ -190,133 +190,6 @@ fn square_string_to_int(s: &str) -> u8 {
     let file = char_to_int(chars.next().unwrap());
     let rank = chars.next().unwrap().to_digit(10).unwrap() as u8 - 1;
     rank * 8 + file
-}
-
-pub fn from_fen(fen: &str) -> Board {
-    let mut board = empty_board();
-
-    let parts: Vec<&str> = fen.split(" ").collect();
-    let pieces_part = parts[0];
-    let mut rank = 7;
-    let mut file = 0;
-    for p in pieces_part.chars() {
-        match p {
-            'K' => {
-                board.my_pieces.king |= coord_bit(rank, file);
-                file += 1;
-            }
-            'Q' => {
-                board.my_pieces.queen |= coord_bit(rank, file);
-                file += 1;
-            }
-            'R' => {
-                board.my_pieces.rook |= coord_bit(rank, file);
-                file += 1;
-            }
-            'B' => {
-                board.my_pieces.bishop |= coord_bit(rank, file);
-                file += 1;
-            }
-            'N' => {
-                board.my_pieces.knight |= coord_bit(rank, file);
-                file += 1;
-            }
-            'P' => {
-                board.my_pieces.pawns |= coord_bit(rank, file);
-                file += 1;
-            }
-            'k' => {
-                board.opponent_pieces.king |= coord_bit(rank, file);
-                file += 1;
-            }
-            'q' => {
-                board.opponent_pieces.queen |= coord_bit(rank, file);
-                file += 1;
-            }
-            'r' => {
-                board.opponent_pieces.rook |= coord_bit(rank, file);
-                file += 1;
-            }
-            'b' => {
-                board.opponent_pieces.bishop |= coord_bit(rank, file);
-                file += 1;
-            }
-            'n' => {
-                board.opponent_pieces.knight |= coord_bit(rank, file);
-                file += 1;
-            }
-            'p' => {
-                board.opponent_pieces.pawns |= coord_bit(rank, file);
-                file += 1;
-            }
-            '/' => {
-                rank -= 1;
-                file = 0;
-            }
-            _ => { file += p.to_digit(10).unwrap() as u8; }
-        }
-    }
-
-    let color = parts[1];
-    match color {
-        "w" => {
-            board.color_to_move = WHITE;
-        }
-        "b" => {
-            board.color_to_move = BLACK;
-            let tmp = board.my_pieces.clone();
-            board.my_pieces = board.opponent_pieces.clone();
-            board.opponent_pieces = tmp.clone();
-        }
-        _ => { panic!("Invalid color"); }
-    }
-
-    let castling = parts[2];
-    for c in castling.chars() {
-        match c {
-            'K' => { board.castling_rights.0 |= WK; }
-            'Q' => { board.castling_rights.0 |= WQ; }
-            'k' => { board.castling_rights.0 |= BK; }
-            'q' => { board.castling_rights.0 |= BQ; }
-            '-' => { board.castling_rights.0 = 0; }
-            _ => { panic!("Invalid castling rights"); }
-        }
-    }
-
-    let en_passant = parts[3];
-    if en_passant != "-" {
-        board.en_passant_square = square_string_to_int(en_passant);
-    } else {
-        board.en_passant_square = 0;
-    }
-
-    let _fifty_move_rule = parts[4];
-    let _half_move_clock = parts[5];
-
-    board.init_hash();
-    board
-}
-
-
-pub fn from_startpos() -> Board {
-    from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk - 0 1")
-}
-
-pub fn empty_board() -> Board {
-    Board {
-        my_pieces: empty_piece_bit_boards(),
-        opponent_pieces: empty_piece_bit_boards(),
-        utility: empty_utility_bitboards(),
-        color_to_move: WHITE,
-        en_passant_square: 0,
-        castling_rights: CastlingRights(0),
-        moves_stack: vec![],
-        zobrist_stack: vec![],
-        en_passant_stack: vec![],
-        castling_stack: vec![],
-        magics: new_magic(),
-        zobrist: init_zobrist(),
-    }
 }
 
 fn empty_utility_bitboards() -> UtilityBitBoards {
@@ -333,6 +206,134 @@ fn empty_utility_bitboards() -> UtilityBitBoards {
         pinned_swne: 0,
         my_attack: 0,
         opponent_attack: 0,
+    }
+}
+
+impl Board {
+    pub fn empty_board() -> Board {
+        Board {
+            my_pieces: empty_piece_bit_boards(),
+            opponent_pieces: empty_piece_bit_boards(),
+            utility: empty_utility_bitboards(),
+            color_to_move: WHITE,
+            en_passant_square: 0,
+            castling_rights: CastlingRights(0),
+            moves_stack: vec![],
+            zobrist_stack: vec![],
+            en_passant_stack: vec![],
+            castling_stack: vec![],
+            magics: new_magic(),
+            zobrist: init_zobrist(),
+        }
+    }
+    pub fn from_fen(fen: &str) -> Board {
+        let mut board = Board::empty_board();
+
+        let parts: Vec<&str> = fen.split(" ").collect();
+        let pieces_part = parts[0];
+        let mut rank = 7;
+        let mut file = 0;
+        for p in pieces_part.chars() {
+            match p {
+                'K' => {
+                    board.my_pieces.king |= coord_bit(rank, file);
+                    file += 1;
+                }
+                'Q' => {
+                    board.my_pieces.queen |= coord_bit(rank, file);
+                    file += 1;
+                }
+                'R' => {
+                    board.my_pieces.rook |= coord_bit(rank, file);
+                    file += 1;
+                }
+                'B' => {
+                    board.my_pieces.bishop |= coord_bit(rank, file);
+                    file += 1;
+                }
+                'N' => {
+                    board.my_pieces.knight |= coord_bit(rank, file);
+                    file += 1;
+                }
+                'P' => {
+                    board.my_pieces.pawns |= coord_bit(rank, file);
+                    file += 1;
+                }
+                'k' => {
+                    board.opponent_pieces.king |= coord_bit(rank, file);
+                    file += 1;
+                }
+                'q' => {
+                    board.opponent_pieces.queen |= coord_bit(rank, file);
+                    file += 1;
+                }
+                'r' => {
+                    board.opponent_pieces.rook |= coord_bit(rank, file);
+                    file += 1;
+                }
+                'b' => {
+                    board.opponent_pieces.bishop |= coord_bit(rank, file);
+                    file += 1;
+                }
+                'n' => {
+                    board.opponent_pieces.knight |= coord_bit(rank, file);
+                    file += 1;
+                }
+                'p' => {
+                    board.opponent_pieces.pawns |= coord_bit(rank, file);
+                    file += 1;
+                }
+                '/' => {
+                    rank -= 1;
+                    file = 0;
+                }
+                _ => { file += p.to_digit(10).unwrap() as u8; }
+            }
+        }
+
+        let color = parts[1];
+        match color {
+            "w" => {
+                board.color_to_move = WHITE;
+            }
+            "b" => {
+                board.color_to_move = BLACK;
+                let tmp = board.my_pieces.clone();
+                board.my_pieces = board.opponent_pieces.clone();
+                board.opponent_pieces = tmp.clone();
+            }
+            _ => { panic!("Invalid color"); }
+        }
+
+        let castling = parts[2];
+        for c in castling.chars() {
+            match c {
+                'K' => { board.castling_rights.0 |= WK; }
+                'Q' => { board.castling_rights.0 |= WQ; }
+                'k' => { board.castling_rights.0 |= BK; }
+                'q' => { board.castling_rights.0 |= BQ; }
+                '-' => { board.castling_rights.0 = 0; }
+                _ => { panic!("Invalid castling rights"); }
+            }
+        }
+
+        let en_passant = parts[3];
+        if en_passant != "-" {
+            board.en_passant_square = square_string_to_int(en_passant);
+        } else {
+            board.en_passant_square = 0;
+        }
+
+        let _fifty_move_rule = parts[4];
+        let _half_move_clock = parts[5];
+
+        board.init_hash();
+        board
+    }
+
+
+    pub fn from_startpos() -> Board {
+        Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk - 0 1")
     }
 }
 
@@ -551,7 +552,7 @@ impl Board {
 
     pub fn generate_moves(&mut self, captures: bool) -> Vec<Move> {
         self.update_utilities();
-        let mut moves: Vec<Move> = Vec::new();
+        let mut moves: Vec<Move> = Vec::new(); // todo: OBstack arena allocator
         let ks = lsb(self.my_pieces.king);
 
         let cap_mask: u64;
@@ -1125,8 +1126,6 @@ impl Board {
     }
 
     fn check_legal_en_passant(&self, mov: &Move) -> bool {
-        // todo: probably it still has a minor bug, to reproduce it see todo under main
-
         // (claim) only case where this should not pass the other checks is if there is a horizontal
         // rook and only two squares. Otherwise it would be pinned / land_mask would catch it
         // maybe treating the pawn as a rook, making a ray, checking if it ends up on a sequence
@@ -1139,63 +1138,97 @@ impl Board {
         // get king rank, if different than mov.start then true
 
         let ks = self.my_pieces.king;
-        let ss_bit = square_num_to_bitboard(mov.start_square);
-        // if !same_rank(ks, ss_bit) {
+        //
+        // if !(bitboard_to_square_num(ks) / 8 == mov.start_square / 8) {
         //     return true;
         // }
 
-        if !(bitboard_to_square_num(ks) / 8 == mov.start_square / 8) {
-            return true;
+        let is_pawn_on_left = (mov.start_square % 8) > (mov.end_square % 8);
+
+        let pawn_file = (mov.start_square % 8) as i32;
+
+        let mut found_slider = false;
+        let mut found_king = false;
+        // left
+        let mut file;
+        if is_pawn_on_left {
+            file = pawn_file - 2;
+        } else {
+            file = pawn_file - 1;
         }
 
-        // loop over line by adding to ks
-        let is_left = ks < ss_bit;
-        let mut king_file: i32;
-        let king_rank: i32;
-        let temp = int_to_coord(bitboard_to_square_num(ks));
-        king_rank = temp.0 as i32;
-        king_file = temp.1 as i32;
-
-        let direction: i32;
-        match is_left {
-            true => {
-                direction = 1;
-            }
-            false => {
-                direction = -1
-            }
-        }
-
-        let mut found_another_pawn = false;
-        king_file += direction;
-        while 0 <= king_file && king_file < 8 {
-            let x = square_num_to_bitboard(coord_to_int(king_rank as u8, king_file as u8));
-            if self.utility.all_occupancy & x != 0 {
-                if x == square_num_to_bitboard(mov.start_square) {
-                    // found my pawn
-                } else if self.opponent_pieces.pawns & x != 0 {
-                    if found_another_pawn {
-                        return true;
-                    } else {
-                        found_another_pawn = true;
-                    }
+        while file >= 0 {
+            let sq = square_num_to_bitboard((mov.start_square/8) * 8 + file as u8);
+            if self.utility.all_occupancy & sq != 0 {
+                if sq & self.opponent_pieces.rook != 0 || sq & self.opponent_pieces.queen != 0 {
+                    found_slider = true;
+                    break;
+                } else if sq & ks != 0 {
+                    found_king = true;
+                    break;
                 } else {
-                    if (self.opponent_pieces.rook & x != 0) || (self.opponent_pieces.queen & x != 0) {
-                        return false;
-                    } else {
-                        return true;
-                    }
+                    return true;
                 }
             }
-            king_file += direction;
+            file -= 1;
         }
 
-        return true;
+        let mut file;
+        if is_pawn_on_left {
+            file = pawn_file + 1;
+        } else {
+            file = pawn_file + 2;
+        }
+
+        while file <= 7 {
+            let sq = square_num_to_bitboard((mov.start_square/8) * 8 + file as u8);
+            if self.utility.all_occupancy & sq != 0 {
+                if sq & self.opponent_pieces.rook != 0 || sq & self.opponent_pieces.queen != 0 {
+                    found_slider = true;
+                    break;
+                } else if sq & ks != 0 {
+                    found_king = true;
+                    break;
+                } else {
+                    return true;
+                }
+            }
+            file += 1;
+        }
+
+        return !(found_slider && found_king);
     }
+
 
     pub(crate) fn is_3fold(&self) -> bool {
         let hash = self.zobrist.hash;
         self.zobrist_stack.iter().fold(0, |acc, x| if *x == hash { acc + 1 } else { acc }) >= 3
+    }
+
+    pub fn perft(&mut self, depth: i32, print_depth: i32, bulk_count: bool) -> u64 {
+        let mut moves = self.generate_moves(false);
+
+
+        if bulk_count && depth == 1 {
+            return moves.len() as u64;
+        } else if depth == 0 {
+            return 1;
+        }
+
+        let mut counter: u64 = 0;
+
+        for mov in moves {
+            self.make_move(mov);
+            let c = self.perft(depth - 1, print_depth, bulk_count);
+            counter += c;
+            self.unmake_move();
+
+            if depth == print_depth {
+                println!("{}: {}", mov.to_uci_string(), c);
+            }
+        }
+
+        counter
     }
 }
 

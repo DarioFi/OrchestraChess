@@ -10,10 +10,12 @@ pub const fn coord_to_int(rank: u8, file: u8) -> u8 {
 pub const fn coord_bit(x: u8, y: u8) -> u64 {
     square_num_to_bitboard(coord_to_int(x, y))
 }
-#[inline]
+
+
 pub const fn square_num_to_bitboard(square: u8) -> u64 {
     1 << square
 }
+
 
 pub fn bitboard_to_square_num(x: u64) -> u8 {
     lsb(x)
@@ -216,7 +218,7 @@ fn array() -> [u64; 64] {
 
 fn array_vec() -> [Vec<u64>; 64] {
     // initialize empty array of vecs
-    let arr: [Vec<u64>; 64] = [vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![],vec![], vec![], ];
+    let arr: [Vec<u64>; 64] = [vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], ];
     arr
 }
 

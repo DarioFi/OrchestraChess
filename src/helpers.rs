@@ -40,11 +40,12 @@ pub fn get_msb_index(x: u64) -> u8 {
     63 - x.leading_zeros() as u8
 }
 
+
 pub fn get_msb_masked(x: u64) -> u64 {
     1 << get_msb_index(x)
 }
 
-pub fn remove_msb(x: u64) -> u64 {
+pub fn remove_msb(x: u64) -> u64 { // todo: arithmetic
     x ^ get_msb_masked(x)
 }
 

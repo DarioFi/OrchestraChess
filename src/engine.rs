@@ -1,14 +1,15 @@
-
 use std::cmp::max;
 use crate::board::Board;
 use crate::constants::{COLOR, PieceType};
 use crate::r#move::{Move, create_move};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-
+use crate::book::OpeningBook;
 
 
 const MATING_SCORE: i32 = 250000;
+const BOOK_DEPTH: u64 = 20;
+const BOOK_FILE: &str = "sorted_uci.uci";
 
 fn null_move() -> Move {
     create_move(0, 0, PieceType::Null, PieceType::Null, PieceType::Null, false, false)
@@ -19,6 +20,9 @@ pub struct Engine {
     node_count: u64,
     max_selective: i32,
     transposition_table: HashMap<u64, (u64, i32, Move, bool)>,
+    pub book: OpeningBook,
+    pub position_loaded: String,
+    pub moves_loaded: String,
 }
 
 pub fn new_engine(board: Board) -> Engine {
@@ -27,6 +31,9 @@ pub fn new_engine(board: Board) -> Engine {
         node_count: 0,
         max_selective: 0,
         transposition_table: HashMap::new(),
+        book: OpeningBook::new(BOOK_FILE),
+        position_loaded: "".to_string(),
+        moves_loaded: "".to_string(),
     }
 }
 
@@ -45,11 +52,18 @@ fn move_score(m: &Move) -> i32 {
 
 impl Engine {
     pub fn search(&mut self, depth: u64, stop_hook: Arc<Mutex<bool>>) -> (i32, Move) {
+        if self.position_loaded == "startpos" {
+            let mut moves = self.moves_loaded.split(" ");
+            if moves.collect::<Vec<_>>().len() < BOOK_DEPTH as usize {
+                let mov = self.book.query(&self.moves_loaded);
+                if mov.is_some() {
+                    return (0, self.board.move_from_str(&mov.unwrap()));
+                }
+            }
+        }
 
 
-
-
-        self.transposition_table = HashMap::new();
+        self.transposition_table = HashMap::new(); // todo: clear it properly without deleting all data
 
         let mut best_move = null_move();
         let mut score = 0;
@@ -58,7 +72,7 @@ impl Engine {
 
 
         for dep_it in 1..(depth + 1) {
-            let dep = dep_it*2;
+            let dep = dep_it * 2;
             let x = self.negamax(dep, -MATING_SCORE, MATING_SCORE, self.board.color_to_move, &stop_hook);
 
             if *stop_hook.lock().unwrap() {
@@ -199,36 +213,10 @@ impl Engine {
         alpha
     }
 
-    pub fn perft(&mut self, depth: i32, sd: i32, bulk_count: bool) -> u64 {
-        let mut moves = self.board.generate_moves(false);
-
-
-        if bulk_count && depth == 1 {
-            return moves.len() as u64;
-        } else if depth == 0 {
-            return 1;
-        }
-
-        let mut counter: u64 = 0;
-
-        moves.sort_by_key(move_score);
-        for mov in moves {
-            self.board.make_move(mov);
-            let c = self.perft(depth - 1, sd, bulk_count);
-            counter += c;
-            self.board.unmake_move();
-
-            if depth == sd {
-                println!("{}: {}", mov.to_uci_string(), c);
-            }
-        }
-
-        counter
-    }
 
     pub fn benchmark_perf(&mut self, depth: u32) {
         let now = std::time::Instant::now();
-        let res = self.perft(depth as i32, depth as i32, true);
+        let res = self.board.perft(depth as i32, depth as i32, true);
         let elapsed = now.elapsed();
         let elapsed_ms = elapsed.as_millis();
         println!("{} nodes in {} ms", res, elapsed_ms);
@@ -251,5 +239,4 @@ impl Engine {
         // self.transposition_table[&hash] = (depth, score, mov, is_exact);
         self.transposition_table.insert(hash, (depth, score, mov, is_exact));
     }
-
 }
