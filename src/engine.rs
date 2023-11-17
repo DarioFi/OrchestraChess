@@ -187,6 +187,23 @@ impl Engine {
             return (0, null_move());
         }
 
+        if self.transposition_table.contains_key(&hash) {
+            let result = self.transposition_table[&hash];
+            let old_depth = result.0;
+            let old_score = result.1;
+            let old_move = result.2;
+            let old_exact = result.3;
+
+            if old_depth >= depth {
+                if old_exact || old_score >= beta {
+                    if old_score > MATING_SCORE - 100 {
+                        return (old_score - 1, old_move);
+                    }
+                    return (old_score, old_move);
+                }
+            }
+        }
+
         // transposition for move ordering
         if depth == 0 {
             // let eval = self.quiescence_search(alpha, beta, 0);
@@ -200,7 +217,7 @@ impl Engine {
         let mut best_move = null_move();
         let mut best_score = -MATING_SCORE;
         let mut alpha = alpha;
-        let mut is_exact = true;
+        let mut is_exact = false;
         let mut is_first = true;
 
         if moves.len() == 0 {
@@ -223,6 +240,8 @@ impl Engine {
                 score = -self.principal_variation(depth - 1, -alpha - 1, -alpha, color.flip(), &stop_search).0;
                 if (alpha < score && score < beta) {
                     score = -self.principal_variation(depth - 1, -beta, -alpha, color.flip(), &stop_search).0;
+                } else {
+                    is_exact = false;
                 }
             }
             self.board.unmake_move();
@@ -244,8 +263,8 @@ impl Engine {
                 is_exact = false;
                 break;
             }
-
         }
+        self.update_transposition_table(depth, best_score, best_move, is_exact);
 
         (best_score, best_move)
     }
