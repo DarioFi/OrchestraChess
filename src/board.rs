@@ -1291,11 +1291,11 @@ impl Board {
         self.color_to_move = self.color_to_move.flip();
 
 
-        // let temp = self.my_pieces.clone();
-        // self.my_pieces = self.opponent_pieces.clone();
-        // self.opponent_pieces = temp;
+        let temp = self.my_pieces.clone();
+        self.my_pieces = self.opponent_pieces.clone();
+        self.opponent_pieces = temp;
 
-        (self.my_pieces, self.opponent_pieces) = (self.opponent_pieces, self.my_pieces);
+        // (self.my_pieces, self.opponent_pieces) = (self.opponent_pieces, self.my_pieces);
 
         // todo: does this actually work + check which one is faster and decide if it is worth?
         // mem::swap(&mut self.my_pieces, &mut self.opponent_pieces);
