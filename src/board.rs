@@ -6,6 +6,7 @@ use crate::constants::COLOR::{BLACK, WHITE};
 use crate::helpers::{lsb, pop_count, remove_lsb, square_string_to_int};
 use crate::magic::{coord_bit, coord_to_int, DIAGONAL_DIRS, DIRECTIONS, Magics, new_magic, square_num_to_bitboard, STRAIGHT_DIRS};
 use crate::magic::DIRECTIONS::{NE, NW, SE, SW};
+use crate::move_manager::MoveManager;
 use crate::zobrist::ZobristHashHandler;
 use crate::zobrist_impl::init_zobrist;
 
@@ -191,6 +192,7 @@ pub struct Board {
 // but it can be slow to allocate so creating a full size vector and then having a counter that
 // keeps track of the available index
 // the logic here can get intricated so the custom class seems worth
+
 impl Board {
     pub(crate) fn is_check(&self) -> bool {
         // assume self.generate_moves was ran
@@ -542,9 +544,9 @@ impl Board {
     }
 
 
-    pub fn generate_moves(&mut self, captures: bool) -> Vec<Move> {
+    pub fn generate_moves(&mut self, captures: bool) -> MoveManager {
         self.update_utilities();
-        let mut moves: Vec<Move> = Vec::new(); // todo: OBstack arena allocator
+        let mut moves_manager: MoveManager = MoveManager::new(); // todo: OBstack arena allocator
         let ks = lsb(self.my_pieces.king);
 
         let cap_mask: u64;
@@ -558,35 +560,34 @@ impl Board {
             1 => {
                 let land_mask = cap_mask & self.utility.blocker_squares; // move needs to end up on one of these so this will be our land_mask
 
-                moves.extend(self.gen_king_moves(ks, captures));
+                self.gen_king_moves(ks, captures, &mut moves_manager);
 
                 // pawns
-                moves.extend(self.gen_pawns_legal(land_mask));
+                self.gen_pawns_legal(land_mask, &mut moves_manager);
 
-                moves.extend(self.gen_moves_land_mask_normal_pieces(land_mask));
+                self.gen_moves_land_mask_normal_pieces(land_mask, &mut moves_manager);
             }
             2 => {
-                return self.gen_king_moves(ks, captures);
+                self.gen_king_moves(ks, captures, &mut moves_manager);
             }
             _ => {
-                moves.extend(self.gen_king_moves(ks, captures));
-                moves.extend(self.gen_castle());
+                self.gen_king_moves(ks, captures, &mut moves_manager);
+                self.gen_castle(&mut moves_manager);
 
                 // pawns
-                moves.extend(self.gen_pawns_legal(cap_mask));
+                self.gen_pawns_legal(cap_mask, &mut moves_manager);
 
                 // normal pieces
-                moves.extend(self.gen_moves_land_mask_normal_pieces(cap_mask));
+                self.gen_moves_land_mask_normal_pieces(cap_mask, &mut moves_manager);
             }
         }
 
-        moves
+        moves_manager
     }
 
-    fn gen_moves_land_mask_normal_pieces(&mut self, land_mask: u64) -> Vec<Move> {
+    fn gen_moves_land_mask_normal_pieces(&mut self, land_mask: u64, moves_manager: &mut MoveManager) {
         // iterate over pieces then run gen_moves using land_mask
         // similarly to how we generate attacks in the update utilities
-        let mut moves: Vec<Move> = Vec::new();
         // knights
         let mut knights = self.my_pieces.knight & !self.utility.pinned;
         let mut sq = lsb(knights);
@@ -600,7 +601,7 @@ impl Board {
                 continue;
             }
 
-            moves.extend(self.gen_knight_moves(sq, land_mask));
+            self.gen_knight_moves(sq, land_mask, moves_manager);
             sq = lsb(knights);
             knights = remove_lsb(knights);
         }
@@ -610,7 +611,7 @@ impl Board {
         let mut sq = lsb(rook);
         rook = remove_lsb(rook);
         while sq != 64 {
-            moves.extend(self.gen_rook_moves(sq, land_mask));
+            self.gen_rook_moves(sq, land_mask, moves_manager);
             sq = lsb(rook);
             rook = remove_lsb(rook);
         }
@@ -620,7 +621,7 @@ impl Board {
         let mut sq = lsb(bishops);
         bishops = remove_lsb(bishops);
         while sq != 64 {
-            moves.extend(self.gen_bishop_moves(sq, land_mask));
+            self.gen_bishop_moves(sq, land_mask, moves_manager);
             sq = lsb(bishops);
             bishops = remove_lsb(bishops);
         }
@@ -630,12 +631,10 @@ impl Board {
         let mut sq = lsb(queen);
         queen = remove_lsb(queen);
         while sq != 64 {
-            moves.extend(self.gen_queen_moves(sq, land_mask));
+            self.gen_queen_moves(sq, land_mask, moves_manager);
             sq = lsb(queen);
             queen = remove_lsb(queen);
         }
-
-        moves
     }
     fn get_opponent_piece_on_square(&self, index: u8) -> PieceType {
         let sqntb = square_num_to_bitboard(index);
@@ -697,7 +696,7 @@ impl Board {
         (PieceType::Null, COLOR::WHITE)
     }
 
-    fn gen_king_moves(&self, square: u8, captures: bool) -> Vec<Move> {
+    fn gen_king_moves(&self, square: u8, captures: bool, move_manager: &mut MoveManager) {
         let legal_moves = self.gen_king_moves_bitboard(square) & (!self.utility.opponent_attack);
         let fin: u64;
         if captures {
@@ -705,14 +704,14 @@ impl Board {
         } else {
             fin = legal_moves;
         }
-        self.loop_over_moves_mask(fin, PieceType::King, square)
+        self.loop_over_moves_mask(fin, PieceType::King, square, move_manager);
     }
 
-    fn gen_knight_moves(&self, square: u8, land_mask: u64) -> Vec<Move> {
+    fn gen_knight_moves(&self, square: u8, land_mask: u64, move_manager: &mut MoveManager) {
         let legal_moves = self.gen_knight_moves_bitboard(square) & land_mask;
-        return self.loop_over_moves_mask(legal_moves, PieceType::Knight, square);
+        return self.loop_over_moves_mask(legal_moves, PieceType::Knight, square, move_manager);
     }
-    fn gen_rook_moves(&self, square: u8, mut land_mask: u64) -> Vec<Move> {
+    fn gen_rook_moves(&self, square: u8, mut land_mask: u64, move_manager: &mut MoveManager) {
         // compute land mask from pinned logic
         let sqntb = square_num_to_bitboard(square);
         let pinned = (self.utility.pinned & sqntb) != 0;
@@ -720,7 +719,7 @@ impl Board {
             let diag_pin = (self.utility.pinned_nwse & sqntb) != 0;
             let diag2_pin = (self.utility.pinned_swne & sqntb) != 0;
             if diag2_pin || diag_pin {
-                return Vec::new();
+                return;
             }
 
             let pinned_ns = (self.utility.pinned_ns & sqntb) != 0;
@@ -738,20 +737,20 @@ impl Board {
 
 
         let legal_moves = self.gen_rook_moves_bitboard(square) & land_mask;
-        return self.loop_over_moves_mask(legal_moves, PieceType::Rook, square);
+        self.loop_over_moves_mask(legal_moves, PieceType::Rook, square, move_manager)
     }
-    fn gen_bishop_moves(&self, square: u8, mut land_mask: u64) -> Vec<Move> {
+    fn gen_bishop_moves(&self, square: u8, mut land_mask: u64, move_manager: &mut MoveManager) {
         let sqntb = square_num_to_bitboard(square);
         let pinned = (self.utility.pinned & sqntb) != 0;
         if pinned {
             let pinned_ns = (self.utility.pinned_ns & sqntb) != 0;
 
             if pinned_ns {
-                return Vec::new();
+                return;
             }
             let pinned_we = (self.utility.pinned_we & sqntb) != 0;
             if pinned_we {
-                return Vec::new();
+                return;
             }
             let pinned_nwse = (self.utility.pinned_nwse & sqntb) != 0;
             let pinned_swne = (self.utility.pinned_swne & sqntb) != 0;
@@ -765,10 +764,10 @@ impl Board {
         }
 
         let legal_moves = self.gen_bishop_moves_bitboard(square) & land_mask;
-        return self.loop_over_moves_mask(legal_moves, PieceType::Bishop, square);
+        self.loop_over_moves_mask(legal_moves, PieceType::Bishop, square, move_manager);
     }
 
-    fn gen_queen_moves(&self, square: u8, mut land_mask: u64) -> Vec<Move> {
+    fn gen_queen_moves(&self, square: u8, mut land_mask: u64, move_manager: &mut MoveManager) {
         let sqntb = square_num_to_bitboard(square);
         let pinned = (self.utility.pinned & sqntb) != 0;
         if pinned {
@@ -796,13 +795,12 @@ impl Board {
         }
 
         let legal_moves = self.gen_queen_moves_bitboard(square) & land_mask;
-        return self.loop_over_moves_mask(legal_moves, PieceType::Queen, square);
+        self.loop_over_moves_mask(legal_moves, PieceType::Queen, square, move_manager);
     }
-    fn loop_over_moves_mask(&self, mut mask: u64, piece_moved: PieceType, start_square: u8) -> Vec<Move> {
-        let mut moves = Vec::new();
+    fn loop_over_moves_mask(&self, mut mask: u64, piece_moved: PieceType, start_square: u8, move_manager: &mut MoveManager) {
         let mut end_square = lsb(mask);
         while end_square != 64 {
-            moves.push(Move {
+            move_manager.add_move(Move {
                 start_square,
                 end_square,
                 piece_moved,
@@ -814,7 +812,6 @@ impl Board {
             mask = remove_lsb(mask);
             end_square = lsb(mask);
         }
-        moves
     }
 
     fn gen_queen_moves_bitboard(&self, square: u8) -> u64 {
@@ -840,9 +837,8 @@ impl Board {
     }
 
 
-    fn gen_pawns_legal(&self, land_mask: u64) -> Vec<Move> {
+    fn gen_pawns_legal(&self, land_mask: u64, mut move_manager: &mut MoveManager) {
         // pushes
-        let mut moves: Vec<Move> = Vec::new();
 
         let back_rank: u64;
         let promotion_rank: u64;
@@ -884,7 +880,7 @@ impl Board {
                     if push & promotion_rank == 0 {
                         // no promotion
                         if push & land_mask != 0 {
-                            moves.push(create_move(
+                            move_manager.add_move(create_move(
                                 sq,
                                 (sq as i32 + direction) as u8,
                                 PieceType::Pawn,
@@ -899,7 +895,7 @@ impl Board {
                             // double push
                             let double_push = square_num_to_bitboard((sq as i32 + 2 * direction) as u8);
                             if (self.utility.all_occupancy & double_push == 0) && (double_push & land_mask != 0) {
-                                moves.push(create_move(
+                                move_manager.add_move(create_move(
                                     sq,
                                     (sq as i32 + 2 * direction) as u8,
                                     PieceType::Pawn,
@@ -914,7 +910,7 @@ impl Board {
                         // promotion
                         for piece_promotion in MOVING_PIECES.iter() {
                             let piece_promotion = *piece_promotion;
-                            moves.push(create_move(
+                            move_manager.add_move(create_move(
                                 sq,
                                 (sq as i32 + direction) as u8,
                                 PieceType::Pawn,
@@ -975,7 +971,7 @@ impl Board {
 
                     if square_num_to_bitboard(capture_sq) & promotion_rank == 0 {
                         // no promotion
-                        moves.push(create_move(
+                        move_manager.add_move(create_move(
                             sq,
                             capture_sq,
                             PieceType::Pawn,
@@ -988,7 +984,7 @@ impl Board {
                         // promotion
                         for piece_promotion in MOVING_PIECES.iter() {
                             let piece_promotion = *piece_promotion;
-                            moves.push(create_move(
+                            move_manager.add_move(create_move(
                                 sq,
                                 capture_sq,
                                 PieceType::Pawn,
@@ -1027,7 +1023,7 @@ impl Board {
                         );
 
                         if self.check_legal_en_passant(&enpmov) {
-                            moves.push(enpmov);
+                            move_manager.add_move(enpmov);
                         }
                     }
                 }
@@ -1035,12 +1031,9 @@ impl Board {
             sq = lsb(pawns);
             pawns = remove_lsb(pawns);
         }
-
-
-        moves
     }
 
-    fn gen_castle(&self) -> Vec<Move> {
+    fn gen_castle(&self, mut move_manager: &mut MoveManager) {
         let mut moves: Vec<Move> = Vec::new();
         match self.color_to_move {
             COLOR::WHITE => {
@@ -1051,7 +1044,7 @@ impl Board {
                 if self.castling_rights.can_wq() {
                     if self.my_pieces.rook & WRQ_STARTPOS != 0 {
                         if (self.utility.all_occupancy & WQ_EMPTY == 0) & (self.utility.opponent_attack & WQ_ATTACK == 0) {
-                            moves.push(Move {
+                            move_manager.add_move(Move {
                                 start_square: lsb(WK_STARTPOS),
                                 end_square: coord_to_int(0, 2),
                                 piece_moved: PieceType::King,
@@ -1066,7 +1059,7 @@ impl Board {
                 if self.castling_rights.can_wk() {
                     if self.my_pieces.rook & WRK_STARTPOS != 0 {
                         if (self.utility.all_occupancy & WK_EMPTY == 0) & (self.utility.opponent_attack & WK_ATTACK == 0) {
-                            moves.push(Move {
+                            move_manager.add_move(Move {
                                 start_square: lsb(WK_STARTPOS),
                                 end_square: coord_to_int(0, 6),
                                 piece_moved: PieceType::King,
@@ -1083,7 +1076,7 @@ impl Board {
                 if self.castling_rights.can_bq() {
                     if self.my_pieces.rook & BRQ_STARTPOS != 0 {
                         if (self.utility.all_occupancy & BQ_EMPTY == 0) & (self.utility.opponent_attack & BQ_ATTACK == 0) {
-                            moves.push(Move {
+                            move_manager.add_move(Move {
                                 start_square: lsb(BK_STARTPOS),
                                 end_square: coord_to_int(7, 2),
                                 piece_moved: PieceType::King,
@@ -1099,7 +1092,7 @@ impl Board {
                 if self.castling_rights.can_bk() {
                     if self.my_pieces.rook & BRK_STARTPOS != 0 {
                         if (self.utility.all_occupancy & BK_EMPTY == 0) & (self.utility.opponent_attack & BK_ATTACK == 0) {
-                            moves.push(Move {
+                            move_manager.add_move(Move {
                                 start_square: lsb(BK_STARTPOS),
                                 end_square: coord_to_int(7, 6),
                                 piece_moved: PieceType::King,
@@ -1114,7 +1107,7 @@ impl Board {
             }
         }
 
-        moves
+
     }
 
     fn check_legal_en_passant(&self, mov: &Move) -> bool {
@@ -1209,7 +1202,8 @@ impl Board {
 
         let mut counter: u64 = 0;
 
-        for mov in moves {
+        for mov in moves.iter() {
+            let mov = *mov;
             self.make_move(mov);
             let c = self.perft(depth - 1, print_depth, bulk_count);
             counter += c;

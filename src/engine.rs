@@ -38,17 +38,7 @@ pub fn new_engine(board: Board) -> Engine {
 }
 
 
-fn move_score(m: &Move) -> i32 {
-    match m.piece_captured {
-        PieceType::Null => { 0 }
-        PieceType::Pawn => { 100 }
-        PieceType::Knight => { 300 }
-        PieceType::Bishop => { 330 }
-        PieceType::Rook => { 500 }
-        PieceType::Queen => { 900 }
-        PieceType::King => { 2500 }
-    }
-}
+
 
 impl Engine {
     pub fn search(&mut self, depth: u64, stop_hook: Arc<Mutex<bool>>) -> (i32, Move) {
@@ -156,7 +146,8 @@ impl Engine {
             }
         }
 
-        for mov in moves {
+        for mov in moves.iter() {
+            let mov = *mov;
             self.board.make_move(mov);
             let score = -self.negamax(depth - 1, -beta, -alpha, color.flip(), &stop_search).0;
             self.board.unmake_move();
@@ -197,7 +188,7 @@ impl Engine {
         }
 
         let mut moves = self.board.generate_moves(true);
-        moves.sort_by_key(move_score);
+        moves.sort();
 
         for mov in moves.iter() {
             self.board.make_move(*mov);
