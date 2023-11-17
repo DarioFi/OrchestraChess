@@ -1,5 +1,6 @@
 use crate::board::Board;
 
+#[allow(dead_code)]
 pub fn test_perft_speed() {
     println!("Starting perft speed test");
     let mut board = Board::from_startpos();

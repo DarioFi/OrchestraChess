@@ -66,22 +66,10 @@ fn main() {
     // println!("{:?}", node);
 
     let mut orchestra_director = orchestradirector::new_orchestra_director();
-    orchestra_director.eng.board = Board::from_fen("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
-    // orchestra_director.handle_command("position", "startpos moves a2a3");
-    // let hook = Arc::new(Mutex::new(false));
-    // orchestra_director.eng.negamax(6, -250000, 250000, COLOR::WHITE, &hook);
-    // exit(0);
-    // orchestra_director.handle_command("go", "");
-    // exit(0);
 
-    // use crate::tests::benchmark::test_perft_speed;
-    // test_perft_speed();
-    // exit(0);
-
-    // exit(0);
-
-    // PARTE BUONA
-    // let mut orchestra_director = orchestradirector::new_orchestra_director();
+    orchestra_director.handle_command("position", "startpos");
+    orchestra_director.handle_command("go", "depth 8");
+    exit(0);
 
     loop {
         let mut message = String::new();

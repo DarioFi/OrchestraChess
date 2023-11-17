@@ -837,7 +837,7 @@ impl Board {
     }
 
 
-    fn gen_pawns_legal(&self, land_mask: u64, mut move_manager: &mut MoveManager) {
+    fn gen_pawns_legal(&self, land_mask: u64, move_manager: &mut MoveManager) {
         // pushes
 
         let back_rank: u64;
@@ -1033,8 +1033,7 @@ impl Board {
         }
     }
 
-    fn gen_castle(&self, mut move_manager: &mut MoveManager) {
-        let mut moves: Vec<Move> = Vec::new();
+    fn gen_castle(&self, move_manager: &mut MoveManager) {
         match self.color_to_move {
             COLOR::WHITE => {
                 // if (self.my_pieces.king & WK_STARTPOS) != 0 {
@@ -1190,8 +1189,10 @@ impl Board {
         self.zobrist_stack.iter().fold(0, |acc, x| if *x == hash { acc + 1 } else { acc }) >= 3
     }
 
+    //ignore that it is unused
+    #[allow(dead_code)]
     pub fn perft(&mut self, depth: i32, print_depth: i32, bulk_count: bool) -> u64 {
-        let mut moves = self.generate_moves(false);
+        let moves = self.generate_moves(false);
 
 
         if bulk_count && depth == 1 {
@@ -1291,11 +1292,11 @@ impl Board {
         self.color_to_move = self.color_to_move.flip();
 
 
-        // let temp = self.my_pieces.clone();
-        // self.my_pieces = self.opponent_pieces.clone();
-        // self.opponent_pieces = temp;
+        let temp = self.my_pieces.clone();
+        self.my_pieces = self.opponent_pieces.clone();
+        self.opponent_pieces = temp;
 
-        (self.my_pieces, self.opponent_pieces) = (self.opponent_pieces, self.my_pieces);
+        // (self.my_pieces, self.opponent_pieces) = (self.opponent_pieces, self.my_pieces);
 
         // todo: does this actually work + check which one is faster and decide if it is worth?
         // mem::swap(&mut self.my_pieces, &mut self.opponent_pieces);
