@@ -9,7 +9,7 @@ use crate::book::OpeningBook;
 
 const MATING_SCORE: i32 = 250000;
 const BOOK_DEPTH: u64 = 20;
-const BOOK_FILE: &str = "tree.json";
+const BOOK_FILE: &str = "/home/dario/Programming/rust-chess-bot/tree.json";
 
 fn null_move() -> Move {
     create_move(0, 0, PieceType::Null, PieceType::Null, PieceType::Null, false, false)
@@ -40,8 +40,7 @@ pub fn new_engine(board: Board) -> Engine {
 
 impl Engine {
     pub fn search(&mut self, depth: u64, stop_hook: Arc<Mutex<bool>>) -> (i32, Move) {
-
-        if self.position_loaded == "startpos" {
+        if self.position_loaded == "startposA" {
             let moves = self.moves_loaded.split(" ");
             if moves.collect::<Vec<_>>().len() < BOOK_DEPTH as usize {
                 let mov = self.book.query(&self.moves_loaded);
@@ -62,7 +61,7 @@ impl Engine {
 
         for dep_it in 1..(depth + 1) {
             let dep = dep_it * 2;
-            let x = self.principal_variation(dep, -MATING_SCORE, MATING_SCORE, self.board.color_to_move, &stop_hook);
+            let x = self.principal_variation(dep, -MATING_SCORE, MATING_SCORE, &stop_hook, true);
 
             if *stop_hook.lock().unwrap() {
                 break;
@@ -91,12 +90,11 @@ impl Engine {
         return (score, best_move);
     }
 
-    pub fn negamax(&mut self, depth: u64, alpha: i32, beta: i32, color: COLOR, stop_search: &Arc<Mutex<bool>>) -> (i32, Move) {
+    pub fn negamax(&mut self, depth: u64, alpha: i32, beta: i32, stop_search: &Arc<Mutex<bool>>) -> (i32, Move) {
         if *stop_search.lock().unwrap() {
             return (0, null_move());
         }
 
-        self.node_count += 1;
 
         let hash = self.board.zobrist.hash;
         if self.board.is_3fold() {
@@ -119,6 +117,7 @@ impl Engine {
                 }
             }
         }
+        self.node_count += 1;
 
 
         if depth == 0 {
@@ -148,7 +147,7 @@ impl Engine {
         for mov in moves.iter() {
             let mov = *mov;
             self.board.make_move(mov);
-            let score = -self.negamax(depth - 1, -beta, -alpha, color.flip(), &stop_search).0;
+            let score = -self.negamax(depth - 1, -beta, -alpha,  &stop_search).0;
             self.board.unmake_move();
 
             if score > best_score {
@@ -170,13 +169,13 @@ impl Engine {
             }
         }
 
-        self.update_transposition_table(depth, best_score, best_move, is_exact);
+        // self.update_transposition_table(depth, best_score, best_move, is_exact);
 
         return (best_score, best_move);
     }
 
 
-    fn principal_variation(&mut self, depth: u64, alpha: i32, beta: i32, color: COLOR, stop_search: &Arc<Mutex<bool>>) -> (i32, Move) {
+    fn principal_variation(&mut self, depth: u64, alpha: i32, beta: i32, stop_search: &Arc<Mutex<bool>>, genuine: bool) -> (i32, Move) {
         if *stop_search.lock().unwrap() {
             return (0, null_move());
         }
@@ -218,8 +217,9 @@ impl Engine {
         let mut best_move = null_move();
         let mut best_score = -MATING_SCORE;
         let mut alpha = alpha;
-        let mut is_exact = false;
+        let mut is_exact = true;
         let mut is_first = true;
+        let mut alpha_overwritten = false;
 
         if moves.len() == 0 {
             if self.board.is_check() {
@@ -235,14 +235,12 @@ impl Engine {
             let mut score;
             if is_first {
                 is_first = false;
-                score = -self.principal_variation(depth - 1, -beta, -alpha, color.flip(), &stop_search).0;
+                score = -self.principal_variation(depth - 1, -beta, -alpha, &stop_search, true).0;
                 best_move = mov;
             } else {
-                score = -self.principal_variation(depth - 1, -alpha - 1, -alpha, color.flip(), &stop_search).0;
+                score = -self.principal_variation(depth - 1, -alpha - 1, -alpha, &stop_search, false).0;
                 if (alpha < score && score < beta) {
-                    score = -self.principal_variation(depth - 1, -beta, -alpha, color.flip(), &stop_search).0;
-                } else {
-                    is_exact = false;
+                    score = -self.principal_variation(depth - 1, -beta, -alpha, &stop_search, true).0;
                 }
             }
             self.board.unmake_move();
@@ -257,6 +255,7 @@ impl Engine {
                 }
             }
             if best_score > alpha {
+                alpha_overwritten = true;
                 alpha = best_score;
             }
 
@@ -265,7 +264,11 @@ impl Engine {
                 break;
             }
         }
-        self.update_transposition_table(depth, best_score, best_move, is_exact);
+
+        if genuine || alpha_overwritten {
+            self.update_transposition_table(depth, best_score, best_move, is_exact);
+        } else {}
+
 
         (best_score, best_move)
     }

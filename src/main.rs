@@ -67,9 +67,9 @@ fn main() {
 
     let mut orchestra_director = orchestradirector::new_orchestra_director();
 
-    orchestra_director.handle_command("position", "startpos");
-    orchestra_director.handle_command("go", "depth 8");
-    exit(0);
+    // orchestra_director.handle_command("position", "fen 3k4/1p6/1P3p1p/4p1pP/4P1P1/8/1K6/8 b - - 0 25");
+    // orchestra_director.handle_command("go", "depth 14");
+    // exit(0);
 
     loop {
         let mut message = String::new();
