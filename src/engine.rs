@@ -38,12 +38,9 @@ pub fn new_engine(board: Board) -> Engine {
 }
 
 
-
-
 impl Engine {
     pub fn search(&mut self, depth: u64, stop_hook: Arc<Mutex<bool>>) -> (i32, Move) {
-
-        if self.position_loaded == "startpos" {
+        if self.position_loaded == "startposaaa" {
             let mut moves = self.moves_loaded.split(" ");
             if moves.collect::<Vec<_>>().len() < BOOK_DEPTH as usize {
                 let mov = self.book.query(&self.moves_loaded);
@@ -64,7 +61,7 @@ impl Engine {
 
         for dep_it in 1..(depth + 1) {
             let dep = dep_it * 2;
-            let x = self.negamax(dep, -MATING_SCORE, MATING_SCORE, self.board.color_to_move, &stop_hook);
+            let x = self.principal_variation(dep, -MATING_SCORE, MATING_SCORE, self.board.color_to_move, &stop_hook);
 
             if *stop_hook.lock().unwrap() {
                 break;
@@ -129,8 +126,9 @@ impl Engine {
             return (eval, null_move());
         }
 
-        let moves;
+        let mut moves;
         moves = self.board.generate_moves(false);
+        moves.sort();
 
         let mut best_move = null_move();
         let mut best_score = -MATING_SCORE;
@@ -176,6 +174,81 @@ impl Engine {
         return (best_score, best_move);
     }
 
+
+    fn principal_variation(&mut self, depth: u64, alpha: i32, beta: i32, color: COLOR, stop_search: &Arc<Mutex<bool>>) -> (i32, Move) {
+        if *stop_search.lock().unwrap() {
+            return (0, null_move());
+        }
+
+        self.node_count += 1;
+
+        let hash = self.board.zobrist.hash;
+        if self.board.is_3fold() {
+            return (0, null_move());
+        }
+
+        // transposition for move ordering
+        if depth == 0 {
+            // let eval = self.quiescence_search(alpha, beta, 0);
+            let eval = self.board.static_evaluation();
+            return (eval, null_move());
+        }
+
+        let mut moves;
+        moves = self.board.generate_moves(false);
+        moves.sort();
+        let mut best_move = null_move();
+        let mut best_score = -MATING_SCORE;
+        let mut alpha = alpha;
+        let mut is_exact = true;
+        let mut is_first = true;
+
+        if moves.len() == 0 {
+            if self.board.is_check() {
+                return (-MATING_SCORE, null_move());
+            } else {
+                return (0, null_move());
+            }
+        }
+
+        for mov in moves.iter() {
+            let mov = *mov;
+            self.board.make_move(mov);
+            let mut score;
+            if is_first {
+                is_first = false;
+                score = -self.principal_variation(depth - 1, -beta, -alpha, color.flip(), &stop_search).0;
+                best_move = mov;
+            } else {
+                score = -self.principal_variation(depth - 1, -alpha - 1, -alpha, color.flip(), &stop_search).0;
+                if (alpha < score && score < beta) {
+                    score = -self.principal_variation(depth - 1, -beta, -alpha, color.flip(), &stop_search).0;
+                }
+            }
+            self.board.unmake_move();
+
+            if score > best_score {
+                if score > MATING_SCORE - 100 {
+                    best_score = score - 1;
+                    best_move = mov;
+                } else {
+                    best_score = score;
+                    best_move = mov;
+                }
+            }
+            if best_score > alpha {
+                alpha = best_score;
+            }
+
+            if alpha >= beta {
+                is_exact = false;
+                break;
+            }
+
+        }
+
+        (best_score, best_move)
+    }
     fn quiescence_search(&mut self, alpha: i32, beta: i32, depth: i32) -> i32 {
         self.max_selective = max(self.max_selective, depth);
         let mut eval = self.board.static_evaluation();

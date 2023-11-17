@@ -10,7 +10,6 @@ macro_rules! debug {
 use crate::timer::{start_timer, Timer};
 
 use crate::board::Board;
-use crate::book::OpeningBook;
 use crate::constants::COLOR::{BLACK, WHITE};
 
 #[path = "helpers.rs"]
