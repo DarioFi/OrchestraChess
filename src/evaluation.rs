@@ -137,13 +137,13 @@ const ROOK_SCORES_ENDGAME: [i32; 64] = [
 
 impl Board {
     pub fn static_evaluation(&self) -> i32 {
-        let mut score = 0;
+        let mut score = 0f32;
         let opponent_occupancy = self.opponent_pieces.pawns | self.opponent_pieces.knight | self.opponent_pieces.bishop | self.opponent_pieces.rook | self.opponent_pieces.queen | self.opponent_pieces.king;
         let my_occupancy = self.my_pieces.pawns | self.my_pieces.knight | self.my_pieces.bishop | self.my_pieces.rook | self.my_pieces.queen | self.my_pieces.king;
         let all_occupancy = my_occupancy | opponent_occupancy;
 
         let count = pop_count(all_occupancy) as i32;
-        let end_gameness = (32 - count) / 32;
+        let end_gameness: f32 = (32_f32 - count as f32) / 32_f32;
 
         let is_white = match self.color_to_move {
             COLOR::WHITE => { true }
@@ -151,12 +151,12 @@ impl Board {
         };
         score += self.evaluate_pos(self.my_pieces, end_gameness, is_white);
         score -= self.evaluate_pos(self.opponent_pieces, end_gameness, !is_white);
-        score
+        score as i32
     }
 
 
-    fn evaluate_pos(&self, pbb: PieceBitBoards, end_gameness: i32, is_white: bool) -> i32 {
-        let mut score = 0;
+    fn evaluate_pos(&self, pbb: PieceBitBoards, end_gameness: f32, is_white: bool) -> f32 {
+        let mut score = 0f32;
 
         score += self.ev_piece(pbb.pawns, end_gameness, is_white, 100, &PAWN_SCORES, &PAWN_SCORES_ENDGAME);
         score += self.ev_piece(pbb.bishop, end_gameness, is_white, 330, &BISHOP_SCORES, &BISHOP_SCORES_ENDGAME);
@@ -167,9 +167,9 @@ impl Board {
 
         score
     }
-    fn ev_piece(&self, square_mask: u64, end_gameness: i32, is_white: bool, piece_val: i32, table: &[i32; 64], table_endgame: &[i32; 64]) -> i32 {
+    fn ev_piece(&self, square_mask: u64, end_gameness: f32, is_white: bool, piece_val: i32, table: &[i32; 64], table_endgame: &[i32; 64]) -> f32 {
         let mut x = square_mask;
-        let mut score = 0;
+        let mut score = 0_f32;
 
         while x != 0 {
             let sq = lsb(x);
@@ -182,8 +182,8 @@ impl Board {
                 63 - sq
             };
 
-            score += piece_val;
-            score += table[sq as usize] * (1 - end_gameness) + table_endgame[sq as usize] * end_gameness;
+            score += piece_val as f32;
+            score += table[sq as usize] as f32 * (1_f32 - end_gameness) + table_endgame[sq as usize] as f32 * end_gameness;
             // Adjust the score based on endgame condition
         }
 

@@ -1034,7 +1034,6 @@ impl Board {
     }
 
     fn gen_castle(&self, mut move_manager: &mut MoveManager) {
-        let mut moves: Vec<Move> = Vec::new();
         match self.color_to_move {
             COLOR::WHITE => {
                 // if (self.my_pieces.king & WK_STARTPOS) != 0 {

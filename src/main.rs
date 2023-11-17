@@ -23,14 +23,8 @@ fn main() {
 
     let mut orchestra_director = orchestradirector::new_orchestra_director();
 
-    // orchestra_director.eng.board = from_fen("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
-    // orchestra_director.handle_command("position", "startpos moves a2a3");
-    // orchestra_director.handle_command("go", "");
-    // exit(0);
-
-    use crate::tests::benchmark::test_perft_speed;
-    test_perft_speed();
-
+    orchestra_director.handle_command("position", "startpos");
+    orchestra_director.handle_command("go", "depth 6");
     exit(0);
 
     loop {

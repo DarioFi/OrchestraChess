@@ -22,6 +22,7 @@ impl OpeningBook {
     }
 
     pub fn query(&self, moves: &str) -> Option<String> {
+        return None;
         for line in self.list_position.iter() {
             if line.trim_start().starts_with(moves.trim_start()) {
 

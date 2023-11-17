@@ -73,7 +73,6 @@ impl OrchestraDirector {
                 self.eng.moves_loaded = w[1].to_string();
             }
             self.eng.position_loaded = "startpos".to_string();
-
         } else {
             let (fen, moves) = helpers::split_fen_moves(options);
             self.init_from_fen(&fen);
@@ -106,6 +105,7 @@ impl OrchestraDirector {
         let op_list: Vec<&str> = options.split_whitespace().collect();
         let mut i = 0;
         let mut movetime: u64 = 0;
+        let mut depth: u64 = 0;
         while i < op_list.len() {
             match op_list[i] {
                 "wtime" => {
@@ -133,38 +133,46 @@ impl OrchestraDirector {
                     }
                     i += 2;
                 }
-                "depth" | "nodes"
-             => {
-                i += 2;
-            }
-            "infinite" => {
-                i += 1;
-            }
-            "movetime" => {
-                movetime = op_list[i + 1].parse().unwrap();
-                i += 2;
-            }
-            _ => {
-                i += 1;
+                "depth" => {
+                    depth = op_list[i + 1].parse().unwrap();
+                    depth /= 2;
+                    i += 2;
+                }
+                "nodes"
+                => {
+                    i += 2;
+                }
+                "infinite" => {
+                    i += 1;
+                }
+                "movetime" => {
+                    movetime = op_list[i + 1].parse().unwrap();
+                    i += 2;
+                }
+                _ => {
+                    i += 1;
+                }
             }
         }
+
+        self.timer.move_time = movetime;
+
+        if depth == 0 {
+            start_timer(self.timer.clone(), hook.clone());
+            depth = 20;
+        };
+        let res = self.eng.search(depth, hook.clone());
+        let mov = res.1;
+        let _score = res.0;
+
+        println!("bestmove {}", mov.to_uci_string());
     }
 
-    self.timer.move_time = movetime;
-    start_timer( self .timer.clone(), hook.clone());
+    fn uci_handle_stop(&self) {
+        panic!("NotImplementedError");
+    }
 
-    let res = self .eng.search(20, hook.clone());
-    let mov = res.1;
-    let _score = res.0;
-
-    println!("bestmove {}", mov.to_uci_string());
-}
-
-fn uci_handle_stop(&self) {
-    panic!("NotImplementedError");
-}
-
-fn uci_handle_quit(&self) {
-    std::process::exit(0);
-}
+    fn uci_handle_quit(&self) {
+        std::process::exit(0);
+    }
 }
