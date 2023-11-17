@@ -9,7 +9,7 @@ use crate::book::OpeningBook;
 
 const MATING_SCORE: i32 = 250000;
 const BOOK_DEPTH: u64 = 20;
-const BOOK_FILE: &str = "sorted_uci.uci";
+const BOOK_FILE: &str = "tree.json";
 
 fn null_move() -> Move {
     create_move(0, 0, PieceType::Null, PieceType::Null, PieceType::Null, false, false)
@@ -44,7 +44,7 @@ impl Engine {
     pub fn search(&mut self, depth: u64, stop_hook: Arc<Mutex<bool>>) -> (i32, Move) {
 
         if self.position_loaded == "startpos" {
-            let mut moves = self.moves_loaded.split(" ");
+            let moves = self.moves_loaded.split(" ");
             if moves.collect::<Vec<_>>().len() < BOOK_DEPTH as usize {
                 let mov = self.book.query(&self.moves_loaded);
                 if mov.is_some() {
@@ -93,7 +93,7 @@ impl Engine {
         return (score, best_move);
     }
 
-    fn negamax(&mut self, depth: u64, alpha: i32, beta: i32, color: COLOR, stop_search: &Arc<Mutex<bool>>) -> (i32, Move) {
+    pub fn negamax(&mut self, depth: u64, alpha: i32, beta: i32, color: COLOR, stop_search: &Arc<Mutex<bool>>) -> (i32, Move) {
         if *stop_search.lock().unwrap() {
             return (0, null_move());
         }
