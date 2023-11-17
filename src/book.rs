@@ -6,8 +6,6 @@ use rand::Rng;
 // pub struct OpeningBook {
 //     list_position: Vec<String>,
 // }
-
-
 // impl OpeningBook {
 //     pub fn new(path_to_file: &str) -> OpeningBook {
 //         let mut positions: Vec<String> = Vec::new();
@@ -38,6 +36,7 @@ use rand::Rng;
 // }
 
 
+// todo: add a temperature parameter and softmax.
 pub struct OpeningBook {
     root: Node,
 }
