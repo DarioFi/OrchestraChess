@@ -1,5 +1,5 @@
 from tqdm import tqdm
-
+# todo: pipeline this into a series of files
 
 with open('output.pgn', 'w') as output_file:
     with open('lichess_db_standard_rated_2016-06.pgn', 'r') as file:

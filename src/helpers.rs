@@ -23,8 +23,8 @@ pub fn lsb(x: u64) -> u8 {
 
 #[inline]
 pub fn remove_lsb(x: u64) -> u64 {
-    if x == 0{
-        return 0_u64
+    if x == 0 {
+        return 0_u64;
     }
     x & (x - 1)
 }
@@ -45,10 +45,35 @@ pub fn get_msb_masked(x: u64) -> u64 {
     1 << get_msb_index(x)
 }
 
-pub fn remove_msb(x: u64) -> u64 { // todo: arithmetic
+pub fn remove_msb(x: u64) -> u64 { // todo: is there good arithmetic
     x ^ get_msb_masked(x)
 }
 
 pub fn pop_count(x: u64) -> u32 {
     x.count_ones()
+}
+
+fn char_to_int(x: char) -> u8 {
+    match x {
+        'a' => 0,
+        'b' => 1,
+        'c' => 2,
+        'd' => 3,
+        'e' => 4,
+        'f' => 5,
+        'g' => 6,
+        'h' => 7,
+
+        _ => {
+            panic!()
+        }
+    }
+}
+
+pub fn square_string_to_int(s: &str) -> u8 {
+    // trasform a1 into 0, h8 into 63
+    let mut chars = s.chars();
+    let file = char_to_int(chars.next().unwrap());
+    let rank = chars.next().unwrap().to_digit(10).unwrap() as u8 - 1;
+    rank * 8 + file
 }

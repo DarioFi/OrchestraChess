@@ -75,7 +75,7 @@ impl OrchestraDirector {
             self.eng.position_loaded = "startpos".to_string();
 
         } else {
-            let (fen, moves) = helpers::split_fen_moves(options); // Assuming helpers module is available
+            let (fen, moves) = helpers::split_fen_moves(options);
             self.init_from_fen(&fen);
             self.execute_moves(&moves);
         }

@@ -52,6 +52,7 @@ fn move_score(m: &Move) -> i32 {
 
 impl Engine {
     pub fn search(&mut self, depth: u64, stop_hook: Arc<Mutex<bool>>) -> (i32, Move) {
+
         if self.position_loaded == "startpos" {
             let mut moves = self.moves_loaded.split(" ");
             if moves.collect::<Vec<_>>().len() < BOOK_DEPTH as usize {

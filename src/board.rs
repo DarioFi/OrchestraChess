@@ -1,10 +1,10 @@
 use std::ops::{Index, IndexMut};
 use crate::r#move::{create_move, Move};
 
-use crate::constants::{COLOR, PieceType, MASK_ONES, MOVING_PIECES};
-use crate::constants::COLOR::{WHITE, BLACK};
-use crate::helpers::{pop_count, lsb, remove_lsb};
-use crate::magic::{Magics, DIRECTIONS, DIAGONAL_DIRS, STRAIGHT_DIRS, square_num_to_bitboard, coord_to_int, coord_bit, new_magic, bitboard_to_square_num, int_to_coord};
+use crate::constants::{COLOR, MASK_ONES, MOVING_PIECES, PieceType};
+use crate::constants::COLOR::{BLACK, WHITE};
+use crate::helpers::{lsb, pop_count, remove_lsb, square_string_to_int};
+use crate::magic::{coord_bit, coord_to_int, DIAGONAL_DIRS, DIRECTIONS, Magics, new_magic, square_num_to_bitboard, STRAIGHT_DIRS};
 use crate::magic::DIRECTIONS::{NE, NW, SE, SW};
 use crate::zobrist::ZobristHashHandler;
 use crate::zobrist_impl::init_zobrist;
@@ -161,7 +161,6 @@ pub struct Board {
     utility: UtilityBitBoards,
 
     pub(crate) color_to_move: COLOR,
-    // todo: check if this is smart, set to 0 if no en passant?? idk just something that cannot give true with random checks, maybe 64
     en_passant_square: u8,
     castling_rights: CastlingRights,
 
@@ -175,6 +174,23 @@ pub struct Board {
     pub(crate) zobrist: ZobristHashHandler,
 }
 
+
+// todo: Move allocation:
+// possible ideas
+// - MovesManager object, kept in parallel with board under Engine (has access to board object if
+// needed, needs to be passed around in move gen
+// - Same but inside Board, cannot access utilities if methods are inside this object but it is
+// cleaner and perft would still be contained
+// disadvantage is that we would need to move out some logic
+
+// idea of this object is to have a method add_move which parses this move and has some logic,
+// slightly inefficient as in some points we already know whether it is a caputre or similar but
+// it might be worth the logic separation
+
+// the other thing to choose is the data structure to use for the moves, we could use a Vec<Move>
+// but it can be slow to allocate so creating a full size vector and then having a counter that
+// keeps track of the available index
+// the logic here can get intricated so the custom class seems worth
 impl Board {
     pub(crate) fn is_check(&self) -> bool {
         // assume self.generate_moves was ran
@@ -183,14 +199,6 @@ impl Board {
     }
 }
 
-
-fn square_string_to_int(s: &str) -> u8 {
-    // trasform a1 into 0, h8 into 63
-    let mut chars = s.chars();
-    let file = char_to_int(chars.next().unwrap());
-    let rank = chars.next().unwrap().to_digit(10).unwrap() as u8 - 1;
-    rank * 8 + file
-}
 
 fn empty_utility_bitboards() -> UtilityBitBoards {
     UtilityBitBoards {
@@ -209,6 +217,7 @@ fn empty_utility_bitboards() -> UtilityBitBoards {
     }
 }
 
+// region Board initialization
 impl Board {
     pub fn empty_board() -> Board {
         Board {
@@ -330,12 +339,11 @@ impl Board {
         board.init_hash();
         board
     }
-
-
     pub fn from_startpos() -> Board {
         Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk - 0 1")
     }
 }
+// endregion
 
 // region Utilities update
 impl Board {
@@ -490,23 +498,7 @@ impl Board {
 
 // endregion
 
-fn char_to_int(x: char) -> u8 {
-    match x {
-        'a' => 0,
-        'b' => 1,
-        'c' => 2,
-        'd' => 3,
-        'e' => 4,
-        'f' => 5,
-        'g' => 6,
-        'h' => 7,
-
-        _ => {
-            panic!()
-        }
-    }
-}
-
+// region Moves generation
 impl Board {
     pub fn move_from_str(&self, mov: &str) -> Move {
         let start_square = square_string_to_int(&mov[0..2]);
@@ -947,7 +939,7 @@ impl Board {
                     if direction > 0 {
                         enpmld = land_mask << direction;
                     } else {
-                        enpmld = land_mask >> (-direction); // todo verify this right direction
+                        enpmld = land_mask >> (-direction);
                     }
                     en_passant_mask = square_num_to_bitboard(self.en_passant_square) & capture_mask_pre_land_mask & enpmld;
                 } else {
@@ -1158,7 +1150,7 @@ impl Board {
         }
 
         while file >= 0 {
-            let sq = square_num_to_bitboard((mov.start_square/8) * 8 + file as u8);
+            let sq = square_num_to_bitboard((mov.start_square / 8) * 8 + file as u8);
             if self.utility.all_occupancy & sq != 0 {
                 if sq & self.opponent_pieces.rook != 0 || sq & self.opponent_pieces.queen != 0 {
                     found_slider = true;
@@ -1181,7 +1173,7 @@ impl Board {
         }
 
         while file <= 7 {
-            let sq = square_num_to_bitboard((mov.start_square/8) * 8 + file as u8);
+            let sq = square_num_to_bitboard((mov.start_square / 8) * 8 + file as u8);
             if self.utility.all_occupancy & sq != 0 {
                 if sq & self.opponent_pieces.rook != 0 || sq & self.opponent_pieces.queen != 0 {
                     found_slider = true;
@@ -1231,7 +1223,9 @@ impl Board {
         counter
     }
 }
+// endregion
 
+// region Move make-unmake
 impl Board {
     pub fn make_move(&mut self, mov: Move) {
         self.update_hash(mov);
@@ -1303,14 +1297,15 @@ impl Board {
         self.color_to_move = self.color_to_move.flip();
 
 
-        let temp = self.my_pieces.clone();
-        self.my_pieces = self.opponent_pieces.clone();
-        self.opponent_pieces = temp;
+        // let temp = self.my_pieces.clone();
+        // self.my_pieces = self.opponent_pieces.clone();
+        // self.opponent_pieces = temp;
+
+        (self.my_pieces, self.opponent_pieces) = (self.opponent_pieces, self.my_pieces);
 
         // todo: does this actually work + check which one is faster and decide if it is worth?
         // mem::swap(&mut self.my_pieces, &mut self.opponent_pieces);
     }
-
 
     fn make_simple_move(&mut self, mov: Move) {
         // a simple move is a move where piece a moves to square b and might capture something
@@ -1325,6 +1320,7 @@ impl Board {
             self.opponent_pieces[mov.piece_captured] &= !square_num_to_bitboard(mov.end_square);
         }
     }
+
     fn make_castling_move(&mut self, mov: Move) {
         let rank: u8;
         match self.color_to_move {
@@ -1407,6 +1403,7 @@ impl Board {
             _ => {}
         }
     }
+
     fn unmake_castling_move(&mut self, mov: Move) {
         let rank: u8;
         match self.color_to_move {
@@ -1430,6 +1427,7 @@ impl Board {
             self.my_pieces.king |= square_num_to_bitboard(coord_to_int(rank, 4));
         }
     }
+
     fn unmake_simple_move(&mut self, mov: Move) {
         // a simple move is a move where piece a moves to square b and might capture something
         // or not. It is not a castling move or an en passant move
@@ -1444,3 +1442,4 @@ impl Board {
         }
     }
 }
+// endregion

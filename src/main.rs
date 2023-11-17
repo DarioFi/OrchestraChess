@@ -11,6 +11,7 @@ mod zobrist_impl;
 mod timer;
 mod tests;
 mod book;
+mod move_manager;
 
 
 use std::{io, process::exit};
@@ -27,10 +28,10 @@ fn main() {
     // orchestra_director.handle_command("go", "");
     // exit(0);
 
-    // use crate::tests::benchmark::test_perft_speed;
-    // test_perft_speed();
-    //
-    // exit(0);
+    use crate::tests::benchmark::test_perft_speed;
+    test_perft_speed();
+
+    exit(0);
 
     loop {
         let mut message = String::new();

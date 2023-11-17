@@ -17,11 +17,6 @@ pub const fn square_num_to_bitboard(square: u8) -> u64 {
 }
 
 
-pub fn bitboard_to_square_num(x: u64) -> u8 {
-    lsb(x)
-}
-
-
 pub fn int_to_coord(square: u8) -> (u8, u8) {
     (square / 8, square % 8)
 }
@@ -54,6 +49,13 @@ pub fn hash_on_mask(key: u64, mask: u64) -> u64 {
     result
 }
 
+/*
+mask 000111100001111
+key  101101010001110
+res  10101110
+ */
+
+
 pub fn inverse_hash_on_mask(result: u64, mask: u64) -> u64 {
     let mut original_key: u64 = 0;
     let mut _result = result;
@@ -71,8 +73,6 @@ pub fn inverse_hash_on_mask(result: u64, mask: u64) -> u64 {
 
     original_key
 }
-
-// derive clone and copy
 
 fn new_direction_magic() -> DirectionMagic {
     DirectionMagic {
@@ -208,14 +208,8 @@ fn new_direction_mask() -> DirectionMasks {
     }
 }
 
-fn array() -> [u64; 64] {
-    let mut arr = [0; 64];
-    for i in 0..64 {
-        arr[i] = 0;
-    }
-    arr
-}
 
+// todo: define a macro for this (it exists for rust 2021 but not for 2018)
 fn array_vec() -> [Vec<u64>; 64] {
     // initialize empty array of vecs
     let arr: [Vec<u64>; 64] = [vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], ];
@@ -231,20 +225,20 @@ fn array_vec_dm() -> [DirectionMagic; 64] {
 
 pub fn new_magic() -> Magics {
     let mut mag = Magics {
-        king_magic: array(),
-        knight_magic: array(),
+        king_magic: [0; 64],
+        knight_magic: [0; 64],
         rook_magic: array_vec(),
         bishop_magic: array_vec(),
 
         direction_magic: array_vec_dm(),
 
-        rook_full_masks: array(),
-        rook_partial_masks: array(),
-        bishop_full_masks: array(),
-        bishop_partial_masks: array(),
+        rook_full_masks: [0; 64],
+        rook_partial_masks: [0; 64],
+        bishop_full_masks: [0; 64],
+        bishop_partial_masks: [0; 64],
         direction_full_masks: new_direction_mask(),
-        pawn_captures_white: array(),
-        pawn_captures_black: array(),
+        pawn_captures_white: [0; 64],
+        pawn_captures_black: [0; 64],
         direction_partial_masks: new_direction_mask(),
     };
     mag.init();

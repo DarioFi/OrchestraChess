@@ -1,9 +1,4 @@
 mod move_gen_test;
 
-pub(crate) mod benchmark;
+pub mod benchmark;
 
-
-fn main() {
-
-    benchmark::test_perft_speed();
-}
