@@ -41,6 +41,7 @@ pub struct Move {
     pub(crate) promotion: PieceType,
     pub(crate) is_castling: bool,
     pub(crate) is_en_passant: bool,
+    pub(crate) is_check: bool,
 }
 
 impl Move {
@@ -66,5 +67,7 @@ pub fn create_move(start_square: u8, end_square: u8, piece_moved: PieceType, pie
         promotion,
         is_castling,
         is_en_passant,
+        is_check: false,
     }
 }
+

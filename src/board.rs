@@ -62,7 +62,7 @@ impl IndexMut<PieceType> for PieceBitBoards {
 }
 
 
-struct UtilityBitBoards {
+pub struct UtilityBitBoards {
     my_occupancy: u64,
     opponent_occupancy: u64,
     all_occupancy: u64,
@@ -86,6 +86,11 @@ struct UtilityBitBoards {
     opponent_queen_attacks: u64,
     opponent_king_attacks: u64,
 
+    pub checking_pawn: u64,
+    pub checking_knight: u64,
+    pub checking_bishop: u64,
+    pub checking_rook: u64,
+    pub checking_queen: u64,
 }
 
 #[repr(transparent)]
@@ -209,7 +214,7 @@ impl Board {
 }
 
 
-fn empty_utility_bitboards() -> UtilityBitBoards {
+pub fn empty_utility_bitboards() -> UtilityBitBoards {
     UtilityBitBoards {
         my_occupancy: 0,
         opponent_occupancy: 0,
@@ -222,6 +227,7 @@ fn empty_utility_bitboards() -> UtilityBitBoards {
         pinned_nwse: 0,
         pinned_swne: 0,
         my_attack: 0,
+
         sq_attacked_by_oppo: 0,
         opponent_pawn_attacks: 0,
         opponent_knight_attacks: 0,
@@ -229,6 +235,11 @@ fn empty_utility_bitboards() -> UtilityBitBoards {
         opponent_rook_attacks: 0,
         opponent_queen_attacks: 0,
         opponent_king_attacks: 0,
+        checking_pawn: 0,
+        checking_knight: 0,
+        checking_bishop: 0,
+        checking_rook: 0,
+        checking_queen: 0,
     }
 }
 
@@ -369,6 +380,7 @@ impl Board {
 
         self.update_pinned_checkers();
         self.update_attacked_squares();
+        self.update_checking_squares();
     }
 
     fn update_pinned_checkers(&mut self) {
@@ -457,7 +469,6 @@ impl Board {
         self.utility.opponent_king_attacks = 0;
 
 
-
         // king
         let sq = lsb(self.opponent_pieces.king);
         self.utility.opponent_king_attacks |= self.gen_king_moves_bitboard(sq);
@@ -518,7 +529,15 @@ impl Board {
         }
 
         self.utility.sq_attacked_by_oppo = self.utility.opponent_pawn_attacks | self.utility.opponent_knight_attacks | self.utility.opponent_bishop_attacks | self.utility.opponent_rook_attacks | self.utility.opponent_queen_attacks | self.utility.opponent_king_attacks;
+    }
 
+    fn update_checking_squares(&mut self) {
+        let king_square = lsb(self.opponent_pieces.king);
+        self.utility.checking_knight = self.magics.get_knight_moves(king_square);
+        self.utility.checking_pawn = self.magics.get_pawn_captures(king_square, self.color_to_move);
+        self.utility.checking_bishop = self.magics.get_bishop_moves(king_square, self.utility.all_occupancy);
+        self.utility.checking_rook = self.magics.get_rook_moves(king_square, self.utility.all_occupancy);
+        self.utility.checking_queen = self.utility.checking_bishop | self.utility.checking_rook;
     }
 }
 
@@ -568,13 +587,19 @@ impl Board {
     }
 
 
-    pub fn generate_moves(&mut self, captures: bool) -> MoveManager {
+    pub fn generate_moves(&mut self, only_forcing: bool) -> MoveManager {
+
+        // if in checks, ignores only_forcing
+
         self.update_utilities();
         let mut moves_manager: MoveManager = MoveManager::new();
+
+        moves_manager.update_checkers(&self.utility);
+
         let ks = lsb(self.my_pieces.king);
 
         let cap_mask: u64;
-        if captures {
+        if only_forcing {
             cap_mask = self.utility.opponent_occupancy;
         } else {
             cap_mask = MASK_ONES;
@@ -584,38 +609,49 @@ impl Board {
             1 => {
                 let land_mask = cap_mask & self.utility.blocker_squares; // move needs to end up on one of these so this will be our land_mask
 
-                self.gen_king_moves(ks, captures, &mut moves_manager);
+                self.gen_king_moves(ks, false, &mut moves_manager);
 
-                self.gen_pawns_legal(land_mask, &mut moves_manager);
+                self.gen_pawns_legal(land_mask, false, &mut moves_manager);
 
-                self.gen_moves_land_mask_normal_pieces(land_mask, &mut moves_manager);
+                self.gen_moves_land_mask_normal_pieces(land_mask, false, &mut moves_manager);
             }
             2 => {
-                self.gen_king_moves(ks, captures, &mut moves_manager);
+                self.gen_king_moves(ks, false, &mut moves_manager);
             }
             _ => {
-                self.gen_king_moves(ks, captures, &mut moves_manager);
+                self.gen_king_moves(ks, only_forcing, &mut moves_manager);
 
-                self.gen_castle(&mut moves_manager);
+
+                if !only_forcing { // ignore castling with check
+                    self.gen_castle(&mut moves_manager);
+                }
 
                 // pawns
-                self.gen_pawns_legal(cap_mask, &mut moves_manager);
+                self.gen_pawns_legal(cap_mask, only_forcing, &mut moves_manager);
 
                 // normal pieces
-                self.gen_moves_land_mask_normal_pieces(cap_mask, &mut moves_manager);
+                self.gen_moves_land_mask_normal_pieces(cap_mask, only_forcing, &mut moves_manager);
             }
         }
 
         moves_manager
     }
 
-    fn gen_moves_land_mask_normal_pieces(&mut self, land_mask: u64, moves_manager: &mut MoveManager) {
+    fn gen_moves_land_mask_normal_pieces(&mut self, land_mask: u64, only_forcing: bool, moves_manager: &mut MoveManager) {
         // iterate over pieces then run gen_moves using land_mask
         // similarly to how we generate attacks in the update utilities
         // knights
         let mut knights = self.my_pieces.knight & !self.utility.pinned;
         let mut sq = lsb(knights);
         knights = remove_lsb(knights);
+
+        let knight_lm;
+        if only_forcing {
+            knight_lm = land_mask | self.utility.checking_knight;
+        } else {
+            knight_lm = land_mask;
+        }
+
         while sq != 64 {
 
             // if pinned skip
@@ -625,7 +661,7 @@ impl Board {
                 continue;
             }
 
-            self.gen_knight_moves(sq, land_mask, moves_manager);
+            self.gen_knight_moves(sq, knight_lm, moves_manager);
             sq = lsb(knights);
             knights = remove_lsb(knights);
         }
@@ -634,8 +670,16 @@ impl Board {
         let mut rook = self.my_pieces.rook;
         let mut sq = lsb(rook);
         rook = remove_lsb(rook);
+
+        let rook_lm;
+        if only_forcing {
+            rook_lm = land_mask | self.utility.checking_rook;
+        } else {
+            rook_lm = land_mask;
+        }
+
         while sq != 64 {
-            self.gen_rook_moves(sq, land_mask, moves_manager);
+            self.gen_rook_moves(sq, rook_lm, moves_manager);
             sq = lsb(rook);
             rook = remove_lsb(rook);
         }
@@ -644,8 +688,16 @@ impl Board {
         let mut bishops = self.my_pieces.bishop;
         let mut sq = lsb(bishops);
         bishops = remove_lsb(bishops);
+
+        let bishop_lm;
+        if only_forcing {
+            bishop_lm = land_mask | self.utility.checking_bishop;
+        } else {
+            bishop_lm = land_mask;
+        }
+
         while sq != 64 {
-            self.gen_bishop_moves(sq, land_mask, moves_manager);
+            self.gen_bishop_moves(sq, bishop_lm, moves_manager);
             sq = lsb(bishops);
             bishops = remove_lsb(bishops);
         }
@@ -654,8 +706,16 @@ impl Board {
         let mut queen = self.my_pieces.queen;
         let mut sq = lsb(queen);
         queen = remove_lsb(queen);
+
+        let queen_lm;
+        if only_forcing {
+            queen_lm = land_mask | self.utility.checking_queen;
+        } else {
+            queen_lm = land_mask;
+        }
+
         while sq != 64 {
-            self.gen_queen_moves(sq, land_mask, moves_manager);
+            self.gen_queen_moves(sq, queen_lm, moves_manager);
             sq = lsb(queen);
             queen = remove_lsb(queen);
         }
@@ -720,16 +780,17 @@ impl Board {
         (PieceType::Null, COLOR::WHITE)
     }
 
-    fn gen_king_moves(&self, square: u8, captures: bool, move_manager: &mut MoveManager) {
+    fn gen_king_moves(&self, square: u8, only_forcing: bool, move_manager: &mut MoveManager) {
         let legal_moves = self.gen_king_moves_bitboard(square) & (!self.utility.sq_attacked_by_oppo);
-        let fin: u64;
+        let land_mask: u64;
+
         //todo: why not passing land mask instead of a bool
-        if captures {
-            fin = legal_moves & self.utility.opponent_occupancy;
+        if only_forcing {
+            land_mask = legal_moves & self.utility.opponent_occupancy;
         } else {
-            fin = legal_moves;
+            land_mask = legal_moves;
         }
-        self.loop_over_moves_mask(fin, PieceType::King, square, move_manager);
+        self.loop_over_moves_mask(land_mask, PieceType::King, square, move_manager);
     }
 
     fn gen_knight_moves(&self, square: u8, land_mask: u64, move_manager: &mut MoveManager) {
@@ -825,15 +886,15 @@ impl Board {
     fn loop_over_moves_mask(&self, mut mask: u64, piece_moved: PieceType, start_square: u8, move_manager: &mut MoveManager) {
         let mut end_square = lsb(mask);
         while end_square != 64 {
-            move_manager.add_move(Move {
+            move_manager.add_move(create_move(
                 start_square,
                 end_square,
                 piece_moved,
-                piece_captured: self.get_opponent_piece_on_square(end_square),
-                promotion: PieceType::Null,
-                is_castling: false,
-                is_en_passant: false,
-            });
+                self.get_opponent_piece_on_square(end_square),
+                PieceType::Null,
+                false,
+                false,
+            ));
             mask = remove_lsb(mask);
             end_square = lsb(mask);
         }
@@ -862,12 +923,16 @@ impl Board {
     }
 
 
-    fn gen_pawns_legal(&self, land_mask: u64, move_manager: &mut MoveManager) {
+    fn gen_pawns_legal(&self, mut land_mask: u64, only_forcing: bool, move_manager: &mut MoveManager) {
         // pushes
 
         let back_rank: u64;
         let promotion_rank: u64;
         let direction: i32; // signed because it can be subtracted
+
+        if only_forcing {
+            land_mask |= self.utility.checking_pawn;
+        }
 
         match self.color_to_move {
             WHITE => {
@@ -991,8 +1056,6 @@ impl Board {
                 let mut capture_sq = lsb(capture_mask);
                 capture_mask = remove_lsb(capture_mask);
                 while capture_sq != 64 {
-
-
                     if square_num_to_bitboard(capture_sq) & promotion_rank == 0 {
                         // no promotion
                         move_manager.add_move(create_move(
@@ -1067,30 +1130,30 @@ impl Board {
                 if self.castling_rights.can_wq() {
                     if self.my_pieces.rook & WRQ_STARTPOS != 0 {
                         if (self.utility.all_occupancy & WQ_EMPTY == 0) & (self.utility.sq_attacked_by_oppo & WQ_ATTACK == 0) {
-                            move_manager.add_move(Move {
-                                start_square: lsb(WK_STARTPOS),
-                                end_square: coord_to_int(0, 2),
-                                piece_moved: PieceType::King,
-                                piece_captured: PieceType::Null,
-                                promotion: PieceType::Null,
-                                is_castling: true,
-                                is_en_passant: false,
-                            })
+                            move_manager.add_move(create_move(
+                                lsb(WK_STARTPOS),
+                                coord_to_int(0, 2),
+                                PieceType::King,
+                                PieceType::Null,
+                                PieceType::Null,
+                                true,
+                                false)
+                            )
                         }
                     }
                 }
                 if self.castling_rights.can_wk() {
                     if self.my_pieces.rook & WRK_STARTPOS != 0 {
                         if (self.utility.all_occupancy & WK_EMPTY == 0) & (self.utility.sq_attacked_by_oppo & WK_ATTACK == 0) {
-                            move_manager.add_move(Move {
-                                start_square: lsb(WK_STARTPOS),
-                                end_square: coord_to_int(0, 6),
-                                piece_moved: PieceType::King,
-                                piece_captured: PieceType::Null,
-                                promotion: PieceType::Null,
-                                is_castling: true,
-                                is_en_passant: false,
-                            })
+                            move_manager.add_move(create_move(
+                                lsb(WK_STARTPOS),
+                                coord_to_int(0, 6),
+                                PieceType::King,
+                                PieceType::Null,
+                                PieceType::Null,
+                                true,
+                                false)
+                            )
                         }
                     }
                 }
@@ -1099,15 +1162,15 @@ impl Board {
                 if self.castling_rights.can_bq() {
                     if self.my_pieces.rook & BRQ_STARTPOS != 0 {
                         if (self.utility.all_occupancy & BQ_EMPTY == 0) & (self.utility.sq_attacked_by_oppo & BQ_ATTACK == 0) {
-                            move_manager.add_move(Move {
-                                start_square: lsb(BK_STARTPOS),
-                                end_square: coord_to_int(7, 2),
-                                piece_moved: PieceType::King,
-                                piece_captured: PieceType::Null,
-                                promotion: PieceType::Null,
-                                is_castling: true,
-                                is_en_passant: false,
-                            })
+                            move_manager.add_move(create_move(
+                                lsb(BK_STARTPOS),
+                                coord_to_int(7, 2),
+                                PieceType::King,
+                                PieceType::Null,
+                                PieceType::Null,
+                                true,
+                                false)
+                            )
                         }
                     }
                 }
@@ -1115,22 +1178,20 @@ impl Board {
                 if self.castling_rights.can_bk() {
                     if self.my_pieces.rook & BRK_STARTPOS != 0 {
                         if (self.utility.all_occupancy & BK_EMPTY == 0) & (self.utility.sq_attacked_by_oppo & BK_ATTACK == 0) {
-                            move_manager.add_move(Move {
-                                start_square: lsb(BK_STARTPOS),
-                                end_square: coord_to_int(7, 6),
-                                piece_moved: PieceType::King,
-                                piece_captured: PieceType::Null,
-                                promotion: PieceType::Null,
-                                is_castling: true,
-                                is_en_passant: false,
-                            })
+                            move_manager.add_move(create_move(
+                                lsb(BK_STARTPOS),
+                                coord_to_int(7, 6),
+                                PieceType::King,
+                                PieceType::Null,
+                                PieceType::Null,
+                                true,
+                                false)
+                            )
                         }
                     }
                 }
             }
         }
-
-
     }
 
     fn check_legal_en_passant(&self, mov: &Move) -> bool {

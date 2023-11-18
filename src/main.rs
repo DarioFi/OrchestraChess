@@ -68,11 +68,15 @@ fn main() {
     let mut orchestra_director = orchestradirector::new_orchestra_director();
     // orchestra_director.handle_command("position", "startpos moves e2e4 e7e5 g1f3 b8c6 f1b5 c6d4 b5c4 d4b3 c4b3 d7d5 e4d5 c7c6 d5c6 d8d1 c6b");
 
-    // orchestra_director.handle_command("position", "6qk/6pp/8/8/8/n3n3/8/1Q1Q3K w - - 0 1");
-    // println!("{}", orchestra_director.eng.board.static_evaluation());
-    // let x = orchestra_director.eng.quiescence_search(-250000, 250000, 0);
-    // println!("{}", x);
-    // exit(0);
+    orchestra_director.handle_command("position", "fen rn1q1rk1/pp3pp1/1b3n1p/3p4/PP2p3/1QPP1N1P/5PP1/RNB2RK1 w - - 0 14");
+    let start = std::time::Instant::now();
+
+    orchestra_director.handle_command("go", "depth 7");
+
+    // print time
+    let duration = start.elapsed();
+    println!("Time elapsed in expensive_function() is: {:?}", duration);
+    exit(0);
     // orchestra_director.handle_command("go", "depth 14");
 
     loop {
