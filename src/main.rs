@@ -68,10 +68,12 @@ fn main() {
     let mut orchestra_director = orchestradirector::new_orchestra_director();
     // orchestra_director.handle_command("position", "startpos moves e2e4 e7e5 g1f3 b8c6 f1b5 c6d4 b5c4 d4b3 c4b3 d7d5 e4d5 c7c6 d5c6 d8d1 c6b");
 
-    // orchestra_director.handle_command("position", "fen 3k4/1p6/1P3p1p/4p1pP/4P1P1/8/1K6/8 b - - 0 25");
-    // orchestra_director.handle_command("position", "fen 8/8/5Kp1/8/4q3/3k4/8/8 b - - 3 55");
-    // orchestra_director.handle_command("go", "depth 14");
+    // orchestra_director.handle_command("position", "6qk/6pp/8/8/8/n3n3/8/1Q1Q3K w - - 0 1");
+    // println!("{}", orchestra_director.eng.board.static_evaluation());
+    // let x = orchestra_director.eng.quiescence_search(-250000, 250000, 0);
+    // println!("{}", x);
     // exit(0);
+    // orchestra_director.handle_command("go", "depth 14");
 
     loop {
         let mut message = String::new();

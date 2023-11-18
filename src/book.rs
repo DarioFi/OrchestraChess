@@ -7,8 +7,8 @@ use rand::rngs::StdRng;
 use core::option::{Option::None, Option::Some};
 
 const USE_BEST_MOVE: bool = true;
+const USE_BOOK: bool = true;
 
-// todo: add a temperature parameter and softmax.
 pub struct OpeningBook {
     root: Node,
     seed: Option<u64>
@@ -31,6 +31,9 @@ impl OpeningBook {
     }
 
     pub fn query(&self, moves: &str) -> Option<String> {
+        if !USE_BOOK{
+            return None;
+        }
         let mut current_node = &self.root;
         for mov in moves.split_whitespace() {
             let mut found = false;

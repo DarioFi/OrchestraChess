@@ -28,6 +28,7 @@ pub struct Engine {
     pub book: OpeningBook,
     pub position_loaded: String,
     pub moves_loaded: String,
+    curr_max_depth: i32,
 }
 
 pub fn new_engine(board: Board) -> Engine {
@@ -39,6 +40,7 @@ pub fn new_engine(board: Board) -> Engine {
         book: OpeningBook::new(BOOK_FILE),
         position_loaded: "".to_string(),
         moves_loaded: "".to_string(),
+        curr_max_depth: 0,
     }
 }
 
@@ -72,8 +74,9 @@ impl Engine {
 
         println!("max time {}", max_time);
 
-        for dep_it in 1..(depth + 1) {
-            let dep = dep_it * 2;
+        for dep in 1..(depth + 1) {
+            self.curr_max_depth = dep as i32;
+
             let pv_result = self.principal_variation(dep, -MATING_SCORE, MATING_SCORE, &stop_hook, true, true);
 
             if *stop_hook.lock().unwrap() {
@@ -232,14 +235,15 @@ impl Engine {
         }
 
 
-        if is_root {
-            println!("Trasposition retrieved? {}", retrieved_hash);
-            println!("{}", old_move.to_uci_string());
-        }
-
         //todo: check this
         if self.board.is_3fold() {
             return (0, null_move());
+        }
+
+        if depth == 0 {
+            let eval = self.quiescence_search(-MATING_SCORE, MATING_SCORE, 0);
+            // let eval = self.board.static_evaluation();
+            return (eval, null_move());
         }
 
         let mut moves;
@@ -251,11 +255,7 @@ impl Engine {
                 return (0, null_move());
             }
         }
-        if depth == 0 {
-            // let eval = self.quiescence_search(alpha, beta, 0);
-            let eval = self.board.static_evaluation();
-            return (eval, null_move());
-        }
+
 
         let mut best_move = null_move();
         let mut best_score = -MATING_SCORE;
@@ -274,9 +274,6 @@ impl Engine {
             self.board.make_move(mov);
             let mut score;
             if has_first_not_been_completed {
-                if is_root {
-                    println!("{}", mov.to_uci_string());
-                }
                 score = -self.principal_variation(depth - 1, -beta, -alpha, &stop_search, true, false).0;
                 best_move = mov;
             } else {
@@ -325,30 +322,53 @@ impl Engine {
     }
 
 
-    fn quiescence_search(&mut self, alpha: i32, beta: i32, depth: i32) -> i32 {
+    pub(crate) fn quiescence_search(&mut self, mut alpha: i32, beta: i32, depth: i32) -> i32 {
         self.max_selective = max(self.max_selective, depth);
-        let mut eval = self.board.static_evaluation();
-        let mut alpha = alpha;
+
+        let mut moves = self.board.generate_moves(true);
+        if self.board.is_check() {
+            moves = self.board.generate_moves(false);
+            if moves.len() == 0 {
+                return -MATING_SCORE;
+            }
+        }
+
+        let eval = self.board.static_evaluation();
+        if depth > self.curr_max_depth {
+            return eval;
+        }
+
         if eval > beta {
-            return beta;
+            return eval;
         }
         if eval > alpha {
             alpha = eval;
         }
 
-        let mut moves = self.board.generate_moves(true);
-        moves.sort();
 
+
+        // we are ignoring stalemates in quiescence search!
+        // } else {
+        //     if moves.len() == 0 {
+        //         let moves_total = self.board.generate_moves(false);
+        //         if moves_total.len() == 0 {
+        //             return 0;
+        //         }
+        //     }
+        // }
+
+        moves.sort();
         for mov in moves.iter() {
             self.board.make_move(*mov);
-            eval = -self.quiescence_search(-beta, -alpha, depth + 1);
+            let eval = -self.quiescence_search(-beta, -alpha, depth + 1);
             self.board.unmake_move();
 
-            if eval >= beta {
-                return beta;
-            }
             if eval > alpha {
                 alpha = eval;
+            }
+
+            if alpha >= beta {
+                break;
             }
         }
         alpha
