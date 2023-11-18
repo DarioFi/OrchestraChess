@@ -45,7 +45,7 @@ pub fn new_engine(board: Board) -> Engine {
 
 impl Engine {
     pub fn search(&mut self, depth: u64, max_time: u128) -> (i32, Move) {
-        if self.position_loaded == "startposa" {
+        if self.position_loaded == "startpos" {
             let moves = self.moves_loaded.split(" ");
             if moves.collect::<Vec<_>>().len() < BOOK_DEPTH as usize {
                 let mov = self.book.query(&self.moves_loaded);
@@ -74,14 +74,22 @@ impl Engine {
 
         for dep_it in 1..(depth + 1) {
             let dep = dep_it * 2;
-            let x = self.principal_variation(dep, -MATING_SCORE, MATING_SCORE, &stop_hook, true);
+            let pv_result = self.principal_variation(dep, -MATING_SCORE, MATING_SCORE, &stop_hook, true, true);
 
             if *stop_hook.lock().unwrap() {
-                break;
+                if pv_result.1 == null_move() {
+                    println!("Wasted iterative");
+                    break;
+                } else {
+                    println!("Used iterative");
+                    best_move = pv_result.1;
+                    score = pv_result.0;
+                    break;
+                }
             }
 
-            best_move = x.1;
-            score = x.0;
+            best_move = pv_result.1;
+            score = pv_result.0;
             let score_string;
             if score > MATING_SCORE - 100 {
                 score_string = format!("mate {}", (MATING_SCORE - score + 1) / 2);
@@ -194,16 +202,17 @@ impl Engine {
     */
 
 
-    fn principal_variation(&mut self, depth: u64, alpha: i32, beta: i32, stop_search: &Arc<Mutex<bool>>, genuine: bool) -> (i32, Move) {
-
+    fn principal_variation(&mut self, depth: u64, alpha: i32, beta: i32, stop_search: &Arc<Mutex<bool>>, genuine: bool, is_root: bool) -> (i32, Move) {
         if *stop_search.lock().unwrap() {
             return (0, null_move());
         }
         self.node_count += 1;
+        let retrieved_hash: bool;
 
         let mut old_move: Move = null_move();
         let hash = self.board.zobrist.hash;
         if self.transposition_table.contains_key(&hash) {
+            retrieved_hash = true;
             let result = self.transposition_table[&hash];
             let old_depth = result.0;
             let old_score = result.1;
@@ -218,6 +227,14 @@ impl Engine {
                     return (old_score, old_move);
                 }
             }
+        } else {
+            retrieved_hash = false;
+        }
+
+
+        if is_root {
+            println!("Trasposition retrieved? {}", retrieved_hash);
+            println!("{}", old_move.to_uci_string());
         }
 
         //todo: check this
@@ -244,27 +261,42 @@ impl Engine {
         let mut best_score = -MATING_SCORE;
         let mut alpha = alpha;
         let mut is_exact = true;
-        let mut is_first = true;
+        let mut has_first_not_been_completed = true;
         let mut alpha_overwritten = false;
+
         moves.sort();
-        if old_move != null_move() {
-            // moves.add_priority_move(old_move);
+        if retrieved_hash {
+            moves.add_priority_move(old_move);
         }
+
         for mov in moves.iter() {
             let mov = *mov;
             self.board.make_move(mov);
             let mut score;
-            if is_first {
-                is_first = false;
-                score = -self.principal_variation(depth - 1, -beta, -alpha, &stop_search, true).0;
+            if has_first_not_been_completed {
+                if is_root {
+                    println!("{}", mov.to_uci_string());
+                }
+                score = -self.principal_variation(depth - 1, -beta, -alpha, &stop_search, true, false).0;
                 best_move = mov;
             } else {
-                score = -self.principal_variation(depth - 1, -alpha - 1, -alpha, &stop_search, false).0;
+                score = -self.principal_variation(depth - 1, -alpha - 1, -alpha, &stop_search, false, false).0;
                 if (alpha < score && score < beta) {
-                    score = -self.principal_variation(depth - 1, -beta, -alpha, &stop_search, true).0;
+                    score = -self.principal_variation(depth - 1, -beta, -alpha, &stop_search, true, false).0;
                 }
             }
             self.board.unmake_move();
+
+            if *stop_search.lock().unwrap() {
+                if !has_first_not_been_completed && is_root && retrieved_hash {
+                    assert_ne!(best_move, null_move());
+                    return (best_score, best_move);
+                } else {
+                    return (0, null_move());
+                }
+            }
+
+            has_first_not_been_completed = false;
 
             if score > best_score {
                 if score > MATING_SCORE - 100 {
