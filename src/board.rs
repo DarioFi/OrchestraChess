@@ -526,7 +526,7 @@ impl Board {
             is_castling = false
         }
         let is_enpassant;
-        if piece_moved == PieceType::Pawn && end_square == self.en_passant_square {
+        if piece_moved == PieceType::Pawn && end_square == self.en_passant_square && self.en_passant_square != 0 {
             is_enpassant = true;
         } else {
             is_enpassant = false;
