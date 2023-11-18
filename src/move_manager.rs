@@ -12,7 +12,7 @@ fn move_score(m: &Move) -> i32 {
         PieceType::King => { 2500 }
     }
 }
-
+// todo: OBstack arena allocator
 pub struct MoveManager {
     quiet_moves: Vec<Move>,
     capture_moves: Vec<Move>,
