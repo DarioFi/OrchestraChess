@@ -4,12 +4,15 @@ use crate::constants::{COLOR, PieceType};
 use crate::r#move::{Move, create_move};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use std::thread::JoinHandle;
 use crate::book::OpeningBook;
+use crate::timer::start_timer_maximum_allocable;
 
 
 const MATING_SCORE: i32 = 250000;
 const BOOK_DEPTH: u64 = 20;
 const BOOK_FILE: &str = "/home/dario/Programming/rust-chess-bot/tree.json";
+const TIME_ELAPSED_ITERATIVE_DEEPENING: f32 = 0.5;
 
 fn null_move() -> Move {
     create_move(0, 0, PieceType::Null, PieceType::Null, PieceType::Null, false, false)
@@ -39,9 +42,8 @@ pub fn new_engine(board: Board) -> Engine {
 
 
 impl Engine {
-    pub fn search(&mut self, depth: u64, stop_hook: Arc<Mutex<bool>>) -> (i32, Move) {
-        
-        if self.position_loaded == "startposA" {
+    pub fn search(&mut self, depth: u64, max_time: u128) -> (i32, Move) {
+        if self.position_loaded == "startposa" {
             let moves = self.moves_loaded.split(" ");
             if moves.collect::<Vec<_>>().len() < BOOK_DEPTH as usize {
                 let mov = self.book.query(&self.moves_loaded);
@@ -54,11 +56,19 @@ impl Engine {
 
         self.transposition_table = HashMap::new(); // todo: clear it properly without deleting all data
 
+        let start_time = std::time::Instant::now();
+        let stop_hook = Arc::new(Mutex::new(false));
+
+        if max_time != 0 {
+            start_timer_maximum_allocable(max_time, stop_hook.clone());
+        }
+
         let mut best_move = null_move();
         let mut score = 0;
         self.node_count = 0;
         self.max_selective = 0;
 
+        println!("max time {}", max_time);
 
         for dep_it in 1..(depth + 1) {
             let dep = dep_it * 2;
@@ -79,19 +89,24 @@ impl Engine {
                 score_string = format!("cp {}", score);
             }
             println!("info depth {} seldepth {} score {} nodes {} pv {}", dep, self.max_selective, score_string, self.node_count, best_move.to_uci_string());
-            // println!("Transposition table size {}", self.transposition_table.len());
 
 
-            // let end_time = std::time::Instant::now();
-            // let elapsed_time = end_time.duration_since(start_time); // Calculate the elapsed time
-            // if elapsed_time.as_secs_f64() > 0.5 {
-            //     break;
+            // logic to check whether to stop the search
+            let elapsed = start_time.elapsed().as_millis();
+
+            if max_time != 0 && elapsed as f32 > max_time as f32 * TIME_ELAPSED_ITERATIVE_DEEPENING {
+                println!("Stopped iterative deepening early because previous iteration already long enough");
+                *stop_hook.lock().unwrap() = true;
+                break;
+            }
         }
 
+        println!("Time elapsed {}", start_time.elapsed().as_millis());
+//2.23
         return (score, best_move);
     }
 
-    // pub fn negamax(&mut self, depth: u64, alpha: i32, beta: i32, stop_search: &Arc<Mutex<bool>>) -> (i32, Move) {
+    /* pub fn negamax(&mut self, depth: u64, alpha: i32, beta: i32, stop_search: &Arc<Mutex<bool>>) -> (i32, Move) {
     //     if *stop_search.lock().unwrap() {
     //         return (0, null_move());
     //     }
@@ -174,6 +189,7 @@ impl Engine {
 
     //     return (best_score, best_move);
     // }
+    */
 
 
     fn principal_variation(&mut self, depth: u64, alpha: i32, beta: i32, stop_search: &Arc<Mutex<bool>>, genuine: bool) -> (i32, Move) {

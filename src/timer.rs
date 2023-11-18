@@ -1,6 +1,8 @@
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::thread::JoinHandle;
 use std::time::Duration;
+use crate::r#move::Move;
 
 #[derive(Clone)]
 pub struct Timer {
@@ -19,7 +21,7 @@ impl Timer {
         }
     }
 
-    fn how_much_time(&self) -> Duration {
+    pub(crate) fn max_allocable(&self) -> Duration {
         if self.move_time != 0 {
             return Duration::from_millis(self.move_time);
         } else {
@@ -28,12 +30,22 @@ impl Timer {
     }
 }
 
-pub fn start_timer(x: Timer, hook: Arc<Mutex<bool>>) {
+pub fn start_timer_maximum_allocable(millis: u128, hook: Arc<Mutex<bool>>){
     thread::spawn(move || {
         // Sleep for x milliseconds
-        println!("Sleeping for {} seconds", x.how_much_time().as_millis() as i32 / 1000 as i32);
-        thread::sleep(x.how_much_time()); // Change the duration as needed
-        // Set the mutex to true after the specified time
+        println!("Sleeping for {} seconds", millis / 1000);
+
+        let seconds = millis / 1000;
+        let millis_remaining = millis % 1000;
+
+        for i in 0..seconds {
+            if *hook.lock().unwrap() {
+                return;
+            }
+            thread::sleep(Duration::from_secs(1));
+        }
+        thread::sleep(Duration::from_millis(millis_remaining as u64));
+
         *hook.lock().unwrap() = true;
     });
 }

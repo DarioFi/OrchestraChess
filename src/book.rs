@@ -1,7 +1,8 @@
 use std::fs::File;
 use crate::tree::Node;
 use std::io::prelude::*;
-use rand::Rng;
+use rand::{Rng, SeedableRng};
+use rand::rngs::StdRng;
 
 // pub struct OpeningBook {
 //     list_position: Vec<String>,
@@ -76,7 +77,7 @@ impl OpeningBook {
 
         // Select a random move with probability proportional to the score of each child
         let total_score = current_node.score;
-        let mut rng = rand::thread_rng();
+        let mut rng = StdRng::seed_from_u64(11122001_u64);
         let random_score = rng.gen::<i32>() % (total_score + 1);
         let mut current_score = 0;
         for child in current_node.children.iter() {

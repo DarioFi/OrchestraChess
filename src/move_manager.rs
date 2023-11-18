@@ -24,7 +24,7 @@ impl MoveManager {
     }
 
     pub fn add_move(&mut self, m: Move) {
-        if m.piece_captured != PieceType::Null || m.is_en_passant {
+        if m.piece_captured != PieceType::Null || m.is_en_passant || m.promotion != PieceType::Null {
             self.capture_moves.push(m);
         } else {
             self.quite_moves.push(m);
@@ -32,8 +32,8 @@ impl MoveManager {
     }
 
     pub fn sort(&mut self) {
-        self.quite_moves.sort_by_key(|a| -move_score(a) );
-        self.capture_moves.sort_by_key(|a| -move_score(a) );
+        self.quite_moves.sort_by_key(|a| -move_score(a));
+        self.capture_moves.sort_by_key(|a| -move_score(a));
     }
 
     pub fn iter(&self) -> impl Iterator<Item=&Move> {

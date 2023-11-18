@@ -1,4 +1,6 @@
 use std::sync::{Arc, Mutex};
+use std::thread::JoinHandle;
+use std::time::Duration;
 use crate::helpers::respond_to_uci;
 #[macro_export]
 macro_rules! debug {
@@ -7,7 +9,7 @@ macro_rules! debug {
     };
 }
 
-use crate::timer::{start_timer, Timer};
+use crate::timer::{start_timer_maximum_allocable, Timer};
 
 use crate::board::Board;
 use crate::constants::COLOR::{BLACK, WHITE};
@@ -156,13 +158,19 @@ impl OrchestraDirector {
 
         self.timer.move_time = movetime;
 
+        let max_time_think;
         if depth == 0 {
-            start_timer(self.timer.clone(), hook.clone());
             depth = 20;
-        };
-        let res = self.eng.search(depth, hook.clone());
+            max_time_think = self.timer.max_allocable().as_millis();
+        } else {
+            max_time_think = 0;
+        }
+
+        let res = self.eng.search(depth, max_time_think);
+
         let mov = res.1;
         let _score = res.0;
+
 
         println!("bestmove {}", mov.to_uci_string());
     }

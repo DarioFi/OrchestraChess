@@ -1,4 +1,5 @@
-use rand::{Rng, thread_rng};
+use rand::{Rng, SeedableRng, thread_rng};
+use rand::rngs::StdRng;
 use crate::zobrist::ZobristHashHandler;
 
 use crate::board::Board;
@@ -7,7 +8,8 @@ use crate::constants::{COLOR, PieceType};
 use crate::r#move::Move;
 
 pub fn init_zobrist() -> ZobristHashHandler {
-    let mut rng = thread_rng();
+    let mut rng = StdRng::seed_from_u64(11122001_u64);
+
     let mut table: [[u64; 12]; 64] = [[0; 12]; 64];
 
     let black_to_move: u64 = rng.gen();
