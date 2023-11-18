@@ -66,9 +66,11 @@ fn main() {
     // println!("{:?}", node);
 
     let mut orchestra_director = orchestradirector::new_orchestra_director();
+    // orchestra_director.handle_command("position", "startpos moves e2e4 e7e5 g1f3 b8c6 f1b5 c6d4 b5c4 d4b3 c4b3 d7d5 e4d5 c7c6 d5c6 d8d1 c6b");
 
     orchestra_director.handle_command("position", "fen 3k4/1p6/1P3p1p/4p1pP/4P1P1/8/1K6/8 b - - 0 25");
-    orchestra_director.handle_command("go", "depth 16");
+    // orchestra_director.handle_command("position", "fen r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
+    orchestra_director.handle_command("go", "depth 14");
     exit(0);
 
     loop {

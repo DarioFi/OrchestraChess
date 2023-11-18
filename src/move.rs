@@ -32,7 +32,7 @@ fn index_to_string(index: u8) -> String {
     res
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Move {
     pub(crate) start_square: u8,
     pub(crate) end_square: u8,

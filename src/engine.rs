@@ -1,4 +1,6 @@
 use std::cmp::max;
+use std::os::unix::fs::MetadataExt;
+use std::vec;
 use crate::board::Board;
 use crate::constants::{COLOR, PieceType};
 use crate::r#move::{Move, create_move};
@@ -11,7 +13,7 @@ use crate::timer::start_timer_maximum_allocable;
 
 const MATING_SCORE: i32 = 250000;
 const BOOK_DEPTH: u64 = 20;
-const BOOK_FILE: &str = "/home/dario/Programming/rust-chess-bot/tree.json";
+const BOOK_FILE: &str = "tree.json";
 const TIME_ELAPSED_ITERATIVE_DEEPENING: f32 = 0.5;
 
 fn null_move() -> Move {
@@ -54,7 +56,7 @@ impl Engine {
         }
 
 
-        self.transposition_table = HashMap::new(); // todo: clear it properly without deleting all data
+        self.transposition_table = HashMap::new();
 
         let start_time = std::time::Instant::now();
         let stop_hook = Arc::new(Mutex::new(false));
@@ -89,7 +91,7 @@ impl Engine {
                 score_string = format!("cp {}", score);
             }
             println!("info depth {} seldepth {} score {} nodes {} pv {}", dep, self.max_selective, score_string, self.node_count, best_move.to_uci_string());
-
+            // println!("Transposition table size {}", self.transposition_table.len());
 
             // logic to check whether to stop the search
             let elapsed = start_time.elapsed().as_millis();
@@ -193,22 +195,19 @@ impl Engine {
 
 
     fn principal_variation(&mut self, depth: u64, alpha: i32, beta: i32, stop_search: &Arc<Mutex<bool>>, genuine: bool) -> (i32, Move) {
+
         if *stop_search.lock().unwrap() {
             return (0, null_move());
         }
-
         self.node_count += 1;
 
+        let mut old_move: Move = null_move();
         let hash = self.board.zobrist.hash;
-        if self.board.is_3fold() {
-            return (0, null_move());
-        }
-
         if self.transposition_table.contains_key(&hash) {
             let result = self.transposition_table[&hash];
             let old_depth = result.0;
             let old_score = result.1;
-            let old_move = result.2;
+            old_move = result.2;
             let old_exact = result.3;
 
             if old_depth >= depth {
@@ -221,25 +220,13 @@ impl Engine {
             }
         }
 
-        // transposition for move ordering
-        //todo: should we update the transposition table here?
-        //todo: should we multiply the score by color???
-        if depth == 0 {
-            // let eval = self.quiescence_search(alpha, beta, 0);
-            let eval = self.board.static_evaluation();
-            return (eval, null_move());
+        //todo: check this
+        if self.board.is_3fold() {
+            return (0, null_move());
         }
 
         let mut moves;
         moves = self.board.generate_moves(false);
-        moves.sort();
-        let mut best_move = null_move();
-        let mut best_score = -MATING_SCORE;
-        let mut alpha = alpha;
-        let mut is_exact = true;
-        let mut is_first = true;
-        let mut alpha_overwritten = false;
-
         if moves.len() == 0 {
             if self.board.is_check() {
                 return (-MATING_SCORE, null_move());
@@ -247,7 +234,22 @@ impl Engine {
                 return (0, null_move());
             }
         }
+        if depth == 0 {
+            // let eval = self.quiescence_search(alpha, beta, 0);
+            let eval = self.board.static_evaluation();
+            return (eval, null_move());
+        }
 
+        let mut best_move = null_move();
+        let mut best_score = -MATING_SCORE;
+        let mut alpha = alpha;
+        let mut is_exact = true;
+        let mut is_first = true;
+        let mut alpha_overwritten = false;
+        moves.sort();
+        if old_move != null_move() {
+            // moves.add_priority_move(old_move);
+        }
         for mov in moves.iter() {
             let mov = *mov;
             self.board.make_move(mov);
@@ -277,7 +279,6 @@ impl Engine {
                 alpha_overwritten = true;
                 alpha = best_score;
             }
-
             if alpha >= beta {
                 is_exact = false;
                 break;
