@@ -136,7 +136,6 @@ impl OrchestraDirector {
                 }
                 "depth" => {
                     depth = op_list[i + 1].parse().unwrap();
-                    depth /= 2;
                     i += 2;
                 }
                 "nodes"
