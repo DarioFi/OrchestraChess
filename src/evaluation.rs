@@ -163,10 +163,12 @@ impl Board {
         score += self.ev_piece(pbb.knight, end_gameness, is_white, 300, &KNIGHT_SCORES, &KNIGHT_SCORES_ENDGAME);
         score += self.ev_piece(pbb.rook, end_gameness, is_white, 500, &ROOK_SCORES, &ROOK_SCORES_ENDGAME);
         score += self.ev_piece(pbb.queen, end_gameness, is_white, 900, &QUEEN_SCORES, &QUEEN_SCORES_ENDGAME);
-        score += self.ev_piece(pbb.king, end_gameness, is_white, 2500, &KING_SCORES, &KING_SCORES_ENDGAME);
+        score += self.ev_piece(pbb.king, end_gameness, is_white, 5000, &KING_SCORES, &KING_SCORES_ENDGAME);
 
         score
     }
+
+    //todo: check this fix
     fn ev_piece(&self, square_mask: u64, end_gameness: f32, is_white: bool, piece_val: i32, table: &[i32; 64], table_endgame: &[i32; 64]) -> f32 {
         let mut x = square_mask;
         let mut score = 0_f32;
@@ -183,7 +185,7 @@ impl Board {
             };
 
             score += piece_val as f32;
-            score += table[sq as usize] as f32 * (1_f32 - end_gameness) + table_endgame[sq as usize] as f32 * end_gameness;
+            score += table[_sq_index as usize] as f32 * (1_f32 - end_gameness) + table_endgame[_sq_index as usize] as f32 * end_gameness;
             // Adjust the score based on endgame condition
         }
 
