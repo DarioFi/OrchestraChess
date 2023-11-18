@@ -3,43 +3,16 @@ use crate::tree::Node;
 use std::io::prelude::*;
 use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
+// use serde::de::Unexpected::Option;
+use core::option::{Option::None, Option::Some};
 
-// pub struct OpeningBook {
-//     list_position: Vec<String>,
-// }
-// impl OpeningBook {
-//     pub fn new(path_to_file: &str) -> OpeningBook {
-//         let mut positions: Vec<String> = Vec::new();
-
-//         let file = File::open(path_to_file).expect("Unable to open file");
-
-//         for line in BufReader::new(file).lines() {
-//             positions.push(line.unwrap());
-//         }
-
-//         OpeningBook {
-//             list_position: positions,
-//         }
-//     }
-
-//     pub fn query(&self, moves: &str) -> Option<String> {
-//         for line in self.list_position.iter() {
-//             if line.trim_start().starts_with(moves.trim_start()) {
-
-//                 // Zip the iterators over words
-//                 let length_moves = moves.split_whitespace().count();
-//                 let split_result: Vec<&str> = line.split_whitespace().collect();
-//                 return Option::from(split_result[length_moves].to_string());
-//             }
-//         }
-//         None
-//     }
-// }
-
+const USE_BEST_MOVE: bool = true;
 
 // todo: add a temperature parameter and softmax.
 pub struct OpeningBook {
     root: Node,
+    seed: Option<u64>
+
 }
 
 impl OpeningBook {
@@ -53,6 +26,7 @@ impl OpeningBook {
         let deserialized_root: Node = serde_json::from_str(&json_string).expect("Unable to deserialize JSON");
         OpeningBook {
             root: deserialized_root,
+            seed: Option::from(11122001_u64)
         }
     }
 
@@ -77,15 +51,40 @@ impl OpeningBook {
 
         // Select a random move with probability proportional to the score of each child
         let total_score = current_node.score;
-        let mut rng = StdRng::seed_from_u64(11122001_u64);
-        let random_score = rng.gen::<i32>() % (total_score + 1);
-        let mut current_score = 0;
-        for child in current_node.children.iter() {
-            current_score += child.score;
-            if current_score >= random_score {
-                return Option::from(child.mov.to_string());
-            }
+
+        let mut rng;
+        if self.seed.is_some() {
+            rng = StdRng::seed_from_u64(self.seed.unwrap());
+        } else {
+            rng = StdRng::from_entropy();
         }
-        return None;
+
+        if USE_BEST_MOVE {
+            let mut best_score = -1;
+            let mut best_move = "";
+            for child in current_node.children.iter() {
+                if child.score > best_score {
+                    best_score = child.score;
+                    best_move = &child.mov;
+                }
+            }
+            if best_score == -1{
+                return None;
+            }
+            return Option::from(best_move.to_string());
+
+
+        } else {
+            let random_score = rng.gen::<i32>() % (total_score + 1);
+            let mut current_score = 0;
+
+            for child in current_node.children.iter() {
+                current_score += child.score;
+                if current_score >= random_score {
+                    return Option::from(child.mov.to_string());
+                }
+            }
+            return None;
+        }
     }
 }
