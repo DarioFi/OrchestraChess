@@ -6,7 +6,7 @@ use rand::rngs::StdRng;
 // use serde::de::Unexpected::Option;
 use core::option::{Option::None, Option::Some};
 
-const USE_BEST_MOVE: bool = true;
+const USE_BEST_MOVE: bool = false;
 const USE_BOOK: bool = true;
 
 pub struct OpeningBook {
@@ -26,7 +26,8 @@ impl OpeningBook {
         let deserialized_root: Node = serde_json::from_str(&json_string).expect("Unable to deserialize JSON");
         OpeningBook {
             root: deserialized_root,
-            seed: Option::from(11122001_u64)
+            // seed: Option::from(11122001_u64)
+            seed: None
         }
     }
 

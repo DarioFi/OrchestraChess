@@ -1211,7 +1211,7 @@ impl Board {
     }
 
 
-    pub(crate) fn is_3fold(&self) -> bool {
+    pub(crate) fn is_3fold(&self) -> bool { // todo: questo accumulatore non funziona, contare con l'iteratore invece rende l'engine stupido
         let hash = self.zobrist.hash;
         self.zobrist_stack.iter().fold(0, |acc, x| if *x == hash { acc + 1 } else { acc }) >= 3
     }

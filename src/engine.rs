@@ -235,7 +235,7 @@ impl Engine {
         }
 
 
-        //todo: check this
+        //todo: rompe tutto
         if self.board.is_3fold() {
             return (0, null_move());
         }
