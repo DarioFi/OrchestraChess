@@ -2,11 +2,12 @@ use std::fs::File;
 use std::io::Read;
 use std::process::exit;
 use rand::distributions::BernoulliError::InvalidProbability;
-use crate::NNUE::read_utilities::read_u32;
+use crate::nnue::read_utilities::read_u32;
+use crate::r#move::Move;
 
 pub const TRANSFORMED_FEATURE_DIMENSIONS: usize = 2560;
 pub const HALF_DIMENSIONS: usize = TRANSFORMED_FEATURE_DIMENSIONS;
-pub const PSQTBUCKETS: usize = 8;
+pub const PSQT_BUCKETS: usize = 8;
 
 pub type BiasType = i16;
 pub type WeightType = i16;
@@ -121,6 +122,7 @@ pub struct FeatureTransformer {
     bias: Vec<BiasType>,
     weights: Vec<Vec<WeightType>>,
     PSQTWeights: Vec<Vec<PSQTWeightType>>,
+    previous_features: Vec<[i8; TRANSFORMED_FEATURE_DIMENSIONS]>,
 }
 
 impl FeatureTransformer {
@@ -132,11 +134,11 @@ impl FeatureTransformer {
         read_leb_128_bias_type(stream, &mut weights_linear, HALF_DIMENSIONS * INPUT_DIMENSIONS);
 
         let mut psqtweight: Vec<PSQTWeightType> = Vec::new();
-        read_leb_128_psqt_type(stream, &mut psqtweight, PSQTBUCKETS * INPUT_DIMENSIONS);
+        read_leb_128_psqt_type(stream, &mut psqtweight, PSQT_BUCKETS * INPUT_DIMENSIONS);
 
 
         let mut weights: Vec<Vec<WeightType>> = Vec::new();
-        let mut PSQTWeights: Vec<Vec<PSQTWeightType>> = Vec::new();
+        let mut psqtweights: Vec<Vec<PSQTWeightType>> = Vec::new();
 
 
         // what are we doing exactly here ???
@@ -149,18 +151,19 @@ impl FeatureTransformer {
             }
             weights.push(temp);
         }
-        for i in 0..PSQTBUCKETS {
+        for i in 0..PSQT_BUCKETS {
             let mut temp2: Vec<PSQTWeightType> = Vec::new();
             for j in 0..INPUT_DIMENSIONS {
                 temp2.push(psqtweight[i * TRANSFORMED_FEATURE_DIMENSIONS + j]);
             }
-            PSQTWeights.push(temp2);
+            psqtweights.push(temp2);
         }
 
         FeatureTransformer {
             bias,
             weights,
-            PSQTWeights,
+            PSQTWeights: psqtweights,
+            previous_features: Vec::new(),
         }
     }
 
@@ -169,6 +172,27 @@ impl FeatureTransformer {
             bias: Vec::new(),
             weights: Vec::new(),
             PSQTWeights: Vec::new(),
+            previous_features: Vec::new(),
         }
+    }
+
+    pub(crate) fn transform(&self) -> (i32, [i8; TRANSFORMED_FEATURE_DIMENSIONS]) {
+        todo!()
+    }
+
+    pub(crate) fn update_transform(&mut self, mov: &Move) {
+        todo!()
+    }
+
+    pub(crate) fn add_fresh_transform(&mut self) {
+        todo!()
+    }
+
+    pub(crate) fn get_current_transform(&self) -> [i8; TRANSFORMED_FEATURE_DIMENSIONS] {
+        self.previous_features[self.previous_features.len() - 1]
+    }
+
+    pub(crate) fn unmake_move(&mut self) {
+        self.previous_features.pop();
     }
 }

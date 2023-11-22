@@ -5,6 +5,6 @@ mod layer_sqr_clipped_relu;
 mod feature_transformer;
 mod leb128;
 mod read_utilities;
-mod architecture;
+pub(crate) mod architecture;
 mod layer_affine_transform_sparse;
 

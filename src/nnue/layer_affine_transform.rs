@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::mem::size_of;
-use crate::NNUE::read_utilities::{read_i32, read_u32, read_i8, get_padded};
+use crate::nnue::read_utilities::{read_i32, read_u32, read_i8, get_padded};
 
 
 type InputType = i8;

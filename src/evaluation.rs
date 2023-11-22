@@ -1,7 +1,7 @@
-
 use crate::board::{Board, PieceBitBoards};
 use crate::constants::{COLOR};
 use crate::helpers::{remove_lsb, lsb, pop_count};
+use crate::nnue::architecture::OUTPUT_SCALE;
 
 const PAWN_SCORES: [i32; 64] = [
     0, 0, 0, 0, 0, 0, 0, 0,
@@ -152,6 +152,29 @@ impl Board {
         score += self.evaluate_pos(self.my_pieces, end_gameness, is_white);
         score -= self.evaluate_pos(self.opponent_pieces, end_gameness, !is_white);
         score as i32
+    }
+
+    pub fn nnue_static_evaluation(&self, adjusted: bool) -> i32 {
+        let opponent_occupancy = self.opponent_pieces.pawns | self.opponent_pieces.knight | self.opponent_pieces.bishop | self.opponent_pieces.rook | self.opponent_pieces.queen | self.opponent_pieces.king;
+        let my_occupancy = self.my_pieces.pawns | self.my_pieces.knight | self.my_pieces.bishop | self.my_pieces.rook | self.my_pieces.queen | self.my_pieces.king;
+        let all_occupancy = my_occupancy | opponent_occupancy;
+
+        let bucket = pop_count(all_occupancy) as i32;
+        const DELTA: i32 = 24;
+
+        let trans = self.nnue.feature_transformer.transform();
+        let psqt = trans.0;
+        let transformed_features = trans.1; // todo: probably it makes sense to keep it updated in make/unmake move
+
+        let positional = self.nnue.networks[psqt as usize].propagate(transformed_features);
+        // if complexity
+        // complexity = abs(psqt - positional) / Output_scale;
+        if adjusted {
+            ((1024 - DELTA) * psqt + (1024 + DELTA) * positional)
+                / (1024 * OUTPUT_SCALE)
+        } else {
+            (psqt + positional) / OUTPUT_SCALE
+        }
     }
 
 

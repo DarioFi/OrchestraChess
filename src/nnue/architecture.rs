@@ -1,9 +1,9 @@
 use std::fs::File;
-use crate::NNUE::feature_transformer::{INPUT_DIMENSIONS, TRANSFORMED_FEATURE_DIMENSIONS};
-use crate::NNUE::layer_affine_transform::AffineTransform;
-use crate::NNUE::layer_affine_transform_sparse::TransformSparse;
-use crate::NNUE::layer_sqr_clipped_relu::SqrClippedReLU;
-use crate::NNUE::layer_clipped_relu::ClippedRelu;
+use crate::nnue::feature_transformer::{INPUT_DIMENSIONS, TRANSFORMED_FEATURE_DIMENSIONS};
+use crate::nnue::layer_affine_transform::AffineTransform;
+use crate::nnue::layer_affine_transform_sparse::TransformSparse;
+use crate::nnue::layer_sqr_clipped_relu::SqrClippedReLU;
+use crate::nnue::layer_clipped_relu::ClippedRelu;
 
 pub struct Architecture {
     fc_0: TransformSparse,
@@ -17,7 +17,7 @@ pub struct Architecture {
 pub const FC_0_OUT_DIMS: usize = 15;
 pub const FC_1_OUT_DIMS: usize = 32;
 
-const OUTPUT_SCALE: i32 = 16;
+pub const OUTPUT_SCALE: i32 = 16;
 const WEIGHT_SCALE_BITS: i32 = 6;
 
 impl Architecture {
@@ -39,7 +39,7 @@ impl Architecture {
         }
     }
 
-    pub fn propagate(&self, transformed_features: [i8; INPUT_DIMENSIONS]) -> i32 {
+    pub fn propagate(&self, transformed_features: [i8; TRANSFORMED_FEATURE_DIMENSIONS]) -> i32 {
         let mut fc_0_out = self.fc_0.propagate(transformed_features);
 
         assert_eq!(fc_0_out.len(), 16);

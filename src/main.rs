@@ -13,7 +13,7 @@ mod tests;
 mod book;
 mod move_manager;
 mod tree;
-mod NNUE;
+mod nnue;
 
 
 use std::{io, process::exit};
@@ -25,7 +25,7 @@ use crate::board::Board;
 
 use std::io::prelude::*;
 use crate::magic::{hash_on_mask, inverse_hash_on_mask};
-use crate::NNUE::nnue::{Nnue};
+use crate::nnue::nnue::{Nnue};
 
 fn main() {
 
@@ -81,7 +81,7 @@ fn main() {
     // println!("inverse {:b}", hash.pdep(mask));
 
     exit(0);
-    let orchestra_director = orchestradirector::new_orchestra_director();
+    let mut orchestra_director = orchestradirector::new_orchestra_director();
     loop {
         let mut message = String::new();
 

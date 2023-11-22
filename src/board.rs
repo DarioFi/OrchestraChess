@@ -7,6 +7,7 @@ use crate::helpers::{lsb, pop_count, remove_lsb, square_string_to_int};
 use crate::magic::{coord_bit, coord_to_int, DIAGONAL_DIRS, DIRECTIONS, Magics, new_magic, square_num_to_bitboard, STRAIGHT_DIRS};
 use crate::magic::DIRECTIONS::{NE, NW, SE, SW};
 use crate::move_manager::MoveManager;
+use crate::nnue::nnue::Nnue;
 use crate::zobrist::ZobristHashHandler;
 use crate::zobrist_impl::init_zobrist;
 
@@ -178,7 +179,7 @@ pub struct Board {
     castling_stack: Vec<CastlingRights>,
 
     magics: Magics,
-
+    pub(crate) nnue: Nnue,
     pub(crate) zobrist: ZobristHashHandler,
 }
 
@@ -248,6 +249,7 @@ impl Board {
             castling_stack: vec![],
             magics: new_magic(),
             zobrist: init_zobrist(),
+            nnue: Nnue::init(),
         }
     }
     pub fn from_fen(fen: &str) -> Board {

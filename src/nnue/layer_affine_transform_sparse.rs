@@ -1,6 +1,6 @@
 use std::fs::File;
-use crate::NNUE::feature_transformer::{INPUT_DIMENSIONS};
-use crate::NNUE::read_utilities::{get_padded, read_i32, read_i8};
+use crate::nnue::feature_transformer::{INPUT_DIMENSIONS, TRANSFORMED_FEATURE_DIMENSIONS};
+use crate::nnue::read_utilities::{get_padded, read_i32, read_i8};
 
 type BiasType = i32;
 type InputType = i8;
@@ -39,7 +39,7 @@ impl TransformSparse {
         }
     }
 
-    pub fn propagate(&self, input: [InputType; INPUT_DIMENSIONS]) -> Vec<OutputType> {
+    pub fn propagate(&self, input: [InputType; TRANSFORMED_FEATURE_DIMENSIONS]) -> Vec<OutputType> {
         /*
         std::memcpy(output, biases, sizeof(std::int32_t) * OutputDimensions);
 

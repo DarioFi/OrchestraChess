@@ -1,8 +1,8 @@
 use std::fs::File;
 use std::io::Read;
-use crate::NNUE::architecture::Architecture;
-use crate::NNUE::feature_transformer::FeatureTransformer;
-use crate::NNUE::read_utilities::read_u32;
+use crate::nnue::architecture::Architecture;
+use crate::nnue::feature_transformer::FeatureTransformer;
+use crate::nnue::read_utilities::read_u32;
 
 const FILE_NAME: &str = "nn-0000000000a0.nnue";
 
@@ -14,8 +14,8 @@ pub(crate) struct Nnue {
     version: u32,
     hash_value: u32,
     size: u32,
-    feature_transformer: FeatureTransformer,
-    networks: Vec<Architecture>,
+    pub feature_transformer: FeatureTransformer,
+    pub networks: Vec<Architecture>,
 }
 
 
