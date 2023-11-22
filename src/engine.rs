@@ -1,12 +1,9 @@
 use std::cmp::max;
-use std::os::unix::fs::MetadataExt;
-use std::vec;
 use crate::board::Board;
-use crate::constants::{COLOR, PieceType};
+use crate::constants::{PieceType};
 use crate::r#move::{Move, create_move};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::thread::JoinHandle;
 use crate::book::OpeningBook;
 use crate::timer::start_timer_maximum_allocable;
 
@@ -344,7 +341,6 @@ impl Engine {
         if eval > alpha {
             alpha = eval;
         }
-
 
 
         // we are ignoring stalemates in quiescence search!

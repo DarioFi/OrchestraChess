@@ -1,4 +1,5 @@
 use std::fs::File;
+use crate::NNUE::feature_transformer::{INPUT_DIMENSIONS};
 use crate::NNUE::read_utilities::{get_padded, read_i32, read_i8};
 
 type BiasType = i32;
@@ -36,5 +37,33 @@ impl TransformSparse {
             biases,
             weights,
         }
+    }
+
+    pub fn propagate(&self, input: [InputType; INPUT_DIMENSIONS]) -> Vec<OutputType> {
+        /*
+        std::memcpy(output, biases, sizeof(std::int32_t) * OutputDimensions);
+
+        // Traverse weights in transpose order to take advantage of input sparsity
+        for (IndexType i = 0; i < InputDimensions; ++i)
+            if (input[i])
+            {
+                const std::int8_t* w  = &weights[i];
+                const int          in = input[i];
+                for (IndexType j = 0; j < OutputDimensions; ++j)
+                    output[j] += w[j * PaddedInputDimensions] * in;
+            }
+             */
+
+        //transpile this code
+        let mut output = self.biases.clone();
+
+        for i in 0..self.in_dims {
+            if input[i] != 0 {
+                for j in 0..self.out_dims {
+                    output[j] += self.weights[j][i] as i32 * input[i] as i32;
+                }
+            }
+        }
+        output
     }
 }

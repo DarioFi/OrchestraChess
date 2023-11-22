@@ -66,12 +66,12 @@ fn main() {
     // println!("{:?}", node);
     // endregion
 
-    // let nnue = Nnue::init();
+    let nnue = Nnue::init();
     //
     //
-    let mut orchestra_director = orchestradirector::new_orchestra_director();
-    orchestra_director.handle_command("position", "startpos");
-    orchestra_director.eng.benchmark_perf(6);
+    // let mut orchestra_director = orchestradirector::new_orchestra_director();
+    // orchestra_director.handle_command("position", "startpos");
+    // orchestra_director.eng.benchmark_perf(6);
 
     // let mask: u64 = 0b10111111;
     // let keyy: u64 = 0b10101110;

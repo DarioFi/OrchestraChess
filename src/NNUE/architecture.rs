@@ -1,5 +1,5 @@
 use std::fs::File;
-use crate::NNUE::feature_transformer::TRANSFORMED_FEATURE_DIMENSIONS;
+use crate::NNUE::feature_transformer::{INPUT_DIMENSIONS, TRANSFORMED_FEATURE_DIMENSIONS};
 use crate::NNUE::layer_affine_transform::AffineTransform;
 use crate::NNUE::layer_affine_transform_sparse::TransformSparse;
 use crate::NNUE::layer_sqr_clipped_relu::SqrClippedReLU;
@@ -17,11 +17,12 @@ pub struct Architecture {
 pub const FC_0_OUT_DIMS: usize = 15;
 pub const FC_1_OUT_DIMS: usize = 32;
 
+const OUTPUT_SCALE: i32 = 16;
+const WEIGHT_SCALE_BITS: i32 = 6;
 
 impl Architecture {
     pub(crate) fn read_parameters(file: &mut File) -> Architecture {
-
-        let fc_0 = TransformSparse::read_parameters(file, TRANSFORMED_FEATURE_DIMENSIONS, FC_0_OUT_DIMS);
+        let fc_0 = TransformSparse::read_parameters(file, FC_0_OUT_DIMS + 1, TRANSFORMED_FEATURE_DIMENSIONS);
         let ac_sqr_0 = SqrClippedReLU::new();
         let ac_0 = ClippedRelu::new();
         let fc_1 = AffineTransform::read_parameters(file, FC_1_OUT_DIMS, FC_0_OUT_DIMS * 2);
@@ -36,5 +37,31 @@ impl Architecture {
             ac_1,
             fc_2,
         }
+    }
+
+    pub fn propagate(&self, transformed_features: [i8; INPUT_DIMENSIONS]) -> i32 {
+        let mut fc_0_out = self.fc_0.propagate(transformed_features);
+
+        assert_eq!(fc_0_out.len(), 16);
+        let remainder = fc_0_out.pop().unwrap();
+        assert_eq!(fc_0_out.len(), 15);
+
+        let ac_sqr_0_out = self.ac_sqr_0.propagate(&fc_0_out);
+        let ac_0_out = self.ac_0.propagate(&fc_0_out);
+
+        let mut combined_output = ac_sqr_0_out.clone();
+        for x in ac_0_out.iter() {
+            combined_output.push(*x);
+        }
+
+        let fc_1_out = self.fc_1.propagate(combined_output);
+        let ac_1_out = self.ac_1.propagate(&fc_1_out);
+
+        let fc_2_out = self.fc_2.propagate(ac_1_out);
+        assert_eq!(fc_2_out.len(), 1);
+
+        let fwd_out = remainder as i32 * (600 * OUTPUT_SCALE) / (127 * (1 << WEIGHT_SCALE_BITS));
+        let output = fc_2_out[0] + fwd_out;
+        output
     }
 }

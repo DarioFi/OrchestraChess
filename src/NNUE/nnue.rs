@@ -31,13 +31,13 @@ impl Nnue {
         nnue.feature_transformer = FeatureTransformer::read_parameters(&mut file);
 
         // here we itarate over the layers and read the weights
+        println!("The next hash should all be the same");
         for i in 0..LAYER_STACKS {
             let header_layer_hash = read_u32(&mut file);
             //todo: maybe add checks for those hashes
-            println!("Layer {} hash: {}", i, header_layer_hash); // breaks after 1 iteration
+            println!("Layer {} hash: {}", i, header_layer_hash);
             nnue.networks.push(Architecture::read_parameters(&mut file));
         }
-
         nnue
     }
 

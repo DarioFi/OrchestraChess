@@ -3,7 +3,6 @@ use std::mem::size_of;
 use crate::NNUE::read_utilities::{read_i32, read_u32, read_i8, get_padded};
 
 
-
 type InputType = i8;
 type OutputType = i32;
 type BiasType = OutputType;
@@ -42,11 +41,12 @@ impl AffineTransform {
         }
     }
 
-    fn propagate(&self, input: Vec<InputType>) -> Vec<OutputType> {
+    pub(crate) fn propagate(&self, input: Vec<InputType>) -> Vec<OutputType> {
+        // todo: check that no traspose is needed
         let mut output = Vec::new();
         for i in 0..self.out_dims {
             let mut sum = self.bias[i];
-            for j in 0..self.in_dims {
+            for j in 0..self.weights[i].len() {
                 sum += (self.weights[i][j] * input[j]) as i32;
             }
             output.push(sum);

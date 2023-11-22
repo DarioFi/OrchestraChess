@@ -1,6 +1,4 @@
 use std::sync::{Arc, Mutex};
-use std::thread::JoinHandle;
-use std::time::Duration;
 use crate::helpers::respond_to_uci;
 #[macro_export]
 macro_rules! debug {
@@ -9,7 +7,7 @@ macro_rules! debug {
     };
 }
 
-use crate::timer::{start_timer_maximum_allocable, Timer};
+use crate::timer::{Timer};
 
 use crate::board::Board;
 use crate::constants::COLOR::{BLACK, WHITE};
