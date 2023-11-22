@@ -11,3 +11,4 @@ serde = { version = "1.0.104", features = ["derive"] }
 serde_json = { version = "1.0.48", features = [] }
 num-traits = "0.2.17"
 leb128 = "0.2.1"
+bitintr = "0.3.0"

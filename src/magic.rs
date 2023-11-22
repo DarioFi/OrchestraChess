@@ -1,7 +1,7 @@
 use std::ops::{Index, IndexMut};
 use crate::constants::{COLOR};
 use crate::helpers::{get_msb_masked, lsb, pop_count, remove_msb};
-
+use bitintr::{Pext, Pdep};
 
 pub const fn coord_to_int(rank: u8, file: u8) -> u8 {
     rank * 8 + file
@@ -30,7 +30,9 @@ fn signed_interior_coord(file: i32, rank: i32) -> bool {
     file > 0 && file < 7 && rank > 0 && rank < 7
 }
 
-pub fn hash_on_mask(key: u64, mask: u64) -> u64 {
+
+//
+pub fn hash_on_mask_old(key: u64, mask: u64) -> u64 {
     // gives the inverse order but looks quite bijective to me
 
     let mut result: u64 = 0;
@@ -49,14 +51,12 @@ pub fn hash_on_mask(key: u64, mask: u64) -> u64 {
     result
 }
 
-/*
-mask 000111100001111
-key  101101010001110
-res  10101110
- */
+pub fn hash_on_mask(key: u64, mask: u64) -> u64 {
+    key.pext(mask)
+}
 
 
-pub fn inverse_hash_on_mask(result: u64, mask: u64) -> u64 {
+pub fn inverse_hash_on_mask_old(result: u64, mask: u64) -> u64 {
     let mut original_key: u64 = 0;
     let mut _result = result;
     let mut _mask = mask;
@@ -73,6 +73,11 @@ pub fn inverse_hash_on_mask(result: u64, mask: u64) -> u64 {
 
     original_key
 }
+
+pub fn inverse_hash_on_mask(result: u64, mask: u64) -> u64 {
+    result.pdep(mask)
+}
+
 
 fn new_direction_magic() -> DirectionMagic {
     DirectionMagic {

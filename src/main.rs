@@ -19,11 +19,12 @@ mod NNUE;
 use std::{io, process::exit};
 use constants::COLOR;
 use std::sync::{Arc, Mutex};
-
+use bitintr::{Pdep, Pext};
 use crate::board::Board;
 
 
 use std::io::prelude::*;
+use crate::magic::{hash_on_mask, inverse_hash_on_mask};
 use crate::NNUE::nnue::{Nnue};
 
 fn main() {
@@ -65,12 +66,22 @@ fn main() {
     // println!("{:?}", node);
     // endregion
 
-    let nnue = Nnue::init();
+    // let nnue = Nnue::init();
     //
-    exit(0);
     //
     let mut orchestra_director = orchestradirector::new_orchestra_director();
+    orchestra_director.handle_command("position", "startpos");
+    orchestra_director.eng.benchmark_perf(6);
 
+    // let mask: u64 = 0b10111111;
+    // let keyy: u64 = 0b10101110;
+    // let hash = hash_on_mask(keyy, mask);
+    // let inverse = inverse_hash_on_mask(hash, mask);
+    // println!("inverse {:b}", inverse);
+    // println!("inverse {:b}", hash.pdep(mask));
+
+    exit(0);
+    let orchestra_director = orchestradirector::new_orchestra_director();
     loop {
         let mut message = String::new();
 
