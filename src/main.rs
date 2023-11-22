@@ -13,6 +13,7 @@ mod tests;
 mod book;
 mod move_manager;
 mod tree;
+mod NNUE;
 
 
 use std::{io, process::exit};
@@ -22,14 +23,12 @@ use std::sync::{Arc, Mutex};
 use crate::board::Board;
 
 
-use tree::Node;
-use std::fs;
-use std::fs::File;
 use std::io::prelude::*;
-use std::mem;
+use crate::NNUE::nnue::{Nnue};
 
 fn main() {
 
+    // region tree test
     // // Create a sample tree
     // let mut root = Node::new("Root".to_string(), 10);
     // let child1 = Node::new("Child1".to_string(), 5);
@@ -64,26 +63,13 @@ fn main() {
 
     // let node: Node = serde_json::from_str(&the_file).expect("JSON was not well-formatted");
     // println!("{:?}", node);
+    // endregion
 
+    let nnue = Nnue::init();
+    //
+    exit(0);
+    //
     let mut orchestra_director = orchestradirector::new_orchestra_director();
-    // orchestra_director.handle_command("position", "startpos moves e2e4 e7e5 g1f3 b8c6 f1b5 c6d4 b5c4 d4b3 c4b3 d7d5 e4d5 c7c6 d5c6 d8d1 c6b");
-
-    // orchestra_director.handle_command("position", "fen 8/8/8/8/4K3/8/pk6/8 b - - 1 76 moves a2a1q");
-    // orchestra_director.handle_command("go", "wtime 315016 btime 67802 winc 3000 binc 3000");
-    // let start = std::time::Instant::now();
-
-
-    // print time
-    // let duration = start.elapsed();
-    // println!("Time elapsed in expensive_function() is: {:?}", duration);
-    // exit(0);
-    // orchestra_director.handle_command("go", "depth 14");
-
-    // println!("{}", orchestra_director.eng.board.static_evaluation());
-    // let x = orchestra_director.eng.quiescence_search(-250000, 250000, 0);
-    // println!("{}", x);
-    // exit(0);
-    // orchestra_director.handle_command("go", "depth 14");
 
     loop {
         let mut message = String::new();
