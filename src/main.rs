@@ -17,7 +17,6 @@ mod accumulator;
 use std::{io};
 use std::process::exit;
 
-
 fn main() {
 
     // region tree test
