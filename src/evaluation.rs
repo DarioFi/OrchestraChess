@@ -1,6 +1,5 @@
 use crate::board::{Board, PieceBitBoards};
-use crate::constants::{COLOR};
-use crate::helpers::{remove_lsb, lsb, pop_count};
+use crate::utils::{COLOR, lsb, pop_count, remove_lsb};
 use crate::nnue::architecture::OUTPUT_SCALE;
 
 const PAWN_SCORES: [i32; 64] = [

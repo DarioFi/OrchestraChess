@@ -1,4 +1,4 @@
-use crate::constants::PieceType;
+use crate::utils::PieceType;
 
 
 fn index_to_string(index: u8) -> String {

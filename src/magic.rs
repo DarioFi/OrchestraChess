@@ -1,6 +1,6 @@
 use std::ops::{Index, IndexMut};
-use crate::constants::COLOR;
-use crate::helpers::pop_count;
+use crate::utils::COLOR;
+use crate::utils::pop_count;
 use bitintr::{Pext, Pdep};
 
 pub const fn coord_to_int(rank: u8, file: u8) -> u8 {
@@ -30,48 +30,10 @@ fn signed_interior_coord(file: i32, rank: i32) -> bool {
     file > 0 && file < 7 && rank > 0 && rank < 7
 }
 
-
-// pub fn hash_on_mask(key: u64, mask: u64) -> u64 {
-//     // gives the inverse order but looks quite bijective to me
-
-//     let mut result: u64 = 0;
-//     let mut _mask = mask;
-//     let mut sq;
-//     while _mask != 0 {
-//         sq = get_msb_masked(_mask);
-//         let res = ((sq & key) != 0) as u64;
-
-//         result <<= 1;
-//         result |= res;
-
-//         _mask = remove_msb(_mask);
-//     }
-
-//     result
-// }
-
 pub fn hash_on_mask(key: u64, mask: u64) -> u64 {
     key.pext(mask)
 }
 
-
-// pub fn inverse_hash_on_mask(result: u64, mask: u64) -> u64 {
-//     let mut original_key: u64 = 0;
-//     let mut _result = result;
-//     let mut _mask = mask;
-//     let mut bit: u64 = 1;
-
-//     while _mask != 0 {
-//         if (_mask & 1) == 1 {
-//             original_key |= (_result & 1) << bit.trailing_zeros();
-//             _result >>= 1;
-//         }
-//         _mask >>= 1;
-//         bit <<= 1;
-//     }
-
-//     original_key
-// }
 
 pub fn inverse_hash_on_mask(result: u64, mask: u64) -> u64 {
     result.pdep(mask)
@@ -577,3 +539,34 @@ impl Magics {
         }
     }
 }
+
+// pub fn hash_on_mask(key: u64, mask: u64) -> u64 {
+//     // gives the inverse order but looks quite bijective to me
+//     let mut result: u64 = 0;
+//     let mut _mask = mask;
+//     let mut sq;
+//     while _mask != 0 {
+//         sq = get_msb_masked(_mask);
+//         let res = ((sq & key) != 0) as u64;
+//         result <<= 1;
+//         result |= res;
+//         _mask = remove_msb(_mask);
+//     }
+//     result
+// }
+
+// pub fn inverse_hash_on_mask(result: u64, mask: u64) -> u64 {
+//     let mut original_key: u64 = 0;
+//     let mut _result = result;
+//     let mut _mask = mask;
+//     let mut bit: u64 = 1;
+//     while _mask != 0 {
+//         if (_mask & 1) == 1 {
+//             original_key |= (_result & 1) << bit.trailing_zeros();
+//             _result >>= 1;
+//         }
+//         _mask >>= 1;
+//         bit <<= 1;
+//     }
+//     original_key
+// }
