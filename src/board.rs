@@ -1,5 +1,5 @@
 use std::ops::{Index, IndexMut};
-use serde_json::Value::Bool;
+
 use crate::muve::{create_move, Move};
 use crate::constants::{COLOR, MASK_ONES, MOVING_PIECES, PieceType};
 use crate::constants::COLOR::{BLACK, WHITE};

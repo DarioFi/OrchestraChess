@@ -198,20 +198,20 @@ impl FeatureTransformer {
         }
     }
 
-    pub(crate) fn transform(&self, bucket: i32) -> (i32, [i8; TRANSFORMED_FEATURE_DIMENSIONS]) {
+    pub(crate) fn transform(&self, _bucket: i32) -> (i32, [i8; TRANSFORMED_FEATURE_DIMENSIONS]) {
         // this should also compute perspectives average and pick the right one
         todo!()
     }
 
-    pub(crate) fn update_simple_move(&mut self, king_square: u8, mov: &Move, color: COLOR) {
-        let new_acc = self.previous_features[self.previous_features.len() - 1].clone();
+    pub(crate) fn update_simple_move(&mut self, _king_square: u8, mov: &Move, _color: COLOR) {
+        let _new_acc = self.previous_features[self.previous_features.len() - 1].clone();
 
         // handle moving first piece
-        let pt = mov.piece_moved;
-        let from = mov.start_square;
+        let _pt = mov.piece_moved;
+        let _from = mov.start_square;
     }
 
-    fn add_to_acc(&self, acc: &mut [i8; TRANSFORMED_FEATURE_DIMENSIONS], index: (usize, usize, usize)) {
+    fn add_to_acc(&self, _acc: &mut [i8; TRANSFORMED_FEATURE_DIMENSIONS], _index: (usize, usize, usize)) {
         todo!() //unsure this is a good idea
     }
 
