@@ -1,4 +1,4 @@
-use crate::constants::{PieceType};
+use crate::constants::PieceType;
 
 
 fn index_to_string(index: u8) -> String {
@@ -67,4 +67,8 @@ pub fn create_move(start_square: u8, end_square: u8, piece_moved: PieceType, pie
         is_castling,
         is_en_passant,
     }
+}
+
+pub fn null_move() -> Move {
+    create_move(0, 0, PieceType::Null, PieceType::Null, PieceType::Null, false, false)
 }

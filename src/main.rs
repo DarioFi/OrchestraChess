@@ -1,4 +1,4 @@
-mod r#move;
+mod muve;
 mod constants;
 mod board;
 mod helpers;
@@ -71,7 +71,7 @@ fn main() {
     // println!("inverse {:b}", inverse);
     // println!("inverse {:b}", hash.pdep(mask));
 
-    exit(0);
+    // exit(0);
     let mut orchestra_director = orchestradirector::new_orchestra_director();
     loop {
         let mut message = String::new();

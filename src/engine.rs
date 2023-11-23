@@ -1,21 +1,17 @@
 use std::cmp::max;
 use crate::board::Board;
 use crate::constants::{PieceType};
-use crate::r#move::{Move, create_move};
+use crate::muve::{Move, create_move, null_move};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use crate::book::OpeningBook;
 use crate::timer::start_timer_maximum_allocable;
 
 
-const MATING_SCORE: i32 = 250000;
+pub const MATING_SCORE: i32 = 250000;
 const BOOK_DEPTH: u64 = 20;
 const BOOK_FILE: &str = "tree.json";
 const TIME_ELAPSED_ITERATIVE_DEEPENING: f32 = 0.5;
-
-fn null_move() -> Move {
-    create_move(0, 0, PieceType::Null, PieceType::Null, PieceType::Null, false, false)
-}
 
 pub struct Engine {
     pub(crate) board: Board,

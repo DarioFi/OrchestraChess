@@ -14,9 +14,6 @@ use crate::constants::COLOR::{BLACK, WHITE};
 #[path = "helpers.rs"]
 mod helpers;
 
-#[path = "move.rs"]
-mod r#move;
-
 use crate::engine::{new_engine, Engine};
 
 pub struct OrchestraDirector {

@@ -4,7 +4,7 @@ use crate::board::ZobristHashHandler;
 use crate::board::Board;
 use crate::constants::COLOR::{BLACK, WHITE};
 use crate::constants::{COLOR, PieceType};
-use crate::r#move::Move;
+use crate::muve::Move;
 
 
 pub fn init_zobrist() -> ZobristHashHandler {

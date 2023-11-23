@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::Read;
 use crate::nnue::read_utilities::read_u32;
-use crate::r#move::Move;
+use crate::muve::Move;
 
 pub const TRANSFORMED_FEATURE_DIMENSIONS: usize = 2560;
 pub const HALF_DIMENSIONS: usize = TRANSFORMED_FEATURE_DIMENSIONS;

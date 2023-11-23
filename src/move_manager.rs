@@ -1,5 +1,7 @@
 use crate::constants::PieceType;
-use crate::r#move::Move;
+use crate::engine::MATING_SCORE;
+use crate::muve::Move;
+
 
 fn move_score(m: &Move) -> i32 {
     match m.piece_captured {
@@ -9,7 +11,7 @@ fn move_score(m: &Move) -> i32 {
         PieceType::Bishop => { 330 }
         PieceType::Rook => { 500 }
         PieceType::Queen => { 900 }
-        PieceType::King => { 2500 }
+        PieceType::King => { MATING_SCORE }
     }
 }
 // todo: OBstack arena allocator

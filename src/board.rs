@@ -1,5 +1,5 @@
 use std::ops::{Index, IndexMut};
-use crate::r#move::{create_move, Move};
+use crate::muve::{create_move, Move};
 use crate::constants::{COLOR, MASK_ONES, MOVING_PIECES, PieceType};
 use crate::constants::COLOR::{BLACK, WHITE};
 use crate::helpers::{lsb, pop_count, remove_lsb, square_string_to_int};
