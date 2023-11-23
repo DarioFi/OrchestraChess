@@ -56,9 +56,7 @@ struct UtilityBitBoards {
     pinned_nwse: u64,
     pinned_swne: u64,
 
-    my_attack: u64,
     sq_attacked_by_oppo: u64,
-
     opponent_pawn_attacks: u64,
     opponent_knight_attacks: u64,
     opponent_bishop_attacks: u64,
@@ -137,7 +135,6 @@ impl UtilityBitBoards {
             pinned_we: 0,
             pinned_nwse: 0,
             pinned_swne: 0,
-            my_attack: 0,
             sq_attacked_by_oppo: 0,
             opponent_pawn_attacks: 0,
             opponent_knight_attacks: 0,

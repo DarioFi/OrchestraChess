@@ -29,26 +29,6 @@ pub fn remove_lsb(x: u64) -> u64 {
     x & (x - 1)
 }
 
-pub fn get_lsb_masked(x: u64) -> u64 {
-    // this function gets the lsb and creates a mask with all 0 except that one
-    // e.g. 0000_0000_0000_0000_0000_0000_0000_0000_0000_0001_0000_0000_0000_0000_0000_0000
-    // becomes 0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0001_0000_0000_0000_0000_0000
-    x & (x.wrapping_neg())
-}
-
-pub fn get_msb_index(x: u64) -> u8 {
-    63 - x.leading_zeros() as u8
-}
-
-
-pub fn get_msb_masked(x: u64) -> u64 {
-    1 << get_msb_index(x)
-}
-
-pub fn remove_msb(x: u64) -> u64 { // todo: is there good arithmetic
-    x ^ get_msb_masked(x)
-}
-
 pub fn pop_count(x: u64) -> u32 {
     x.count_ones()
 }
@@ -77,3 +57,23 @@ pub fn square_string_to_int(s: &str) -> u8 {
     let rank = chars.next().unwrap().to_digit(10).unwrap() as u8 - 1;
     rank * 8 + file
 }
+
+// pub fn get_lsb_masked(x: u64) -> u64 {
+//     // this function gets the lsb and creates a mask with all 0 except that one
+//     // e.g. 0000_0000_0000_0000_0000_0000_0000_0000_0000_0001_0000_0000_0000_0000_0000_0000
+//     // becomes 0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0001_0000_0000_0000_0000_0000
+//     x & (x.wrapping_neg())
+// }
+
+// pub fn get_msb_index(x: u64) -> u8 {
+//     63 - x.leading_zeros() as u8
+// }
+
+
+// pub fn get_msb_masked(x: u64) -> u64 {
+//     1 << get_msb_index(x)
+// }
+
+// pub fn remove_msb(x: u64) -> u64 { // todo: is there good arithmetic
+//     x ^ get_msb_masked(x)
+// }

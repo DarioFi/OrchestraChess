@@ -100,17 +100,3 @@ pub struct Node {
     pub score: i32,  // number of times this continuation has been played in the database.
     pub children: Vec<Node>, 
 }
-
-impl Node {
-    pub fn new(mov: String, score: i32) -> Node {
-        Node {
-            mov,
-            score,
-            children: Vec::new(),
-        }
-    }
-
-    pub fn add_child(&mut self, child: Node) {
-        self.children.push(child);
-    }
-}

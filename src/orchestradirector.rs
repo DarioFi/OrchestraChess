@@ -6,14 +6,10 @@ macro_rules! debug {
     };
 }
 
-use crate::timer::{Timer};
-
+use crate::timer::Timer;
+use crate::helpers::split_fen_moves;
 use crate::board::Board;
 use crate::constants::COLOR::{BLACK, WHITE};
-
-#[path = "helpers.rs"]
-mod helpers;
-
 use crate::engine::{new_engine, Engine};
 
 pub struct OrchestraDirector {
@@ -71,7 +67,7 @@ impl OrchestraDirector {
             }
             self.eng.position_loaded = "startpos".to_string();
         } else {
-            let (fen, moves) = helpers::split_fen_moves(options);
+            let (fen, moves) = split_fen_moves(options);
             self.init_from_fen(&fen);
             self.execute_moves(&moves);
         }

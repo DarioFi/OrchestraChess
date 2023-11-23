@@ -1,6 +1,6 @@
 use std::ops::{Index, IndexMut};
-use crate::constants::{COLOR};
-use crate::helpers::{get_msb_masked, pop_count, remove_msb};
+use crate::constants::COLOR;
+use crate::helpers::pop_count;
 use bitintr::{Pext, Pdep};
 
 pub const fn coord_to_int(rank: u8, file: u8) -> u8 {

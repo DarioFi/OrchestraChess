@@ -1,7 +1,6 @@
 use std::cmp::max;
 use crate::board::Board;
-use crate::constants::{PieceType};
-use crate::muve::{Move, create_move, null_move};
+use crate::muve::{Move, null_move};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use crate::book::OpeningBook;
