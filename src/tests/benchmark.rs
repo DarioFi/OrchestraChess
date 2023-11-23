@@ -3,7 +3,8 @@ use crate::board::Board;
 #[allow(dead_code)]
 pub fn test_perft_speed() {
     println!("Starting perft speed test");
-    let mut board = Board::from_startpos();
+    let mut board = Board::empty_board();
+    board.from_startpos();
 
     let now = std::time::Instant::now();
     let res = board.perft(6, 6, true);

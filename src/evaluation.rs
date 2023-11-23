@@ -166,7 +166,9 @@ impl Board {
         let psqt = trans.0;
         let transformed_features = trans.1; // todo: probably it makes sense to keep it updated in make/unmake move
 
+        // this is the main subnet
         let positional = self.nnue.networks[bucket as usize].propagate(transformed_features);
+
         // if complexity
         // complexity = abs(psqt - positional) / Output_scale;
         if adjusted {
