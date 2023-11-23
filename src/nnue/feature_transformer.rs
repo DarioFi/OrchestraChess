@@ -2,7 +2,8 @@ use std::fs::File;
 use std::io::Read;
 use crate::nnue::read_utilities::read_u32;
 use crate::muve::Move;
-use crate::constants::{COLOR, PieceType};
+use crate::utils::COLOR;
+use crate::utils::PieceType;
 
 pub const TRANSFORMED_FEATURE_DIMENSIONS: usize = 2560;
 pub const HALF_DIMENSIONS: usize = TRANSFORMED_FEATURE_DIMENSIONS;

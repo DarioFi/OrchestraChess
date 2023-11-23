@@ -1,4 +1,4 @@
-use crate::constants::PieceType;
+use crate::utils::PieceType;
 use crate::engine::MATING_SCORE;
 use crate::muve::Move;
 

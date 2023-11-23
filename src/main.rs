@@ -1,7 +1,6 @@
 mod muve;
-mod constants;
 mod board;
-mod helpers;
+mod utils;
 mod magic;
 mod orchestradirector;
 mod engine;
@@ -15,7 +14,6 @@ mod nnue;
 
 
 use std::{io};
-
 
 
 fn main() {

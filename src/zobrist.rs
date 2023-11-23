@@ -2,8 +2,9 @@ use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use crate::board::ZobristHashHandler;
 use crate::board::Board;
-use crate::constants::COLOR::{BLACK, WHITE};
-use crate::constants::{COLOR, PieceType};
+use crate::utils::COLOR::{BLACK, WHITE};
+use crate::utils::COLOR;
+use crate::utils::PieceType;
 use crate::muve::Move;
 
 

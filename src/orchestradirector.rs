@@ -1,4 +1,4 @@
-use crate::helpers::respond_to_uci;
+use crate::utils::respond_to_uci;
 #[macro_export]
 macro_rules! debug {
     () => {
@@ -7,9 +7,9 @@ macro_rules! debug {
 }
 
 use crate::timer::Timer;
-use crate::helpers::split_fen_moves;
+use crate::utils::split_fen_moves;
 use crate::board::Board;
-use crate::constants::COLOR::{BLACK, WHITE};
+use crate::utils::COLOR::{BLACK, WHITE};
 use crate::engine::{new_engine, Engine};
 
 pub struct OrchestraDirector {

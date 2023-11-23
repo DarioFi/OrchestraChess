@@ -1,9 +1,9 @@
 use std::ops::{Index, IndexMut};
 
 use crate::muve::{create_move, Move};
-use crate::constants::{COLOR, MASK_ONES, MOVING_PIECES, PieceType};
-use crate::constants::COLOR::{BLACK, WHITE};
-use crate::helpers::{lsb, pop_count, remove_lsb, square_string_to_int};
+use crate::utils::COLOR;
+use crate::utils::COLOR::{BLACK, WHITE};
+use crate::utils::{lsb, MASK_ONES, MOVING_PIECES, PieceType, pop_count, remove_lsb, square_string_to_int};
 use crate::magic::{coord_bit, coord_to_int, DIAGONAL_DIRS, DIRECTIONS, Magics, new_magic, square_num_to_bitboard, STRAIGHT_DIRS};
 use crate::magic::DIRECTIONS::{NE, NW, SE, SW};
 use crate::move_manager::MoveManager;
