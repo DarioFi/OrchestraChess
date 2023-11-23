@@ -16,7 +16,7 @@ mod tree;
 mod nnue;
 
 
-use std::{io};
+use std::{io, process::exit};
 
 
 
@@ -62,9 +62,9 @@ fn main() {
     // let nnue = Nnue::init();
     //
     //
-    // let mut orchestra_director = orchestradirector::new_orchestra_director();
-    // orchestra_director.handle_command("position", "startpos");
-    // orchestra_director.eng.benchmark_perf(6);
+    let mut orchestra_director = orchestradirector::new_orchestra_director();
+    orchestra_director.handle_command("position", "startpos");
+    orchestra_director.eng.benchmark_perf(6);
 
     // let mask: u64 = 0b10111111;
     // let keyy: u64 = 0b10101110;
@@ -73,7 +73,7 @@ fn main() {
     // println!("inverse {:b}", inverse);
     // println!("inverse {:b}", hash.pdep(mask));
 
-    // exit(0);
+    exit(0);
     let mut orchestra_director = orchestradirector::new_orchestra_director();
     loop {
         let mut message = String::new();
