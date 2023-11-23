@@ -34,7 +34,7 @@ pub struct Board {
 
 #[derive(Clone, Copy, Debug)]
 pub struct PieceBitBoards {
-    pub(crate) pawns: u64,
+    pub(crate) pawn: u64,
     pub(crate) knight: u64,
     pub(crate) bishop: u64,
     pub(crate) rook: u64,
@@ -82,7 +82,7 @@ struct CastlingRights(u8);
 impl PieceBitBoards {
     fn new() -> PieceBitBoards {
         PieceBitBoards {
-            pawns: 0,
+            pawn: 0,
             knight: 0,
             bishop: 0,
             rook: 0,
@@ -97,7 +97,7 @@ impl Index<PieceType> for PieceBitBoards {
 
     fn index(&self, piece_type: PieceType) -> &Self::Output {
         match piece_type {
-            PieceType::Pawn => &self.pawns,
+            PieceType::Pawn => &self.pawn,
             PieceType::Knight => &self.knight,
             PieceType::Bishop => &self.bishop,
             PieceType::Rook => &self.rook,
@@ -111,7 +111,7 @@ impl Index<PieceType> for PieceBitBoards {
 impl IndexMut<PieceType> for PieceBitBoards {
     fn index_mut(&mut self, piece_type: PieceType) -> &mut Self::Output {
         match piece_type {
-            PieceType::Pawn => &mut self.pawns,
+            PieceType::Pawn => &mut self.pawn,
             PieceType::Knight => &mut self.knight,
             PieceType::Bishop => &mut self.bishop,
             PieceType::Rook => &mut self.rook,
@@ -226,7 +226,7 @@ impl Board {
         }
     }
 
-    fn reset_board_state(&mut self){
+    fn reset_board_state(&mut self) {
         self.my_pieces = PieceBitBoards::new();
         self.opponent_pieces = PieceBitBoards::new();
         self.utility = UtilityBitBoards::new();
@@ -240,7 +240,6 @@ impl Board {
         self.zobrist = init_zobrist();
     }
     pub fn from_fen(&mut self, fen: &str) {
-
         self.reset_board_state();
 
         let parts: Vec<&str> = fen.split(" ").collect();
@@ -270,7 +269,7 @@ impl Board {
                     file += 1;
                 }
                 'P' => {
-                    self.my_pieces.pawns |= coord_bit(rank, file);
+                    self.my_pieces.pawn |= coord_bit(rank, file);
                     file += 1;
                 }
                 'k' => {
@@ -294,7 +293,7 @@ impl Board {
                     file += 1;
                 }
                 'p' => {
-                    self.opponent_pieces.pawns |= coord_bit(rank, file);
+                    self.opponent_pieces.pawn |= coord_bit(rank, file);
                     file += 1;
                 }
                 '/' => {
@@ -352,8 +351,8 @@ impl Board {
 // region Utilities update
 impl Board {
     fn update_utilities(&mut self) {
-        self.utility.opponent_occupancy = self.opponent_pieces.pawns | self.opponent_pieces.knight | self.opponent_pieces.bishop | self.opponent_pieces.rook | self.opponent_pieces.queen | self.opponent_pieces.king;
-        self.utility.my_occupancy = self.my_pieces.pawns | self.my_pieces.knight | self.my_pieces.bishop | self.my_pieces.rook | self.my_pieces.queen | self.my_pieces.king;
+        self.utility.opponent_occupancy = self.opponent_pieces.pawn | self.opponent_pieces.knight | self.opponent_pieces.bishop | self.opponent_pieces.rook | self.opponent_pieces.queen | self.opponent_pieces.king;
+        self.utility.my_occupancy = self.my_pieces.pawn | self.my_pieces.knight | self.my_pieces.bishop | self.my_pieces.rook | self.my_pieces.queen | self.my_pieces.king;
         self.utility.all_occupancy = self.utility.my_occupancy | self.utility.opponent_occupancy;
 
         self.update_pinned_checkers();
@@ -380,7 +379,7 @@ impl Board {
 
         // pawns
         let potential_attackers = self.magics.get_pawn_captures(king_square, self.color_to_move);
-        self.utility.checkers |= potential_attackers & self.opponent_pieces.pawns;  // idea is that it is symmetric
+        self.utility.checkers |= potential_attackers & self.opponent_pieces.pawn;  // idea is that it is symmetric
 
         self.utility.blocker_squares = self.utility.checkers;
 
@@ -446,13 +445,12 @@ impl Board {
         self.utility.opponent_king_attacks = 0;
 
 
-
         // king
         let sq = lsb(self.opponent_pieces.king);
         self.utility.opponent_king_attacks |= self.gen_king_moves_bitboard(sq);
 
         // pawns
-        let mut pawns = self.opponent_pieces.pawns;
+        let mut pawns = self.opponent_pieces.pawn;
         let mut sq = lsb(pawns);
         pawns = remove_lsb(pawns);
         while sq != 64 {
@@ -507,7 +505,6 @@ impl Board {
         }
 
         self.utility.sq_attacked_by_oppo = self.utility.opponent_pawn_attacks | self.utility.opponent_knight_attacks | self.utility.opponent_bishop_attacks | self.utility.opponent_rook_attacks | self.utility.opponent_queen_attacks | self.utility.opponent_king_attacks;
-
     }
 
     pub fn is_check(&self) -> bool {
@@ -655,7 +652,7 @@ impl Board {
     }
     fn get_opponent_piece_on_square(&self, index: u8) -> PieceType {
         let sqntb = square_num_to_bitboard(index);
-        if (self.opponent_pieces.pawns & sqntb) != 0 {
+        if (self.opponent_pieces.pawn & sqntb) != 0 {
             return PieceType::Pawn;
         }
         if (self.opponent_pieces.knight & sqntb) != 0 {
@@ -679,7 +676,7 @@ impl Board {
 
     pub(crate) fn get_my_piece_on_square(&self, index: u8) -> PieceType {
         let sqntb = square_num_to_bitboard(index);
-        if (self.my_pieces.pawns & sqntb) != 0 {
+        if (self.my_pieces.pawn & sqntb) != 0 {
             return PieceType::Pawn;
         }
         if (self.my_pieces.knight & sqntb) != 0 {
@@ -875,7 +872,7 @@ impl Board {
             }
         }
 
-        let mut pawns = self.my_pieces.pawns;
+        let mut pawns = self.my_pieces.pawn;
         let mut sq = lsb(pawns);
         pawns = remove_lsb(pawns);
         while sq != 64 {
@@ -984,8 +981,6 @@ impl Board {
                 let mut capture_sq = lsb(capture_mask);
                 capture_mask = remove_lsb(capture_mask);
                 while capture_sq != 64 {
-
-
                     if square_num_to_bitboard(capture_sq) & promotion_rank == 0 {
                         // no promotion
                         move_manager.add_move(create_move(
@@ -1122,8 +1117,6 @@ impl Board {
                 }
             }
         }
-
-
     }
 
     fn check_legal_en_passant(&self, mov: &Move) -> bool {
@@ -1263,13 +1256,13 @@ impl Board {
             PieceType::Pawn => {
                 if mov.is_en_passant {
                     match self.color_to_move {
-                        WHITE => { self.opponent_pieces.pawns &= !square_num_to_bitboard(mov.end_square - 8) }
-                        BLACK => { self.opponent_pieces.pawns &= !square_num_to_bitboard(mov.end_square + 8) }
+                        WHITE => { self.opponent_pieces.pawn &= !square_num_to_bitboard(mov.end_square - 8) }
+                        BLACK => { self.opponent_pieces.pawn &= !square_num_to_bitboard(mov.end_square + 8) }
                     }
-                    self.my_pieces.pawns &= !square_num_to_bitboard(mov.start_square);
-                    self.my_pieces.pawns |= square_num_to_bitboard(mov.end_square);
+                    self.my_pieces.pawn &= !square_num_to_bitboard(mov.start_square);
+                    self.my_pieces.pawn |= square_num_to_bitboard(mov.end_square);
                 } else if mov.promotion != PieceType::Null {
-                    self.my_pieces.pawns &= !square_num_to_bitboard(mov.start_square);
+                    self.my_pieces.pawn &= !square_num_to_bitboard(mov.start_square);
                     self.my_pieces[mov.promotion] |= square_num_to_bitboard(mov.end_square);
 
                     if mov.piece_captured != PieceType::Null {
@@ -1306,8 +1299,6 @@ impl Board {
         }
 
         self.color_to_move = self.color_to_move.flip();
-
-
         let temp = self.my_pieces.clone();
         self.my_pieces = self.opponent_pieces.clone();
         self.opponent_pieces = temp;
@@ -1316,6 +1307,9 @@ impl Board {
 
         // todo: does this actually work + check which one is faster and decide if it is worth?
         // mem::swap(&mut self.my_pieces, &mut self.opponent_pieces);
+
+        //todo: update here the nnue accumulator
+        self.refresh_accumulator();
     }
 
     fn make_simple_move(&mut self, mov: Move) {
@@ -1360,6 +1354,11 @@ impl Board {
         let mov = self.moves_stack.pop().unwrap();
 
 
+        self.nnue.feature_transformer.my_acc_stack.pop();
+        self.nnue.feature_transformer.opp_acc_stack.pop();
+        self.nnue.feature_transformer.my_psq_acc_stack.pop();
+        self.nnue.feature_transformer.opp_psq_acc_stack.pop();
+
         self.castling_rights = self.castling_stack.pop().unwrap();
         self.en_passant_square = self.en_passant_stack.pop().unwrap();
         self.zobrist.hash = self.zobrist_stack.pop().unwrap();
@@ -1383,14 +1382,14 @@ impl Board {
             PieceType::Pawn => {
                 if mov.is_en_passant {
                     match self.color_to_move {
-                        WHITE => { self.opponent_pieces.pawns |= square_num_to_bitboard(mov.end_square - 8) }
-                        BLACK => { self.opponent_pieces.pawns |= square_num_to_bitboard(mov.end_square + 8) }
+                        WHITE => { self.opponent_pieces.pawn |= square_num_to_bitboard(mov.end_square - 8) }
+                        BLACK => { self.opponent_pieces.pawn |= square_num_to_bitboard(mov.end_square + 8) }
                     }
-                    self.my_pieces.pawns |= square_num_to_bitboard(mov.start_square);
-                    self.my_pieces.pawns &= !square_num_to_bitboard(mov.end_square);
+                    self.my_pieces.pawn |= square_num_to_bitboard(mov.start_square);
+                    self.my_pieces.pawn &= !square_num_to_bitboard(mov.end_square);
                 } else if mov.promotion != PieceType::Null {
                     self.my_pieces[mov.promotion] &= !square_num_to_bitboard(mov.end_square);
-                    self.my_pieces.pawns |= square_num_to_bitboard(mov.start_square);
+                    self.my_pieces.pawn |= square_num_to_bitboard(mov.start_square);
 
                     if mov.piece_captured != PieceType::Null {
                         self.opponent_pieces[mov.piece_captured] |= square_num_to_bitboard(mov.end_square);

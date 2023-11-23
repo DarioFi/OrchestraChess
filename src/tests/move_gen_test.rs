@@ -22,11 +22,11 @@ mod test_move_gen {
              [1, 44, 1486, 62379, 2103487, 89941194, 0]),
             ("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10 ",
              [1, 46, 2079, 89890, 3894594, 164075551, 6923051137])];
+        let mut board = Board::empty_board();
 
         for x in data.iter() {
             let fen = x.0;
             let moves = x.1;
-            let mut board = Board::empty_board();
             board.from_fen(fen);
             for i in 0..moves.len() {
                 if moves[i] == 0 {

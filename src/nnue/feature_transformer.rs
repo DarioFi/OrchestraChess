@@ -1,12 +1,15 @@
 use std::fs::File;
 use std::io::Read;
+use std::ops::Bound::Included;
+use rand::distributions::BernoulliError::InvalidProbability;
 use crate::nnue::read_utilities::read_u32;
 use crate::muve::Move;
 use crate::utils::COLOR;
 use crate::utils::PieceType;
 
 pub const TRANSFORMED_FEATURE_DIMENSIONS: usize = 2560;
-pub const HALF_DIMENSIONS: usize = TRANSFORMED_FEATURE_DIMENSIONS;
+pub const HALF_DIMENSIONS: usize = 2560;
+
 pub const PSQT_BUCKETS: usize = 8;
 
 pub type BiasType = i16;
@@ -121,8 +124,12 @@ pub struct FeatureTransformer {
     bias: Vec<BiasType>,
     weights: Vec<Vec<WeightType>>,
     psqt_weights: Vec<Vec<PSQTWeightType>>,
-    previous_features: Vec<[i8; TRANSFORMED_FEATURE_DIMENSIONS]>, // those are the features after the sparse layer but BEFORE the clippedRelu
+    pub my_acc_stack: Vec<[BiasType; TRANSFORMED_FEATURE_DIMENSIONS]>,
+    pub opp_acc_stack: Vec<[BiasType; TRANSFORMED_FEATURE_DIMENSIONS]>,
+    pub my_psq_acc_stack: Vec<[PSQTWeightType; PSQT_BUCKETS]>,
+    pub opp_psq_acc_stack: Vec<[PSQTWeightType; PSQT_BUCKETS]>,
 }
+
 
 // we will also update the feature transformer here
 
@@ -167,17 +174,20 @@ impl FeatureTransformer {
         // what are we doing exactly here ???
         // check dimensions and whether we are reading in the right order (i dont think so)
 
-        for i in 0..HALF_DIMENSIONS {
+        for i in 0..INPUT_DIMENSIONS {
             let mut temp: Vec<WeightType> = Vec::new();
-            for j in 0..INPUT_DIMENSIONS {
+            for j in 0..HALF_DIMENSIONS {
                 temp.push(weights_linear[i * HALF_DIMENSIONS + j]);
             }
             weights.push(temp);
         }
-        for i in 0..PSQT_BUCKETS {
+        assert_eq!(weights.len(), INPUT_DIMENSIONS);
+        assert_eq!(weights[0].len(), HALF_DIMENSIONS);
+
+        for i in 0..INPUT_DIMENSIONS {
             let mut temp2: Vec<PSQTWeightType> = Vec::new();
-            for j in 0..INPUT_DIMENSIONS {
-                temp2.push(psqtweight[i * TRANSFORMED_FEATURE_DIMENSIONS + j]);
+            for j in 0..PSQT_BUCKETS {
+                temp2.push(psqtweight[i * PSQT_BUCKETS + j]);
             }
             psqtweights.push(temp2);
         }
@@ -186,7 +196,10 @@ impl FeatureTransformer {
             bias,
             weights,
             psqt_weights: psqtweights,
-            previous_features: Vec::new(),
+            my_acc_stack: vec![],
+            opp_acc_stack: vec![],
+            my_psq_acc_stack: vec![],
+            opp_psq_acc_stack: vec![],
         }
     }
 
@@ -195,36 +208,56 @@ impl FeatureTransformer {
             bias: Vec::new(),
             weights: Vec::new(),
             psqt_weights: Vec::new(),
-            previous_features: Vec::new(),
+            my_acc_stack: vec![],
+            opp_acc_stack: vec![],
+            my_psq_acc_stack: vec![],
+            opp_psq_acc_stack: vec![],
         }
     }
 
-    pub(crate) fn transform(&self, _bucket: i32) -> (i32, [i8; TRANSFORMED_FEATURE_DIMENSIONS]) {
-        // this should also compute perspectives average and pick the right one
-        todo!()
+    pub(crate) fn transform(&self, _bucket: i32) -> (i32, [i8; HALF_DIMENSIONS]) {
+        let mut result = [0_i8; HALF_DIMENSIONS];
+        // my accumulation part
+        let my_acc = self.my_acc_stack.last().unwrap();
+        for i in 0..(HALF_DIMENSIONS / 2) {
+            let sum0 = my_acc[i];
+            let sum1 = my_acc[i + HALF_DIMENSIONS / 2];
+            let c0 = sum0.clamp(0, 127);
+            let c1 = sum1.clamp(0, 127);
+            result[i] = (c0 * c1 / 128) as i8;
+        }
+        let opp_acc = self.my_acc_stack.last().unwrap();
+        for i in 0..(HALF_DIMENSIONS / 2) {
+            let sum0 = opp_acc[i];
+            let sum1 = opp_acc[i + HALF_DIMENSIONS / 2];
+            let c0 = sum0.clamp(0, 127);
+            let c1 = sum1.clamp(0, 127);
+            result[i + HALF_DIMENSIONS / 2] = (c0 * c1 / 128) as i8;
+        }
+
+        let my_psq = self.my_psq_acc_stack.last().unwrap();
+        let opp_psq = self.opp_psq_acc_stack.last().unwrap();
+        let x = (my_psq[_bucket as usize] - opp_psq[_bucket as usize]) / 2;
+        (x, result)
     }
 
-    pub(crate) fn update_simple_move(&mut self, _king_square: u8, mov: &Move, _color: COLOR) {
-        let _new_acc = self.previous_features[self.previous_features.len() - 1].clone();
 
-        // handle moving first piece
-        let _pt = mov.piece_moved;
-        let _from = mov.start_square;
+    pub(crate) fn add_to_accumulator(&self, index: usize, acc: &mut [BiasType; HALF_DIMENSIONS]) {
+        for i in 0..TRANSFORMED_FEATURE_DIMENSIONS {
+            acc[i] += self.weights[index][i];
+        }
     }
 
-    fn add_to_acc(&self, _acc: &mut [i8; TRANSFORMED_FEATURE_DIMENSIONS], _index: (usize, usize, usize)) {
-        todo!() //unsure this is a good idea
+    pub(crate) fn get_bias(&self) -> [BiasType; TRANSFORMED_FEATURE_DIMENSIONS] {
+        let mut bias = [0; TRANSFORMED_FEATURE_DIMENSIONS];
+        for i in 0..TRANSFORMED_FEATURE_DIMENSIONS {
+            bias[i] = self.bias[i];
+        }
+        bias
     }
-
-    pub(crate) fn refresh_transform(&mut self) {
-        todo!()
-    }
-
-    pub(crate) fn get_current_transform(&self) -> [i8; TRANSFORMED_FEATURE_DIMENSIONS] {
-        self.previous_features[self.previous_features.len() - 1]
-    }
-
-    pub(crate) fn unmake_move(&mut self) {
-        self.previous_features.pop();
+    pub(crate) fn add_to_accumulator_psq(&self, index: usize, acc: &mut [PSQTWeightType; PSQT_BUCKETS]) {
+        for i in 0..PSQT_BUCKETS {
+            acc[i] += self.psqt_weights[index][i];
+        }
     }
 }

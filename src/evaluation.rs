@@ -135,10 +135,10 @@ const ROOK_SCORES_ENDGAME: [i32; 64] = [
 
 
 impl Board {
-    pub fn static_evaluation(&self) -> i32 {
+    pub fn static_evaluation_old(&self) -> i32 {
         let mut score = 0f32;
-        let opponent_occupancy = self.opponent_pieces.pawns | self.opponent_pieces.knight | self.opponent_pieces.bishop | self.opponent_pieces.rook | self.opponent_pieces.queen | self.opponent_pieces.king;
-        let my_occupancy = self.my_pieces.pawns | self.my_pieces.knight | self.my_pieces.bishop | self.my_pieces.rook | self.my_pieces.queen | self.my_pieces.king;
+        let opponent_occupancy = self.opponent_pieces.pawn | self.opponent_pieces.knight | self.opponent_pieces.bishop | self.opponent_pieces.rook | self.opponent_pieces.queen | self.opponent_pieces.king;
+        let my_occupancy = self.my_pieces.pawn | self.my_pieces.knight | self.my_pieces.bishop | self.my_pieces.rook | self.my_pieces.queen | self.my_pieces.king;
         let all_occupancy = my_occupancy | opponent_occupancy;
 
         let count = pop_count(all_occupancy) as i32;
@@ -153,17 +153,17 @@ impl Board {
         score as i32
     }
 
-    pub fn nnue_static_evaluation(&self, adjusted: bool) -> i32 {
-        let opponent_occupancy = self.opponent_pieces.pawns | self.opponent_pieces.knight | self.opponent_pieces.bishop | self.opponent_pieces.rook | self.opponent_pieces.queen | self.opponent_pieces.king;
-        let my_occupancy = self.my_pieces.pawns | self.my_pieces.knight | self.my_pieces.bishop | self.my_pieces.rook | self.my_pieces.queen | self.my_pieces.king;
+    pub fn static_evaluation(&self, adjusted: bool) -> i32 {
+        let opponent_occupancy = self.opponent_pieces.pawn | self.opponent_pieces.knight | self.opponent_pieces.bishop | self.opponent_pieces.rook | self.opponent_pieces.queen | self.opponent_pieces.king;
+        let my_occupancy = self.my_pieces.pawn | self.my_pieces.knight | self.my_pieces.bishop | self.my_pieces.rook | self.my_pieces.queen | self.my_pieces.king;
         let all_occupancy = my_occupancy | opponent_occupancy;
 
-        let bucket = pop_count(all_occupancy) as i32;
+        let bucket = (pop_count(all_occupancy) as i32 - 1) /4;
         const DELTA: i32 = 24;
 
         let trans = self.nnue.feature_transformer.transform(bucket);
         let psqt = trans.0;
-        let transformed_features = trans.1; // todo: probably it makes sense to keep it updated in make/unmake move
+        let transformed_features = trans.1;
 
         // this is the main subnet
         let positional = self.nnue.networks[bucket as usize].propagate(transformed_features);
@@ -182,7 +182,7 @@ impl Board {
     fn evaluate_pos(&self, pbb: PieceBitBoards, end_gameness: f32, is_white: bool) -> f32 {
         let mut score = 0f32;
 
-        score += self.ev_piece(pbb.pawns, end_gameness, is_white, 100, &PAWN_SCORES, &PAWN_SCORES_ENDGAME);
+        score += self.ev_piece(pbb.pawn, end_gameness, is_white, 100, &PAWN_SCORES, &PAWN_SCORES_ENDGAME);
         score += self.ev_piece(pbb.bishop, end_gameness, is_white, 330, &BISHOP_SCORES, &BISHOP_SCORES_ENDGAME);
         score += self.ev_piece(pbb.knight, end_gameness, is_white, 300, &KNIGHT_SCORES, &KNIGHT_SCORES_ENDGAME);
         score += self.ev_piece(pbb.rook, end_gameness, is_white, 500, &ROOK_SCORES, &ROOK_SCORES_ENDGAME);

@@ -16,6 +16,7 @@ pub(crate) struct Nnue {
     size: u32,
     pub feature_transformer: FeatureTransformer,
     pub networks: Vec<Architecture>,
+
 }
 
 

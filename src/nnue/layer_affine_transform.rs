@@ -46,7 +46,7 @@ impl AffineTransform {
         for i in 0..self.out_dims {
             let mut sum = self.bias[i];
             for j in 0..self.weights[i].len() {
-                sum += (self.weights[i][j] * input[j]) as i32;
+                sum += self.weights[i][j] as i32 * input[j] as i32;
             }
             output.push(sum);
         }

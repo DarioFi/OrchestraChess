@@ -325,7 +325,7 @@ impl Engine {
             }
         }
 
-        let eval = self.board.static_evaluation();
+        let eval = self.board.static_evaluation(true);
         if depth > self.curr_max_depth {
             return eval;
         }
