@@ -13,13 +13,20 @@ const ROOK_IND: usize = 3;
 const QUEEN_IND: usize = 4;
 const KING_IND: usize = 5;
 
-fn make_index(piece_index: usize, is_mine: usize, piece_square: usize, king_square: usize) -> usize {
+fn make_index(piece_index: usize, is_mine: usize, mut piece_square: usize, king_square: usize) -> usize {
     /*
     p_idx = piece_type * 2 + piece_color
     halfkp_idx = piece_square + (p_idx + king_square * 11) * 64
     */
+    let mut file = king_square % 8;
+    let rank = king_square / 8;
+    if file > 3 {
+        file = 7 - file;
+        piece_square ^= 7;
+    }
     let p_idx = piece_index * 2 + is_mine;
     let halfkp_idx = piece_square + (p_idx + king_square * 11) * 64;
+    println!("{}", halfkp_idx);
     halfkp_idx
 }
 
@@ -55,8 +62,8 @@ impl Board {
         }
 
 
-        opp_king_square = get_king_index(opp_king_square);
-        my_king_square = get_king_index(my_king_square);
+        // opp_king_square = get_king_index(opp_king_square);
+        // my_king_square = get_king_index(my_king_square);
 
         let am_i_white = self.color_to_move == COLOR::WHITE;
 

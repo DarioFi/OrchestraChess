@@ -233,8 +233,8 @@ impl Engine {
         }
 
         if depth == 0 {
-            let eval = self.quiescence_search(-MATING_SCORE, MATING_SCORE, 0);
-            // let eval = self.board.static_evaluation();
+            // let eval = self.quiescence_search(-MATING_SCORE, MATING_SCORE, 0);
+            let eval = self.board.static_evaluation(true);
             return (eval, null_move());
         }
 

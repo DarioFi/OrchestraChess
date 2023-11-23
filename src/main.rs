@@ -60,8 +60,8 @@ fn main() {
     //
     //
     let mut orchestra_director = orchestradirector::new_orchestra_director();
-    // orchestra_director.handle_command("position", "startpos moves e2e4");
-    // orchestra_director.handle_command("go", "depth 5");
+    orchestra_director.handle_command("position", "fen 4k3/4p3/8/8/8/8/8/4K3 w - - 0 1");
+    orchestra_director.handle_command("go", "depth 2");
     //
     // orchestra_director.handle_command("position", "startpos moves e2e4 d7d6 g1f3");
     // orchestra_director.handle_command("go", "movetime 1000");

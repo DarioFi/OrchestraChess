@@ -133,28 +133,6 @@ pub struct FeatureTransformer {
 
 // we will also update the feature transformer here
 
-// todo: check that those numbers are correct by reading SF code
-const PAWN_INDEX: usize = 0;
-const KNIGHT_INDEX: usize = 1;
-const BISHOP_INDEX: usize = 2;
-const ROOK_INDEX: usize = 3;
-const QUEEN_INDEX: usize = 4;
-
-fn get_index(piece_type: PieceType, color: COLOR) -> usize {
-    let x = match piece_type {
-        PieceType::Pawn => { PAWN_INDEX }
-        PieceType::Knight => { KNIGHT_INDEX }
-        PieceType::Bishop => { BISHOP_INDEX }
-        PieceType::Rook => { ROOK_INDEX }
-        PieceType::Queen => { QUEEN_INDEX }
-        _ => { panic!("Invalid piece type (either a king was captured or this was called on empty move") }
-    };
-    match color {
-        COLOR::WHITE => { 2 * x }
-        COLOR::BLACK => { 2 * x + 1 }
-    }
-}
-
 impl FeatureTransformer {
     pub(crate) fn read_parameters(stream: &mut File) -> FeatureTransformer {
         let mut bias: Vec<BiasType> = Vec::new();

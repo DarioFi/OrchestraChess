@@ -36,7 +36,7 @@ impl Nnue {
         println!("The next hash should all be the same");
         for i in 0..LAYER_STACKS {
             let header_layer_hash = read_u32(&mut file);
-            //todo: maybe add checks for those hashes
+
             println!("Layer {} hash: {}", i, header_layer_hash);
             nnue.networks.push(Architecture::read_parameters(&mut file));
         }
