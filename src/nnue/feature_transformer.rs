@@ -31,7 +31,7 @@ pub fn read_leb_128_bias_type(stream: &mut File, out: &mut Vec<BiasType>, count:
     let mut bytes_left = read_u32(stream);
 
     let mut buf_pos = BUF_SIZE;
-    for i in 0..count {
+    for _i in 0..count {
         let mut result: BiasType = Default::default();
         let mut shift = 0;
 
@@ -81,7 +81,7 @@ pub fn read_leb_128_psqt_type(stream: &mut File, out: &mut Vec<PSQTWeightType>, 
     let mut bytes_left = read_u32(stream);
 
     let mut buf_pos = BUF_SIZE;
-    for i in 0..count {
+    for _i in 0..count {
         let mut result: PSQTWeightType = Default::default();
         let mut shift = 0;
 
@@ -174,11 +174,11 @@ impl FeatureTransformer {
         }
     }
 
-    pub(crate) fn transform(&self, bucket: i32) -> (i32, [i8; TRANSFORMED_FEATURE_DIMENSIONS]) {
+    pub(crate) fn transform(&self, _bucket: i32) -> (i32, [i8; TRANSFORMED_FEATURE_DIMENSIONS]) {
         todo!()
     }
 
-    pub(crate) fn update_transform(&mut self, mov: &Move) {
+    pub(crate) fn update_transform(&mut self, _mov: &Move) {
         todo!()
     }
 
