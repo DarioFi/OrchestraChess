@@ -558,9 +558,6 @@ impl Board {
         } else {
             is_enpassant = false;
         }
-        if mov.len() == 5{
-            let debug= 0;
-        }
         create_move(
             start_square,
             end_square,

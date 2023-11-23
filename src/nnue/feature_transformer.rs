@@ -1,7 +1,5 @@
 use std::fs::File;
 use std::io::Read;
-use std::process::exit;
-use rand::distributions::BernoulliError::InvalidProbability;
 use crate::nnue::read_utilities::read_u32;
 use crate::r#move::Move;
 
@@ -14,7 +12,7 @@ pub type WeightType = i16;
 pub type PSQTWeightType = i32;
 
 //todo extracted by hand from stockfish
-pub const INPUT_DIMENSIONS: usize = 22528;
+const INPUT_DIMENSIONS: usize = 22528;
 const LEB128_MAGIC_STRING: &[u8; 17] = b"COMPRESSED_LEB128";
 const LEB128_MAGIC_STRING_SIZE: usize = 17;
 
@@ -121,7 +119,7 @@ pub fn read_leb_128_psqt_type(stream: &mut File, out: &mut Vec<PSQTWeightType>, 
 pub struct FeatureTransformer {
     bias: Vec<BiasType>,
     weights: Vec<Vec<WeightType>>,
-    PSQTWeights: Vec<Vec<PSQTWeightType>>,
+    psqt_weights: Vec<Vec<PSQTWeightType>>,
     previous_features: Vec<[i8; TRANSFORMED_FEATURE_DIMENSIONS]>,
 }
 
@@ -162,7 +160,7 @@ impl FeatureTransformer {
         FeatureTransformer {
             bias,
             weights,
-            PSQTWeights: psqtweights,
+            psqt_weights: psqtweights,
             previous_features: Vec::new(),
         }
     }
@@ -171,12 +169,12 @@ impl FeatureTransformer {
         FeatureTransformer {
             bias: Vec::new(),
             weights: Vec::new(),
-            PSQTWeights: Vec::new(),
+            psqt_weights: Vec::new(),
             previous_features: Vec::new(),
         }
     }
 
-    pub(crate) fn transform(&self) -> (i32, [i8; TRANSFORMED_FEATURE_DIMENSIONS]) {
+    pub(crate) fn transform(&self, bucket: i32) -> (i32, [i8; TRANSFORMED_FEATURE_DIMENSIONS]) {
         todo!()
     }
 

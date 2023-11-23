@@ -1,6 +1,5 @@
 use std::fs::File;
 use std::io::Read;
-use serde::de::Unexpected::Signed;
 
 pub fn read_u32(file: &mut File) -> u32 {
     let mut buffer = [0_u8; 4];

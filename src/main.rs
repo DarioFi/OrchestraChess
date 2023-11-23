@@ -16,16 +16,9 @@ mod tree;
 mod nnue;
 
 
-use std::{io, process::exit};
-use constants::COLOR;
-use std::sync::{Arc, Mutex};
-use bitintr::{Pdep, Pext};
-use crate::board::Board;
+use std::{io};
 
 
-use std::io::prelude::*;
-use crate::magic::{hash_on_mask, inverse_hash_on_mask};
-use crate::nnue::nnue::{Nnue};
 
 fn main() {
 
@@ -66,7 +59,7 @@ fn main() {
     // println!("{:?}", node);
     // endregion
 
-    let nnue = Nnue::init();
+    // let nnue = Nnue::init();
     //
     //
     // let mut orchestra_director = orchestradirector::new_orchestra_director();
@@ -80,7 +73,7 @@ fn main() {
     // println!("inverse {:b}", inverse);
     // println!("inverse {:b}", hash.pdep(mask));
 
-    exit(0);
+    // exit(0);
     let mut orchestra_director = orchestradirector::new_orchestra_director();
     loop {
         let mut message = String::new();

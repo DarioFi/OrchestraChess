@@ -3,8 +3,7 @@ use crate::tree::Node;
 use std::io::prelude::*;
 use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
-// use serde::de::Unexpected::Option;
-use core::option::{Option::None, Option::Some};
+use core::option::{Option::None};
 
 const USE_BEST_MOVE: bool = false;
 const USE_BOOK: bool = true;

@@ -1,8 +1,6 @@
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::thread::JoinHandle;
 use std::time::Duration;
-use crate::r#move::Move;
 
 #[derive(Clone)]
 pub struct Timer {
@@ -38,7 +36,7 @@ pub fn start_timer_maximum_allocable(millis: u128, hook: Arc<Mutex<bool>>){
         let seconds = millis / 1000;
         let millis_remaining = millis % 1000;
 
-        for i in 0..seconds {
+        for _ in 0..seconds {
             if *hook.lock().unwrap() {
                 return;
             }

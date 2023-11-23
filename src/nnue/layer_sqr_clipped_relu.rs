@@ -25,7 +25,7 @@ impl SqrClippedReLU {
         for i in 0..input.len() {
             let mut output_value = input[i] as i64;
             output_value *= input[i] as i64;
-            output_value >>= (2 * WEIGHT_SCALE_BITS + 7);
+            output_value >>= 2 * WEIGHT_SCALE_BITS + 7;
             output_value = std::cmp::min(127, output_value);
             output.push(output_value as OutputType);
         }

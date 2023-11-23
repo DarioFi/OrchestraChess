@@ -1,5 +1,5 @@
 use std::fs::File;
-use crate::nnue::feature_transformer::{INPUT_DIMENSIONS, TRANSFORMED_FEATURE_DIMENSIONS};
+use crate::nnue::feature_transformer::{TRANSFORMED_FEATURE_DIMENSIONS};
 use crate::nnue::read_utilities::{get_padded, read_i32, read_i8};
 
 type BiasType = i32;

@@ -1,5 +1,5 @@
 use rand::rngs::StdRng;
-use rand::{Rng, thread_rng, SeedableRng};
+use rand::{Rng, SeedableRng};
 use crate::zobrist::ZobristHashHandler;
 
 use crate::board::Board;

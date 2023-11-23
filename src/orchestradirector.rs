@@ -1,4 +1,3 @@
-use std::sync::{Arc, Mutex};
 use crate::helpers::respond_to_uci;
 #[macro_export]
 macro_rules! debug {
@@ -64,6 +63,8 @@ impl OrchestraDirector {
     }
 
     fn uci_handle_position(&mut self, options: &str) {
+        // todo: we re-initialize everything here, so we have a 400ms overhead for magics + nnue after the position command
+        // find a way to re-use the nnue (especially) and magics
         if options.starts_with("startpos") { // todo: review this because the string editing is done in two different places
             self.init_startpos();
             let w = options.split("moves").collect::<Vec<_>>();
@@ -99,7 +100,6 @@ impl OrchestraDirector {
 
     fn uci_handle_go(&mut self, options: &str) {
         println!("{}", options);
-        let hook = Arc::new(Mutex::new(false));
 
         let op_list: Vec<&str> = options.split_whitespace().collect();
         let mut i = 0;

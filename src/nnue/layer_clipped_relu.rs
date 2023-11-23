@@ -19,7 +19,7 @@ impl ClippedRelu {
         }*/
         // clamp vector
         input.into_iter().map(|value| {
-            let scaled_value = (value >> WEIGHT_SCALE_BITS);
+            let scaled_value = value >> WEIGHT_SCALE_BITS;
             let resc = scaled_value.clamp(0, 127);
             resc as OutputType
         }).collect()

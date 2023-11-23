@@ -162,11 +162,11 @@ impl Board {
         let bucket = pop_count(all_occupancy) as i32;
         const DELTA: i32 = 24;
 
-        let trans = self.nnue.feature_transformer.transform();
+        let trans = self.nnue.feature_transformer.transform(bucket);
         let psqt = trans.0;
         let transformed_features = trans.1; // todo: probably it makes sense to keep it updated in make/unmake move
 
-        let positional = self.nnue.networks[psqt as usize].propagate(transformed_features);
+        let positional = self.nnue.networks[bucket as usize].propagate(transformed_features);
         // if complexity
         // complexity = abs(psqt - positional) / Output_scale;
         if adjusted {

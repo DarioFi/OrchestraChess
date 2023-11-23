@@ -28,6 +28,7 @@ impl Nnue {
         nnue.read_headers(&mut file);
 
         let header_transform_hash = read_u32(&mut file);
+        println!("Header transform hash: {}", header_transform_hash);
         nnue.feature_transformer = FeatureTransformer::read_parameters(&mut file);
 
         // here we itarate over the layers and read the weights

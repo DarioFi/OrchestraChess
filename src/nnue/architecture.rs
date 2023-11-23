@@ -1,5 +1,5 @@
 use std::fs::File;
-use crate::nnue::feature_transformer::{INPUT_DIMENSIONS, TRANSFORMED_FEATURE_DIMENSIONS};
+use crate::nnue::feature_transformer::{ TRANSFORMED_FEATURE_DIMENSIONS};
 use crate::nnue::layer_affine_transform::AffineTransform;
 use crate::nnue::layer_affine_transform_sparse::TransformSparse;
 use crate::nnue::layer_sqr_clipped_relu::SqrClippedReLU;
