@@ -1,9 +1,9 @@
 use std::fs::File;
-use crate::tree::Node;
 use std::io::prelude::*;
 use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
-use core::option::{Option::None};
+use core::option::Option::None;
+use serde::{Deserialize, Serialize};
 
 const USE_BEST_MOVE: bool = false;
 const USE_BOOK: bool = true;
@@ -89,5 +89,28 @@ impl OpeningBook {
             }
             return None;
         }
+    }
+}
+
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "PascalCase")]
+pub struct Node {
+    pub mov: String,
+    pub score: i32,  // number of times this continuation has been played in the database.
+    pub children: Vec<Node>, 
+}
+
+impl Node {
+    pub fn new(mov: String, score: i32) -> Node {
+        Node {
+            mov,
+            score,
+            children: Vec::new(),
+        }
+    }
+
+    pub fn add_child(&mut self, child: Node) {
+        self.children.push(child);
     }
 }

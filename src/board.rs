@@ -1,6 +1,5 @@
 use std::ops::{Index, IndexMut};
 use crate::r#move::{create_move, Move};
-
 use crate::constants::{COLOR, MASK_ONES, MOVING_PIECES, PieceType};
 use crate::constants::COLOR::{BLACK, WHITE};
 use crate::helpers::{lsb, pop_count, remove_lsb, square_string_to_int};
@@ -8,8 +7,29 @@ use crate::magic::{coord_bit, coord_to_int, DIAGONAL_DIRS, DIRECTIONS, Magics, n
 use crate::magic::DIRECTIONS::{NE, NW, SE, SW};
 use crate::move_manager::MoveManager;
 use crate::nnue::nnue::Nnue;
-use crate::zobrist::ZobristHashHandler;
-use crate::zobrist_impl::init_zobrist;
+use crate::zobrist::init_zobrist;
+
+
+pub struct Board {
+    pub(crate) my_pieces: PieceBitBoards,
+    pub(crate) opponent_pieces: PieceBitBoards,
+
+    utility: UtilityBitBoards,
+
+    pub(crate) color_to_move: COLOR,
+    en_passant_square: u8,
+    castling_rights: CastlingRights,
+
+    moves_stack: Vec<Move>,
+    zobrist_stack: Vec<u64>,
+    en_passant_stack: Vec<u8>,
+    castling_stack: Vec<CastlingRights>,
+
+    magics: Magics,
+    pub(crate) nnue: Nnue,
+    pub(crate) zobrist: ZobristHashHandler,
+}
+
 
 #[derive(Clone, Copy, Debug)]
 pub struct PieceBitBoards {
@@ -21,14 +41,55 @@ pub struct PieceBitBoards {
     pub(crate) king: u64,
 }
 
-fn empty_piece_bit_boards() -> PieceBitBoards {
-    PieceBitBoards {
-        pawns: 0,
-        knight: 0,
-        bishop: 0,
-        rook: 0,
-        queen: 0,
-        king: 0,
+
+struct UtilityBitBoards {
+    my_occupancy: u64,
+    opponent_occupancy: u64,
+    all_occupancy: u64,
+
+    checkers: u64,
+    blocker_squares: u64,
+
+    pinned: u64,
+    pinned_ns: u64,
+    pinned_we: u64,
+    pinned_nwse: u64,
+    pinned_swne: u64,
+
+    my_attack: u64,
+    sq_attacked_by_oppo: u64,
+
+    opponent_pawn_attacks: u64,
+    opponent_knight_attacks: u64,
+    opponent_bishop_attacks: u64,
+    opponent_rook_attacks: u64,
+    opponent_queen_attacks: u64,
+    opponent_king_attacks: u64,
+}
+
+
+pub struct ZobristHashHandler {
+    pub table: [[u64; 12]; 64],
+    pub black_to_move: u64,
+    pub hash: u64,
+}
+
+
+#[repr(transparent)]
+#[derive(Clone, Copy, Debug)]
+struct CastlingRights(u8);
+
+
+impl PieceBitBoards {
+    fn new() -> PieceBitBoards {
+        PieceBitBoards {
+            pawns: 0,
+            knight: 0,
+            bishop: 0,
+            rook: 0,
+            queen: 0,
+            king: 0,
+        }
     }
 }
 
@@ -63,60 +124,48 @@ impl IndexMut<PieceType> for PieceBitBoards {
 }
 
 
-struct UtilityBitBoards {
-    my_occupancy: u64,
-    opponent_occupancy: u64,
-    all_occupancy: u64,
-
-    checkers: u64,
-    blocker_squares: u64,
-
-    pinned: u64,
-    pinned_ns: u64,
-    pinned_we: u64,
-    pinned_nwse: u64,
-    pinned_swne: u64,
-
-    my_attack: u64,
-    sq_attacked_by_oppo: u64,
-
-    opponent_pawn_attacks: u64,
-    opponent_knight_attacks: u64,
-    opponent_bishop_attacks: u64,
-    opponent_rook_attacks: u64,
-    opponent_queen_attacks: u64,
-    opponent_king_attacks: u64,
-
+impl UtilityBitBoards {
+    fn new() -> UtilityBitBoards {
+        UtilityBitBoards {
+            my_occupancy: 0,
+            opponent_occupancy: 0,
+            all_occupancy: 0,
+            checkers: 0,
+            blocker_squares: 0,
+            pinned: 0,
+            pinned_ns: 0,
+            pinned_we: 0,
+            pinned_nwse: 0,
+            pinned_swne: 0,
+            my_attack: 0,
+            sq_attacked_by_oppo: 0,
+            opponent_pawn_attacks: 0,
+            opponent_knight_attacks: 0,
+            opponent_bishop_attacks: 0,
+            opponent_rook_attacks: 0,
+            opponent_queen_attacks: 0,
+            opponent_king_attacks: 0,
+        }
+    }
 }
 
-#[repr(transparent)]
-#[derive(Clone, Copy, Debug)]
-struct CastlingRights(u8);
 
 const WK: u8 = 1 << 0;
 const WQ: u8 = 1 << 1;
 const BK: u8 = 1 << 2;
 const BQ: u8 = 1 << 3;
-
-
 const WK_STARTPOS: u64 = coord_bit(0, 4);
-
 const BK_STARTPOS: u64 = coord_bit(7, 4);
-
 const WRK_STARTPOS: u64 = coord_bit(0, 7);
 const WRQ_STARTPOS: u64 = coord_bit(0, 0);
 const BRK_STARTPOS: u64 = coord_bit(7, 7);
 const BRQ_STARTPOS: u64 = coord_bit(7, 0);
-
 const WK_EMPTY: u64 = coord_bit(0, 5) | coord_bit(0, 6);
 const WQ_EMPTY: u64 = coord_bit(0, 1) | coord_bit(0, 2) | coord_bit(0, 3);
-
 const WK_ATTACK: u64 = WK_EMPTY;
 const WQ_ATTACK: u64 = coord_bit(0, 2) | coord_bit(0, 3);
-
 const BK_EMPTY: u64 = coord_bit(7, 5) | coord_bit(7, 6);
 const BQ_EMPTY: u64 = coord_bit(7, 1) | coord_bit(7, 2) | coord_bit(7, 3);
-
 const BK_ATTACK: u64 = BK_EMPTY;
 const BQ_ATTACK: u64 = coord_bit(7, 2) | coord_bit(7, 3);
 
@@ -159,87 +208,13 @@ impl CastlingRights {
     }
 }
 
-
-pub struct Board {
-    // todo: for performance reason probably it makes sense to instantiate a single Vec<Move> and
-    // then use that one for everything kind of in place, for now we don't do it
-
-    pub(crate) my_pieces: PieceBitBoards,
-    pub(crate) opponent_pieces: PieceBitBoards,
-
-    utility: UtilityBitBoards,
-
-    pub(crate) color_to_move: COLOR,
-    en_passant_square: u8,
-    castling_rights: CastlingRights,
-
-    moves_stack: Vec<Move>,
-    zobrist_stack: Vec<u64>,
-    en_passant_stack: Vec<u8>,
-    castling_stack: Vec<CastlingRights>,
-
-    magics: Magics,
-    pub(crate) nnue: Nnue,
-    pub(crate) zobrist: ZobristHashHandler,
-}
-
-
-// todo: Move allocation:
-// possible ideas
-// - MovesManager object, kept in parallel with board under Engine (has access to board object if
-// needed, needs to be passed around in move gen
-// - Same but inside Board, cannot access utilities if methods are inside this object but it is
-// cleaner and perft would still be contained
-// disadvantage is that we would need to move out some logic
-
-// idea of this object is to have a method add_move which parses this move and has some logic,
-// slightly inefficient as in some points we already know whether it is a caputre or similar but
-// it might be worth the logic separation
-
-// the other thing to choose is the data structure to use for the moves, we could use a Vec<Move>
-// but it can be slow to allocate so creating a full size vector and then having a counter that
-// keeps track of the available index
-// the logic here can get intricated so the custom class seems worth
-
-impl Board {
-    pub(crate) fn is_check(&self) -> bool {
-        // assume self.generate_moves was ran
-        // => self.update_utilities() was ran
-        return self.utility.checkers != 0;
-    }
-}
-
-
-fn empty_utility_bitboards() -> UtilityBitBoards {
-    UtilityBitBoards {
-        my_occupancy: 0,
-        opponent_occupancy: 0,
-        all_occupancy: 0,
-        checkers: 0,
-        blocker_squares: 0,
-        pinned: 0,
-        pinned_ns: 0,
-        pinned_we: 0,
-        pinned_nwse: 0,
-        pinned_swne: 0,
-        my_attack: 0,
-        sq_attacked_by_oppo: 0,
-        opponent_pawn_attacks: 0,
-        opponent_knight_attacks: 0,
-        opponent_bishop_attacks: 0,
-        opponent_rook_attacks: 0,
-        opponent_queen_attacks: 0,
-        opponent_king_attacks: 0,
-    }
-}
-
 // region Board initialization
 impl Board {
     pub fn empty_board() -> Board {
         Board {
-            my_pieces: empty_piece_bit_boards(),
-            opponent_pieces: empty_piece_bit_boards(),
-            utility: empty_utility_bitboards(),
+            my_pieces: PieceBitBoards::new(),
+            opponent_pieces: PieceBitBoards::new(),
+            utility: UtilityBitBoards::new(),
             color_to_move: WHITE,
             en_passant_square: 0,
             castling_rights: CastlingRights(0),
@@ -522,8 +497,13 @@ impl Board {
         self.utility.sq_attacked_by_oppo = self.utility.opponent_pawn_attacks | self.utility.opponent_knight_attacks | self.utility.opponent_bishop_attacks | self.utility.opponent_rook_attacks | self.utility.opponent_queen_attacks | self.utility.opponent_king_attacks;
 
     }
-}
 
+    pub fn is_check(&self) -> bool {
+        // assume self.generate_moves was ran
+        // => self.update_utilities() was ran
+        return self.utility.checkers != 0;
+    }
+}
 // endregion
 
 // region Moves generation
@@ -568,7 +548,6 @@ impl Board {
             is_enpassant,
         )
     }
-
 
     pub fn generate_moves(&mut self, captures: bool) -> MoveManager {
         self.update_utilities();
@@ -1215,7 +1194,6 @@ impl Board {
         self.zobrist_stack.iter().fold(0, |acc, x| if *x == hash { acc + 1 } else { acc }) >= 3
     }
 
-    //ignore that it is unused
     #[allow(dead_code)]
     pub fn perft(&mut self, depth: i32, print_depth: i32, bulk_count: bool) -> u64 {
         let moves = self.generate_moves(false);
