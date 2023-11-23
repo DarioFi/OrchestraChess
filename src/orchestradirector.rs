@@ -32,7 +32,7 @@ pub fn new_orchestra_director() -> OrchestraDirector {
 
 impl OrchestraDirector {
     pub(crate) fn init_startpos(&mut self) {
-        self.eng.board = Board::from_startpos();
+        self.eng.board.from_startpos();
     }
 
     pub fn handle_command(&mut self, command: &str, options: &str) {
@@ -88,7 +88,7 @@ impl OrchestraDirector {
     fn init_from_fen(&mut self, fen: &str) {
         // todo: review this because the string editing is done in two different places
         // fen = options[options.find("[") + 1:options.find("]")]
-        self.eng.board = Board::from_fen(fen);
+        self.eng.board.from_fen(fen);
     }
 
     fn uci_handle_isready(&self) {

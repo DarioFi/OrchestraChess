@@ -1,4 +1,5 @@
 use std::ops::{Index, IndexMut};
+use serde_json::Value::Bool;
 use crate::muve::{create_move, Move};
 use crate::constants::{COLOR, MASK_ONES, MOVING_PIECES, PieceType};
 use crate::constants::COLOR::{BLACK, WHITE};
@@ -227,9 +228,7 @@ impl Board {
             nnue: Nnue::init(),
         }
     }
-    pub fn from_fen(fen: &str) -> Board {
-        let mut board = Board::empty_board();
-
+    pub fn from_fen(&mut self, fen: &str) {
         let parts: Vec<&str> = fen.split(" ").collect();
         let pieces_part = parts[0];
         let mut rank = 7;
@@ -237,51 +236,51 @@ impl Board {
         for p in pieces_part.chars() {
             match p {
                 'K' => {
-                    board.my_pieces.king |= coord_bit(rank, file);
+                    self.my_pieces.king |= coord_bit(rank, file);
                     file += 1;
                 }
                 'Q' => {
-                    board.my_pieces.queen |= coord_bit(rank, file);
+                    self.my_pieces.queen |= coord_bit(rank, file);
                     file += 1;
                 }
                 'R' => {
-                    board.my_pieces.rook |= coord_bit(rank, file);
+                    self.my_pieces.rook |= coord_bit(rank, file);
                     file += 1;
                 }
                 'B' => {
-                    board.my_pieces.bishop |= coord_bit(rank, file);
+                    self.my_pieces.bishop |= coord_bit(rank, file);
                     file += 1;
                 }
                 'N' => {
-                    board.my_pieces.knight |= coord_bit(rank, file);
+                    self.my_pieces.knight |= coord_bit(rank, file);
                     file += 1;
                 }
                 'P' => {
-                    board.my_pieces.pawns |= coord_bit(rank, file);
+                    self.my_pieces.pawns |= coord_bit(rank, file);
                     file += 1;
                 }
                 'k' => {
-                    board.opponent_pieces.king |= coord_bit(rank, file);
+                    self.opponent_pieces.king |= coord_bit(rank, file);
                     file += 1;
                 }
                 'q' => {
-                    board.opponent_pieces.queen |= coord_bit(rank, file);
+                    self.opponent_pieces.queen |= coord_bit(rank, file);
                     file += 1;
                 }
                 'r' => {
-                    board.opponent_pieces.rook |= coord_bit(rank, file);
+                    self.opponent_pieces.rook |= coord_bit(rank, file);
                     file += 1;
                 }
                 'b' => {
-                    board.opponent_pieces.bishop |= coord_bit(rank, file);
+                    self.opponent_pieces.bishop |= coord_bit(rank, file);
                     file += 1;
                 }
                 'n' => {
-                    board.opponent_pieces.knight |= coord_bit(rank, file);
+                    self.opponent_pieces.knight |= coord_bit(rank, file);
                     file += 1;
                 }
                 'p' => {
-                    board.opponent_pieces.pawns |= coord_bit(rank, file);
+                    self.opponent_pieces.pawns |= coord_bit(rank, file);
                     file += 1;
                 }
                 '/' => {
@@ -295,13 +294,13 @@ impl Board {
         let color = parts[1];
         match color {
             "w" => {
-                board.color_to_move = WHITE;
+                self.color_to_move = WHITE;
             }
             "b" => {
-                board.color_to_move = BLACK;
-                let tmp = board.my_pieces.clone();
-                board.my_pieces = board.opponent_pieces.clone();
-                board.opponent_pieces = tmp.clone();
+                self.color_to_move = BLACK;
+                let tmp = self.my_pieces.clone();
+                self.my_pieces = self.opponent_pieces.clone();
+                self.opponent_pieces = tmp.clone();
             }
             _ => { panic!("Invalid color"); }
         }
@@ -309,30 +308,29 @@ impl Board {
         let castling = parts[2];
         for c in castling.chars() {
             match c {
-                'K' => { board.castling_rights.0 |= WK; }
-                'Q' => { board.castling_rights.0 |= WQ; }
-                'k' => { board.castling_rights.0 |= BK; }
-                'q' => { board.castling_rights.0 |= BQ; }
-                '-' => { board.castling_rights.0 = 0; }
+                'K' => { self.castling_rights.0 |= WK; }
+                'Q' => { self.castling_rights.0 |= WQ; }
+                'k' => { self.castling_rights.0 |= BK; }
+                'q' => { self.castling_rights.0 |= BQ; }
+                '-' => { self.castling_rights.0 = 0; }
                 _ => { panic!("Invalid castling rights"); }
             }
         }
 
         let en_passant = parts[3];
         if en_passant != "-" {
-            board.en_passant_square = square_string_to_int(en_passant);
+            self.en_passant_square = square_string_to_int(en_passant);
         } else {
-            board.en_passant_square = 0;
+            self.en_passant_square = 0;
         }
 
         let _fifty_move_rule = parts[4];
         let _half_move_clock = parts[5];
 
-        board.init_hash();
-        board
+        self.init_hash();
     }
-    pub fn from_startpos() -> Board {
-        Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk - 0 1")
+    pub fn from_startpos(&mut self) {
+        self.from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk - 0 1")
     }
 }
 // endregion

@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::Read;
 use crate::nnue::read_utilities::read_u32;
 use crate::muve::Move;
+use crate::constants::{COLOR, PieceType};
 
 pub const TRANSFORMED_FEATURE_DIMENSIONS: usize = 2560;
 pub const HALF_DIMENSIONS: usize = TRANSFORMED_FEATURE_DIMENSIONS;
@@ -64,7 +65,6 @@ pub fn read_leb_128_bias_type(stream: &mut File, out: &mut Vec<BiasType>, count:
 
     assert_eq!(bytes_left, 0);
 }
-// todo: if those function work it is a miracle, transpiled with gpt to have a blueprint
 
 pub fn read_leb_128_psqt_type(stream: &mut File, out: &mut Vec<PSQTWeightType>, count: usize) {
     // Check the presence of our LEB128 magic string
@@ -123,6 +123,30 @@ pub struct FeatureTransformer {
     previous_features: Vec<[i8; TRANSFORMED_FEATURE_DIMENSIONS]>,
 }
 
+// we will also update the feature transformer here
+
+// todo: check that those numbers are correct by reading SF code
+const PAWN_INDEX: usize = 0;
+const KNIGHT_INDEX: usize = 1;
+const BISHOP_INDEX: usize = 2;
+const ROOK_INDEX: usize = 3;
+const QUEEN_INDEX: usize = 4;
+
+fn get_index(piece_type: PieceType, color: COLOR) -> usize {
+    let x = match piece_type {
+        PieceType::Pawn => { PAWN_INDEX }
+        PieceType::Knight => { KNIGHT_INDEX }
+        PieceType::Bishop => { BISHOP_INDEX }
+        PieceType::Rook => { ROOK_INDEX }
+        PieceType::Queen => { QUEEN_INDEX }
+        _ => { panic!("Invalid piece type (either a king was captured or this was called on empty move") }
+    };
+    match color {
+        COLOR::WHITE => { 2 * x }
+        COLOR::BLACK => { 2 * x + 1 }
+    }
+}
+
 impl FeatureTransformer {
     pub(crate) fn read_parameters(stream: &mut File) -> FeatureTransformer {
         let mut bias: Vec<BiasType> = Vec::new();
@@ -175,14 +199,23 @@ impl FeatureTransformer {
     }
 
     pub(crate) fn transform(&self, bucket: i32) -> (i32, [i8; TRANSFORMED_FEATURE_DIMENSIONS]) {
+        // this should also compute perspectives average and pick the right one
         todo!()
     }
 
-    pub(crate) fn update_transform(&mut self, mov: &Move) {
-        todo!()
+    pub(crate) fn update_simple_move(&mut self, king_square: u8, mov: &Move, color: COLOR) {
+        let new_acc = self.previous_features[self.previous_features.len() - 1].clone();
+
+        // handle moving first piece
+        let pt = mov.piece_moved;
+        let from = mov.start_square;
     }
 
-    pub(crate) fn add_fresh_transform(&mut self) {
+    fn add_to_acc(&self, acc: &mut [i8; TRANSFORMED_FEATURE_DIMENSIONS], index: (usize, usize, usize)) {
+        todo!() //unsure this is a good idea
+    }
+
+    pub(crate) fn refresh_transform(&mut self) {
         todo!()
     }
 
