@@ -1,9 +1,10 @@
 #[cfg(test)]
 mod test_move_gen {
-    use crate::board::{Board};
+    use crate::board::Board;
 
     fn init_board() -> Board {
-        let mut board = Board::from_startpos();
+        let mut board = Board::empty_board();
+        board.from_startpos();
         board
     }
 
@@ -39,5 +40,3 @@ mod test_move_gen {
         }
     }
 }
-
-

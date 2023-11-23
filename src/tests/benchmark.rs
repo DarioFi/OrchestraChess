@@ -12,4 +12,3 @@ pub fn test_perft_speed() {
     let elapsed_ms = elapsed.as_millis();
     println!("{} nodes in {} ms", res, elapsed_ms);
 }
-
