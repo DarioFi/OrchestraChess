@@ -11,9 +11,11 @@ mod tests;
 mod book;
 mod move_manager;
 mod nnue;
+mod accumulator;
 
 
 use std::{io};
+use std::process::exit;
 
 
 fn main() {
@@ -58,17 +60,17 @@ fn main() {
     // let nnue = Nnue::init();
     //
     //
-    let mut orchestra_director = orchestradirector::new_orchestra_director();
-    orchestra_director.handle_command("position", "startpos");
-    orchestra_director.eng.benchmark_perf(6);
-
-    // let mask: u64 = 0b10111111;
-    // let keyy: u64 = 0b10101110;
-    // let hash = hash_on_mask(keyy, mask);
-    // let inverse = inverse_hash_on_mask(hash, mask);
-    // println!("inverse {:b}", inverse);
-    // println!("inverse {:b}", hash.pdep(mask));
-
+    // let mut orchestra_director = orchestradirector::new_orchestra_director();
+    // orchestra_director.handle_command("position", "startpos moves e2e4");
+    // orchestra_director.handle_command("go", "movetime 1000");
+    //
+    // orchestra_director.handle_command("position", "startpos moves e2e4 d7d6 g1f3");
+    // orchestra_director.handle_command("go", "movetime 1000");
+    //
+    //
+    // orchestra_director.handle_command("position", "startpos moves e2e4 d7d6 g1f3 e7e5 b2b3");
+    // orchestra_director.handle_command("go", "movetime 1000");
+    //
     // exit(0);
     let mut orchestra_director = orchestradirector::new_orchestra_director();
     loop {

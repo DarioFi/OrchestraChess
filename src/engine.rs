@@ -39,7 +39,7 @@ pub fn new_engine(board: Board) -> Engine {
 
 impl Engine {
     pub fn search(&mut self, depth: u64, max_time: u128) -> (i32, Move) {
-        if self.position_loaded == "startposa" {
+        if self.position_loaded == "startpos" {
             let moves = self.moves_loaded.split(" ");
             if moves.collect::<Vec<_>>().len() < BOOK_DEPTH as usize {
                 let mov = self.book.query(&self.moves_loaded);

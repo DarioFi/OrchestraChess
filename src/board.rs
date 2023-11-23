@@ -225,7 +225,24 @@ impl Board {
             nnue: Nnue::init(),
         }
     }
+
+    fn reset_board_state(&mut self){
+        self.my_pieces = PieceBitBoards::new();
+        self.opponent_pieces = PieceBitBoards::new();
+        self.utility = UtilityBitBoards::new();
+        self.color_to_move = WHITE;
+        self.en_passant_square = 0;
+        self.castling_rights = CastlingRights(0);
+        self.moves_stack = vec![];
+        self.zobrist_stack = vec![];
+        self.en_passant_stack = vec![];
+        self.castling_stack = vec![];
+        self.zobrist = init_zobrist();
+    }
     pub fn from_fen(&mut self, fen: &str) {
+
+        self.reset_board_state();
+
         let parts: Vec<&str> = fen.split(" ").collect();
         let pieces_part = parts[0];
         let mut rank = 7;

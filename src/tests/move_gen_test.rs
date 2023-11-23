@@ -26,7 +26,8 @@ mod test_move_gen {
         for x in data.iter() {
             let fen = x.0;
             let moves = x.1;
-            let mut board = Board::from_fen(fen);
+            let mut board = Board::empty_board();
+            board.from_fen(fen);
             for i in 0..moves.len() {
                 if moves[i] == 0 {
                     continue;

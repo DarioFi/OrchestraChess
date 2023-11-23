@@ -121,7 +121,7 @@ pub struct FeatureTransformer {
     bias: Vec<BiasType>,
     weights: Vec<Vec<WeightType>>,
     psqt_weights: Vec<Vec<PSQTWeightType>>,
-    previous_features: Vec<[i8; TRANSFORMED_FEATURE_DIMENSIONS]>,
+    previous_features: Vec<[i8; TRANSFORMED_FEATURE_DIMENSIONS]>, // those are the features after the sparse layer but BEFORE the clippedRelu
 }
 
 // we will also update the feature transformer here
