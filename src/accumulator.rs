@@ -96,6 +96,8 @@ impl Board {
 
         self.nnue.feature_transformer.add_to_accumulator(my_index, &mut my_acc);
         self.nnue.feature_transformer.add_to_accumulator(opp_index, &mut opp_acc);
+        self.nnue.feature_transformer.add_to_accumulator_psq(my_index, &mut my_psq_acc);
+        self.nnue.feature_transformer.add_to_accumulator_psq(opp_index, &mut opp_psq_acc);
 
         let ks = lsb(self.opponent_pieces.king);
         let sq_my_perspective;
