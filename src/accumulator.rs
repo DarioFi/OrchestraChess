@@ -13,7 +13,7 @@ const ROOK_IND: usize = 3;
 const QUEEN_IND: usize = 4;
 const KING_IND: usize = 5;
 
-fn make_index(piece_index: usize, is_mine: usize, mut piece_square: usize, king_square: usize) -> usize {
+pub fn make_index(piece_index: usize, is_mine: usize, mut piece_square: usize, king_square: usize) -> usize {
     /*
     p_idx = piece_type * 2 + piece_color
     halfkp_idx = piece_square + (p_idx + king_square * 11) * 64
@@ -28,9 +28,9 @@ fn make_index(piece_index: usize, is_mine: usize, mut piece_square: usize, king_
     }
     let p_idx = piece_index * 2 + is_mine;
     let new_piece_id = piece_rank * 8 + piece_file;
-    let new_king_id = king_rank * 4 + (king_file - 4);
-    let halfkp_idx = new_piece_id + (p_idx + new_king_id * 11) * 64;
-    println!("{}", halfkp_idx);
+    let new_king_id = 31 - (king_rank * 4 + (king_file - 4));
+    let halfkp_idx = new_piece_id + p_idx * 64 + new_king_id * 11 * 64;
+    // println!("{}", halfkp_idx);
     return halfkp_idx;
 }
 
@@ -42,7 +42,6 @@ fn change_perspective(sq: u8) -> u8 {
 
 impl Board {
     pub fn refresh_accumulator(&mut self) {
-
         let mut my_acc: [i16; DIMS] = self.nnue.feature_transformer.get_bias();
         let mut opp_acc: [i16; DIMS] = self.nnue.feature_transformer.get_bias();
 
@@ -156,5 +155,12 @@ impl Board {
             sq = lsb(pieces);
             pieces = remove_lsb(pieces);
         }
+    }
+
+    pub fn clean_accumulator(&mut self) {
+        self.nnue.feature_transformer.my_acc_stack = vec![];
+        self.nnue.feature_transformer.opp_acc_stack = vec![];
+        self.nnue.feature_transformer.my_psq_acc_stack = vec![];
+        self.nnue.feature_transformer.opp_psq_acc_stack = vec![];
     }
 }

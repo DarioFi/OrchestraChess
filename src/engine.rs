@@ -38,7 +38,7 @@ pub fn new_engine(board: Board) -> Engine {
 
 
 impl Engine {
-    pub fn search(&mut self, depth: u64, max_time: u128) -> (i32, Move) {
+    pub fn search(&mut self, depth: i32, max_time: u128) -> (i32, Move) {
         if self.position_loaded == "startpos" {
             let moves = self.moves_loaded.split(" ");
             if moves.collect::<Vec<_>>().len() < BOOK_DEPTH as usize {
@@ -49,6 +49,11 @@ impl Engine {
             }
         }
 
+        if depth == 0 {
+            let score = self.board.static_evaluation(false);
+            println!("info score cp {}", score);
+            return (score, null_move());
+        }
 
         self.transposition_table = HashMap::new();
 
@@ -67,8 +72,8 @@ impl Engine {
         println!("max time {}", max_time);
 
         for dep in 1..(depth + 1) {
-            self.curr_max_depth = dep as i32;
-
+            self.curr_max_depth = dep;
+            let dep = dep as u64;
             let pv_result = self.principal_variation(dep, -MATING_SCORE, MATING_SCORE, &stop_hook, true, true);
 
             if *stop_hook.lock().unwrap() {
@@ -233,8 +238,8 @@ impl Engine {
         }
 
         if depth == 0 {
-            // let eval = self.quiescence_search(-MATING_SCORE, MATING_SCORE, 0);
-            let eval = self.board.static_evaluation(true);
+            let eval = self.quiescence_search(-MATING_SCORE, MATING_SCORE, 0);
+            // let eval = self.board.static_evaluation(true);
             return (eval, null_move());
         }
 

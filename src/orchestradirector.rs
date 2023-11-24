@@ -97,7 +97,7 @@ impl OrchestraDirector {
         let op_list: Vec<&str> = options.split_whitespace().collect();
         let mut i = 0;
         let mut movetime: u64 = 0;
-        let mut depth: u64 = 0;
+        let mut depth: i32 = -1;
         while i < op_list.len() {
             match op_list[i] {
                 "wtime" => {
@@ -149,7 +149,7 @@ impl OrchestraDirector {
         self.timer.move_time = movetime;
 
         let max_time_think;
-        if depth == 0 {
+        if depth == -1 {
             depth = 20;
             max_time_think = self.timer.max_allocable().as_millis();
         } else {

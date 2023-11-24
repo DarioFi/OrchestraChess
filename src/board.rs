@@ -341,10 +341,13 @@ impl Board {
         let _half_move_clock = parts[5];
 
         self.init_hash();
+        self.clean_accumulator();
+        self.refresh_accumulator();
     }
     pub fn from_startpos(&mut self) {
         self.from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk - 0 1")
     }
+
 }
 // endregion
 
