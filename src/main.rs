@@ -32,11 +32,11 @@ fn main() {
     // // let nnue = Nnue::init();
     // //
     // //
-    let mut orchestra_director = orchestradirector::new_orchestra_director();
-    orchestra_director.handle_command("position", "startpos");
+    // let mut orchestra_director = orchestradirector::new_orchestra_director();
+    // orchestra_director.handle_command("position", "fen r1r3k1/p3ppb1/1npp1npp/7q/2PP2bP/2N1P1P1/1PQN1PB1/R1B2RK1 b - - 1 15");
     // orchestra_director.handle_command("position", "startpos");
-    orchestra_director.handle_command("go", "depth 0");
-    exit(0);
+    // orchestra_director.handle_command("go", "depth 0");
+    // exit(0);
 
     let mut orchestra_director = orchestradirector::new_orchestra_director();
     loop {
