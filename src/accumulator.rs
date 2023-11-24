@@ -13,7 +13,7 @@ const ROOK_IND: usize = 3;
 const QUEEN_IND: usize = 4;
 const KING_IND: usize = 5;
 
-pub fn make_index(piece_index: usize, is_mine: usize, mut piece_square: usize, king_square: usize) -> usize {
+pub fn make_index(piece_index: usize, is_opp: usize, mut piece_square: usize, king_square: usize) -> usize {
     /*
     p_idx = piece_type * 2 + piece_color
     halfkp_idx = piece_square + (p_idx + king_square * 11) * 64
@@ -26,11 +26,11 @@ pub fn make_index(piece_index: usize, is_mine: usize, mut piece_square: usize, k
         king_file ^= 7;
         piece_file ^= 7;
     }
-    let p_idx = piece_index * 2 + is_mine;
+    let p_idx = piece_index * 2 + is_opp;
     let new_piece_id = piece_rank * 8 + piece_file;
     let new_king_id = 31 - (king_rank * 4 + (king_file - 4));
     let halfkp_idx = new_piece_id + p_idx * 64 + new_king_id * 11 * 64;
-    // println!("{}", halfkp_idx);
+    println!("{}", halfkp_idx);
     return halfkp_idx;
 }
 

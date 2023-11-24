@@ -29,15 +29,13 @@ impl Nnue {
         nnue.read_headers(&mut file);
 
         let header_transform_hash = read_u32(&mut file);
-        println!("Header transform hash: {}", header_transform_hash);
+        assert!(header_transform_hash == 2133022904);
         nnue.feature_transformer = FeatureTransformer::read_parameters(&mut file);
 
         // here we itarate over the layers and read the weights
-        println!("The next hash should all be the same");
         for i in 0..LAYER_STACKS {
             let header_layer_hash = read_u32(&mut file);
-
-            println!("Layer {} hash: {}", i, header_layer_hash);
+            assert!(header_layer_hash == 1664313546);
             nnue.networks.push(Architecture::read_parameters(&mut file));
         }
         nnue
@@ -55,11 +53,11 @@ impl Nnue {
 
     fn read_headers(&mut self, file: &mut File) {
         let version = read_u32(file);
-        println!("Version: {}", version);
+        assert!(version == 2062757664);
         let hash_value = read_u32(file);
-        println!("Hash value: {}", hash_value);
+        assert!(hash_value == 470823026);
         let size = read_u32(file);
-        println!("Size: {}", size);
+        assert!(size == 84);
 
         self.version = version;
         self.hash_value = hash_value;
