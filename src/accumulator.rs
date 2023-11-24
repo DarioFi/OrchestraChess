@@ -1,5 +1,4 @@
 use crate::board::Board;
-use crate::magic::int_to_coord;
 use crate::muve::Move;
 use crate::utils::{COLOR, lsb, PieceType, remove_lsb};
 
@@ -15,7 +14,7 @@ const KING_IND: usize = 5;
 
 
 // expects king and piece squares to be in pov but not yet reflected horizontally.
-pub fn make_index(piece_index: usize, is_opp: usize, mut piece_square: usize, king_square: usize) -> usize {
+pub fn make_index(piece_index: usize, is_opp: usize, piece_square: usize, king_square: usize) -> usize {
     let mut king_file = king_square % 8;
     let king_rank = king_square / 8;
     let mut piece_file = piece_square % 8;
@@ -126,7 +125,7 @@ impl Board {
         self.nnue.feature_transformer.opp_psq_acc_stack.push(opp_psq_acc);
     }
 
-    fn update_specific_piece(&mut self, bitmap: u64, INDEX: usize, my_ks: u8, opp_ks: u8, am_i_white: bool, is_my_bitmap: bool, my_acc: &mut [i16; DIMS], opp_acc: &mut [i16; DIMS], my_psq: &mut [i32; 8], opp_psq: &mut [i32; 8]) {
+    fn update_specific_piece(&mut self, bitmap: u64, index: usize, my_ks: u8, opp_ks: u8, am_i_white: bool, is_my_bitmap: bool, my_acc: &mut [i16; DIMS], opp_acc: &mut [i16; DIMS], my_psq: &mut [i32; 8], opp_psq: &mut [i32; 8]) {
         let mut pieces = bitmap;
         let mut sq = lsb(pieces);
         pieces = remove_lsb(pieces);
@@ -145,8 +144,8 @@ impl Board {
                 }
             }
 
-            let my_index = make_index(INDEX, (!is_my_bitmap) as usize, sq_my_perspective as usize, my_ks as usize);
-            let opp_index = make_index(INDEX, is_my_bitmap as usize, sq_opp_perspective as usize, opp_ks as usize);
+            let my_index = make_index(index, (!is_my_bitmap) as usize, sq_my_perspective as usize, my_ks as usize);
+            let opp_index = make_index(index, is_my_bitmap as usize, sq_opp_perspective as usize, opp_ks as usize);
 
             self.nnue.feature_transformer.add_to_accumulator(my_index, my_acc);
             self.nnue.feature_transformer.add_to_accumulator(opp_index, opp_acc);

@@ -135,7 +135,8 @@ const ROOK_SCORES_ENDGAME: [i32; 64] = [
 
 
 impl Board {
-    pub fn static_evaluation_old(&self) -> i32 {
+    #[allow(dead_code)]
+    pub fn static_evaluation_naive(&self) -> i32 {
         let mut score = 0f32;
         let opponent_occupancy = self.opponent_pieces.pawn | self.opponent_pieces.knight | self.opponent_pieces.bishop | self.opponent_pieces.rook | self.opponent_pieces.queen | self.opponent_pieces.king;
         let my_occupancy = self.my_pieces.pawn | self.my_pieces.knight | self.my_pieces.bishop | self.my_pieces.rook | self.my_pieces.queen | self.my_pieces.king;

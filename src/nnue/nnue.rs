@@ -33,7 +33,7 @@ impl Nnue {
         nnue.feature_transformer = FeatureTransformer::read_parameters(&mut file);
 
         // here we itarate over the layers and read the weights
-        for i in 0..LAYER_STACKS {
+        for _ in 0..LAYER_STACKS {
             let header_layer_hash = read_u32(&mut file);
             assert!(header_layer_hash == 1664313546);
             nnue.networks.push(Architecture::read_parameters(&mut file));

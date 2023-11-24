@@ -1,7 +1,6 @@
 type InputType = i32;
 type OutputType = i8;
 
-const OUTPUT_SCALE: i8 = 16;
 const WEIGHT_SCALE_BITS: i8 = 6;
 
 pub(crate) struct SqrClippedReLU {}

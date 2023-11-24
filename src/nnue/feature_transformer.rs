@@ -1,11 +1,6 @@
 use std::fs::File;
 use std::io::Read;
-use std::ops::Bound::Included;
-use rand::distributions::BernoulliError::InvalidProbability;
 use crate::nnue::read_utilities::read_u32;
-use crate::muve::Move;
-use crate::utils::COLOR;
-use crate::utils::PieceType;
 
 pub const TRANSFORMED_FEATURE_DIMENSIONS: usize = 2560;
 pub const HALF_DIMENSIONS: usize = 2560;
@@ -24,7 +19,7 @@ const LEB128_MAGIC_STRING_SIZE: usize = 17;
 pub fn read_leb_128_bias_type(stream: &mut File, out: &mut Vec<BiasType>, count: usize) {
     // Check the presence of our LEB128 magic string
     let mut leb128_magic_string = [0_u8; LEB128_MAGIC_STRING_SIZE];
-    stream.read_exact(&mut leb128_magic_string);
+    let _ = stream.read_exact(&mut leb128_magic_string);
     assert_eq!(&leb128_magic_string, LEB128_MAGIC_STRING);
 
     // Ensure the type is signed (not implemented for unsigned types)
@@ -43,7 +38,7 @@ pub fn read_leb_128_bias_type(stream: &mut File, out: &mut Vec<BiasType>, count:
         while shift < std::mem::size_of::<BiasType>() * 8 {
             if buf_pos == BUF_SIZE {
                 let bytes_to_read = std::cmp::min(bytes_left, BUF_SIZE as u32);
-                stream.read_exact(&mut buf[0..bytes_to_read as usize]);
+                let _ = stream.read_exact(&mut buf[0..bytes_to_read as usize]);
                 buf_pos = 0;
             }
 
@@ -73,7 +68,7 @@ pub fn read_leb_128_bias_type(stream: &mut File, out: &mut Vec<BiasType>, count:
 pub fn read_leb_128_psqt_type(stream: &mut File, out: &mut Vec<PSQTWeightType>, count: usize) {
     // Check the presence of our LEB128 magic string
     let mut leb128_magic_string = [0_u8; LEB128_MAGIC_STRING_SIZE];
-    stream.read_exact(&mut leb128_magic_string);
+    let _ = stream.read_exact(&mut leb128_magic_string);
     assert_eq!(&leb128_magic_string, LEB128_MAGIC_STRING);
 
     // Ensure the type is signed (not implemented for unsigned types)
@@ -92,7 +87,7 @@ pub fn read_leb_128_psqt_type(stream: &mut File, out: &mut Vec<PSQTWeightType>, 
         while shift < std::mem::size_of::<PSQTWeightType>() * 8 {
             if buf_pos == BUF_SIZE {
                 let bytes_to_read = std::cmp::min(bytes_left, BUF_SIZE as u32);
-                stream.read_exact(&mut buf[0..bytes_to_read as usize]);
+                let _ = stream.read_exact(&mut buf[0..bytes_to_read as usize]);
                 buf_pos = 0;
             }
 
@@ -251,5 +246,4 @@ impl FeatureTransformer {
             acc[i] -= self.psqt_weights[index][i];
         }
     }
-    
 }

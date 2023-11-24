@@ -371,6 +371,7 @@ impl Engine {
     }
 
 
+    #[allow(dead_code)]
     pub fn benchmark_perf(&mut self, depth: u32) {
         let now = std::time::Instant::now();
         let res = self.board.perft(depth as i32, depth as i32, true);
