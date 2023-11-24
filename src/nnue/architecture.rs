@@ -43,24 +43,31 @@ impl Architecture {
         let mut fc_0_out = self.fc_0.propagate(transformed_features);
 
         assert_eq!(fc_0_out.len(), 16);
-        let remainder = fc_0_out.last().unwrap();
-        assert_eq!(fc_0_out.len(), 16);
+        let remainder = fc_0_out.pop().unwrap();
+        assert_eq!(fc_0_out.len(), 15);
 
-        let ac_sqr_0_out = self.ac_sqr_0.propagate(&fc_0_out);
-        let ac_0_out = self.ac_0.propagate(&fc_0_out);
+        let mut ac_sqr_0_out = self.ac_sqr_0.propagate(&fc_0_out);
+        let mut ac_0_out = self.ac_0.propagate(&fc_0_out);
 
-        let mut combined_output = ac_sqr_0_out.clone();
-        for x in ac_0_out.iter() {
-            combined_output.push(*x);
-        }
+        // up until this it looks good
+
+        // let mut combined_output = ac_sqr_0_out.clone();
+        // for x in ac_0_out.iter() {
+        //     combined_output.push(*x);
+        // }
+
+        let mut combined_output = Vec::new();
+        combined_output.append(&mut ac_sqr_0_out);
+        combined_output.append(&mut ac_0_out);
+
 
         let fc_1_out = self.fc_1.propagate(combined_output);
         let ac_1_out = self.ac_1.propagate(&fc_1_out);
-
         let fc_2_out = self.fc_2.propagate(ac_1_out);
+
         assert_eq!(fc_2_out.len(), 1);
 
-        let fwd_out = *remainder as i32 * (600 * OUTPUT_SCALE) / (127 * (1 << WEIGHT_SCALE_BITS));
+        let fwd_out = remainder as i32 * (600 * OUTPUT_SCALE) / (127 * (1 << WEIGHT_SCALE_BITS));
         let output = fc_2_out[0] + fwd_out;
         output
     }

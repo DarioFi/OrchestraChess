@@ -30,7 +30,7 @@ pub fn make_index(piece_index: usize, is_opp: usize, mut piece_square: usize, ki
     let new_piece_id = piece_rank * 8 + piece_file;
     let new_king_id = 31 - (king_rank * 4 + (king_file - 4));
     let halfkp_idx = new_piece_id + p_idx * 64 + new_king_id * 11 * 64;
-    println!("{}", halfkp_idx);
+    // println!("{}", halfkp_idx);
     return halfkp_idx;
 }
 

@@ -41,14 +41,12 @@ impl AffineTransform {
     }
 
     pub(crate) fn propagate(&self, input: Vec<InputType>) -> Vec<OutputType> {
-        // todo: check that no traspose is needed
-        let mut output = Vec::new();
-        for i in 0..self.out_dims {
-            let mut sum = self.bias[i];
-            for j in 0..self.weights[i].len() {
-                sum += self.weights[i][j] as i32 * input[j] as i32;
+        let mut output = self.bias.clone();
+        output.resize(self.out_dims, 0);
+        for i in 0..self.in_dims {
+            for j in 0..self.out_dims {
+                output[j] += self.weights[j][i] as i32 * input[i] as i32;
             }
-            output.push(sum);
         }
         output
     }

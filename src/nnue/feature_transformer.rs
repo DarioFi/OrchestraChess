@@ -204,7 +204,8 @@ impl FeatureTransformer {
             let c1 = sum1.clamp(0, 127);
             result[i] = (c0 * c1 / 128) as i8;
         }
-        let opp_acc = self.my_acc_stack.last().unwrap();
+
+        let opp_acc = self.opp_acc_stack.last().unwrap();
         for i in 0..(HALF_DIMENSIONS / 2) {
             let sum0 = opp_acc[i];
             let sum1 = opp_acc[i + HALF_DIMENSIONS / 2];

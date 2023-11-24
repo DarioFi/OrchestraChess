@@ -33,7 +33,8 @@ fn main() {
     // //
     // //
     let mut orchestra_director = orchestradirector::new_orchestra_director();
-    orchestra_director.handle_command("position", "fen 8/8/8/2k3p1/6P1/5K2/8/8 w - - 0 1");
+    orchestra_director.handle_command("position", "startpos");
+    // orchestra_director.handle_command("position", "startpos");
     orchestra_director.handle_command("go", "depth 0");
     exit(0);
 

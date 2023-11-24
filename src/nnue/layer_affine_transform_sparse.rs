@@ -54,7 +54,7 @@ impl TransformSparse {
             }
              */
 
-        //transpile this code
+
         let mut output = self.biases.clone();
 
         for i in 0..self.in_dims {
