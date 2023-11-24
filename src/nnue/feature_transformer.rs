@@ -227,6 +227,12 @@ impl FeatureTransformer {
         }
     }
 
+    pub(crate) fn subtract_from_accumulator(&self, index: usize, acc: &mut [BiasType; HALF_DIMENSIONS]) {
+        for i in 0..TRANSFORMED_FEATURE_DIMENSIONS {
+            acc[i] -= self.weights[index][i];
+        }
+    }
+
     pub(crate) fn get_bias(&self) -> [BiasType; TRANSFORMED_FEATURE_DIMENSIONS] {
         let mut bias = [0; TRANSFORMED_FEATURE_DIMENSIONS];
         for i in 0..TRANSFORMED_FEATURE_DIMENSIONS {
@@ -239,4 +245,11 @@ impl FeatureTransformer {
             acc[i] += self.psqt_weights[index][i];
         }
     }
+
+    pub(crate) fn subtract_from_accumulator_psq(&self, index: usize, acc: &mut [PSQTWeightType; PSQT_BUCKETS]) {
+        for i in 0..PSQT_BUCKETS {
+            acc[i] -= self.psqt_weights[index][i];
+        }
+    }
+    
 }

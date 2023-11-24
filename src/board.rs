@@ -1264,6 +1264,8 @@ impl Board {
                     }
                     self.my_pieces.pawn &= !square_num_to_bitboard(mov.start_square);
                     self.my_pieces.pawn |= square_num_to_bitboard(mov.end_square);
+
+
                 } else if mov.promotion != PieceType::Null {
                     self.my_pieces.pawn &= !square_num_to_bitboard(mov.start_square);
                     self.my_pieces[mov.promotion] |= square_num_to_bitboard(mov.end_square);
@@ -1306,12 +1308,12 @@ impl Board {
         self.my_pieces = self.opponent_pieces.clone();
         self.opponent_pieces = temp;
 
+        self.update_accumulator_on_make(mov);
         // (self.my_pieces, self.opponent_pieces) = (self.opponent_pieces, self.my_pieces);
 
         // todo: does this actually work + check which one is faster and decide if it is worth?
         // mem::swap(&mut self.my_pieces, &mut self.opponent_pieces);
 
-        self.refresh_accumulator();
     }
 
     fn make_simple_move(&mut self, mov: Move) {
@@ -1356,10 +1358,7 @@ impl Board {
         let mov = self.moves_stack.pop().unwrap();
 
 
-        self.nnue.feature_transformer.my_acc_stack.pop();
-        self.nnue.feature_transformer.opp_acc_stack.pop();
-        self.nnue.feature_transformer.my_psq_acc_stack.pop();
-        self.nnue.feature_transformer.opp_psq_acc_stack.pop();
+        self.update_accumulator_on_unmake();
 
         self.castling_rights = self.castling_stack.pop().unwrap();
         self.en_passant_square = self.en_passant_stack.pop().unwrap();
