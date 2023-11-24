@@ -18,30 +18,30 @@ fn make_index(piece_index: usize, is_mine: usize, mut piece_square: usize, king_
     p_idx = piece_type * 2 + piece_color
     halfkp_idx = piece_square + (p_idx + king_square * 11) * 64
     */
-    let mut file = king_square % 8;
-    let rank = king_square / 8;
-    if file > 3 {
-        file = 7 - file;
-        piece_square ^= 7;
+    let mut king_file = king_square % 8;
+    let king_rank = king_square / 8;
+    let mut piece_file = piece_square % 8;
+    let piece_rank = piece_square / 8;
+    if king_file < 4 {
+        king_file ^= 7;
+        piece_file ^= 7;
     }
     let p_idx = piece_index * 2 + is_mine;
-    let halfkp_idx = piece_square + (p_idx + king_square * 11) * 64;
+    let new_piece_id = piece_rank * 8 + piece_file;
+    let new_king_id = king_rank * 4 + (king_file - 4);
+    let halfkp_idx = new_piece_id + (p_idx + new_king_id * 11) * 64;
     println!("{}", halfkp_idx);
-    halfkp_idx
+    return halfkp_idx;
 }
 
-fn get_king_index(sq: u8) -> u8 {
-    let mut file = sq % 8;
+fn change_perspective(sq: u8) -> u8 {
+    let file = sq % 8;
     let rank = sq / 8;
-    if file > 3 {
-        file = 7 - file;
-    }
-    return rank * 4 + file;
+    return (7 - rank) * 8 + file;
 }
 
 impl Board {
     pub fn refresh_accumulator(&mut self) {
-        // self.nnue.feature_transformer.previous_features.push();
 
         let mut my_acc: [i16; DIMS] = self.nnue.feature_transformer.get_bias();
         let mut opp_acc: [i16; DIMS] = self.nnue.feature_transformer.get_bias();
@@ -54,13 +54,12 @@ impl Board {
         let mut opp_king_square = lsb(self.opponent_pieces.king);
         match self.color_to_move {
             COLOR::WHITE => {
-                opp_king_square = 63 - opp_king_square;
+                opp_king_square = change_perspective(opp_king_square);
             }
             COLOR::BLACK => {
-                my_king_square = 63 - my_king_square;
+                my_king_square = change_perspective(my_king_square);
             }
         }
-
 
         // opp_king_square = get_king_index(opp_king_square);
         // my_king_square = get_king_index(my_king_square);
@@ -85,10 +84,10 @@ impl Board {
         match am_i_white {
             true => {
                 sq_my_perspective = ks;
-                sq_opp_perspective = 63 - ks;
+                sq_opp_perspective = change_perspective(ks);
             }
             false => {
-                sq_my_perspective = 63 - ks;
+                sq_my_perspective = change_perspective(ks);
                 sq_opp_perspective = ks;
             }
         }
@@ -105,10 +104,10 @@ impl Board {
         match am_i_white {
             true => {
                 sq_my_perspective = ks;
-                sq_opp_perspective = 63 - ks;
+                sq_opp_perspective = change_perspective(ks);
             }
             false => {
-                sq_my_perspective = 63 - ks;
+                sq_my_perspective = change_perspective(ks);
                 sq_opp_perspective = ks;
             }
         }
@@ -138,10 +137,10 @@ impl Board {
             match am_i_white {
                 true => {
                     sq_my_perspective = sq;
-                    sq_opp_perspective = 63 - sq;
+                    sq_opp_perspective = change_perspective(sq);
                 }
                 false => {
-                    sq_my_perspective = 63 - sq;
+                    sq_my_perspective = change_perspective(sq);
                     sq_opp_perspective = sq;
                 }
             }

@@ -1308,7 +1308,6 @@ impl Board {
         // todo: does this actually work + check which one is faster and decide if it is worth?
         // mem::swap(&mut self.my_pieces, &mut self.opponent_pieces);
 
-        //todo: update here the nnue accumulator
         self.refresh_accumulator();
     }
 
