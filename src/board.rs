@@ -20,11 +20,13 @@ pub struct Board {
     pub(crate) color_to_move: COLOR,
     en_passant_square: u8,
     castling_rights: CastlingRights,
+    rule50: u8,
 
     moves_stack: Vec<Move>,
     zobrist_stack: Vec<u64>,
     en_passant_stack: Vec<u8>,
     castling_stack: Vec<CastlingRights>,
+    rule50_stack: Vec<u8>,
 
     magics: Magics,
     pub(crate) nnue: Nnue,
@@ -216,10 +218,12 @@ impl Board {
             color_to_move: WHITE,
             en_passant_square: 0,
             castling_rights: CastlingRights(0),
+            rule50: 0,
             moves_stack: vec![],
             zobrist_stack: vec![],
             en_passant_stack: vec![],
             castling_stack: vec![],
+            rule50_stack: vec![],
             magics: new_magic(),
             zobrist: init_zobrist(),
             nnue: Nnue::init(),
@@ -233,10 +237,12 @@ impl Board {
         self.color_to_move = WHITE;
         self.en_passant_square = 0;
         self.castling_rights = CastlingRights(0);
+        self.rule50 = 0;
         self.moves_stack = vec![];
         self.zobrist_stack = vec![];
         self.en_passant_stack = vec![];
         self.castling_stack = vec![];
+        self.rule50_stack = vec![];
         self.zobrist = init_zobrist();
     }
     pub fn from_fen(&mut self, fen: &str) {
@@ -347,7 +353,6 @@ impl Board {
     pub fn from_startpos(&mut self) {
         self.from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk - 0 1")
     }
-
 }
 // endregion
 
@@ -1199,8 +1204,12 @@ impl Board {
 
     pub(crate) fn is_3fold(&self) -> bool { // todo: questo accumulatore non funziona, contare con l'iteratore invece rende l'engine stupido
         let hash = self.zobrist.hash;
-        self.zobrist_stack.iter().fold(0, |acc, x| if *x == hash { acc + 1 } else { acc }) >= 3
+        if self.zobrist_stack.len() < 3 {
+            return false;
+        }
+        self.zobrist_stack[self.zobrist_stack.len() - (self.rule50) as usize..].iter().filter(|x| **x == hash).count() >= 3
     }
+
 
     #[allow(dead_code)]
     pub fn perft(&mut self, depth: i32, print_depth: i32, bulk_count: bool) -> u64 {
@@ -1240,6 +1249,9 @@ impl Board {
         self.castling_stack.push(self.castling_rights.clone());
         self.en_passant_stack.push(self.en_passant_square);
         self.zobrist_stack.push(self.zobrist.hash);
+        self.rule50_stack.push(self.rule50);
+        self.rule50 += 1;
+
         self.en_passant_square = 0;
 
         match mov.piece_moved {
@@ -1251,12 +1263,14 @@ impl Board {
 
                 // check if castling
                 if mov.is_castling {
+                    self.rule50 = 0;
                     self.make_castling_move(mov);
                 } else {
                     self.make_simple_move(mov);
                 }
             }
             PieceType::Pawn => {
+                self.rule50 = 0;
                 if mov.is_en_passant {
                     match self.color_to_move {
                         WHITE => { self.opponent_pieces.pawn &= !square_num_to_bitboard(mov.end_square - 8) }
@@ -1264,8 +1278,6 @@ impl Board {
                     }
                     self.my_pieces.pawn &= !square_num_to_bitboard(mov.start_square);
                     self.my_pieces.pawn |= square_num_to_bitboard(mov.end_square);
-
-
                 } else if mov.promotion != PieceType::Null {
                     self.my_pieces.pawn &= !square_num_to_bitboard(mov.start_square);
                     self.my_pieces[mov.promotion] |= square_num_to_bitboard(mov.end_square);
@@ -1313,7 +1325,6 @@ impl Board {
 
         // todo: does this actually work + check which one is faster and decide if it is worth?
         // mem::swap(&mut self.my_pieces, &mut self.opponent_pieces);
-
     }
 
     fn make_simple_move(&mut self, mov: Move) {
@@ -1326,6 +1337,7 @@ impl Board {
 
         // capture opponent piece
         if mov.piece_captured != PieceType::Null {
+            self.rule50 = 0;
             self.opponent_pieces[mov.piece_captured] &= !square_num_to_bitboard(mov.end_square);
         }
     }
@@ -1365,7 +1377,7 @@ impl Board {
         self.zobrist.hash = self.zobrist_stack.pop().unwrap();
 
         self.color_to_move = self.color_to_move.flip();
-
+        self.rule50 = self.rule50_stack.pop().unwrap();
         let temp = self.my_pieces.clone();
         self.my_pieces = self.opponent_pieces.clone();
         self.opponent_pieces = temp;

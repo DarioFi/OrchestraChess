@@ -29,11 +29,11 @@ fn main() {
 
     // // let nnue = Nnue::init();
     // //
-    // //
+    // //position fen 4k3/QQ6/8/8/8/6P1/4qPP1/6K1 b - - 0 1 moves e2d1 g1h2 d1h5 h2g1 h5d1
+    //     go depth
     // let mut orchestra_director = orchestradirector::new_orchestra_director();
-    // orchestra_director.handle_command("position", "fen r1r3k1/p3ppb1/1npp1npp/7q/2PP2bP/2N1P1P1/1PQN1PB1/R1B2RK1 b - - 1 15");
-    // orchestra_director.handle_command("position", "startpos");
-    // orchestra_director.handle_command("go", "depth 0");
+    // orchestra_director.handle_command("position", "fen 4k3/QQ6/8/8/8/6P1/4qPP1/6K1 b - - 0 1 moves e2d1 g1h2 d1h5 h2g1 h5d1 g1h2 d1h5");
+    // orchestra_director.handle_command("go", "depth 5");
 
     let mut orchestra_director = orchestradirector::new_orchestra_director();
     loop {

@@ -209,6 +209,10 @@ impl Engine {
         self.node_count += 1;
         let retrieved_hash: bool;
 
+        if self.board.is_3fold() {
+            return (0, null_move());
+        }
+
         let mut old_move: Move = null_move();
         let hash = self.board.zobrist.hash;
         if self.transposition_table.contains_key(&hash) {
@@ -232,10 +236,7 @@ impl Engine {
         }
 
 
-        //todo: rompe tutto
-        if self.board.is_3fold() {
-            return (0, null_move());
-        }
+
 
         if depth == 0 {
             let eval = self.quiescence_search(-MATING_SCORE, MATING_SCORE, 0);
@@ -321,6 +322,10 @@ impl Engine {
 
     pub(crate) fn quiescence_search(&mut self, mut alpha: i32, beta: i32, depth: i32) -> i32 {
         self.max_selective = max(self.max_selective, depth);
+
+        if self.board.is_3fold() {
+            return 0;
+        }
 
         let mut moves = self.board.generate_moves(true);
         if self.board.is_check() {
