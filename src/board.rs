@@ -25,7 +25,7 @@ pub struct Board {
     moves_from_startpos: u16,
 
     moves_stack: Vec<Move>,
-    zobrist_stack: Vec<u64>,
+    pub(crate) zobrist_stack: Vec<u64>,
     en_passant_stack: Vec<u8>,
     castling_stack: Vec<CastlingRights>,
     rule50_stack: Vec<u8>,
@@ -247,7 +247,9 @@ impl Board {
         self.en_passant_stack = vec![];
         self.castling_stack = vec![];
         self.rule50_stack = vec![];
-        self.zobrist = init_zobrist();
+
+        // self.zobrist_stack.push(self.zobrist.hash);
+        // self.zobrist = init_zobrist();
     }
     pub fn from_fen(&mut self, fen: &str) {
         self.reset_board_state();
@@ -1217,8 +1219,9 @@ impl Board {
         // the issue is the way 3fold works also in chess is that if a player does not claim it then the other can deviate and keep playing
         // this makes it such that only at the losing player depth the 3fold is recognized. A possible second way would be to check if the
         // last position also was a 3fold (claim)
+        let start = (stack_size - moves_to_see) + (stack_size - moves_to_see + 1) % 2;
 
-        self.zobrist_stack[stack_size - self.rule50 as usize..].iter().filter(|x| **x == hash).count() >= 2
+        self.zobrist_stack[start..].iter().step_by(2).filter(|x| **x == hash).count() >= 2
         // ||            self.zobrist_stack[len - self.rule50 as usize..].iter().filter(|x| **x == prev_hash).count() >= 2;
     }
 
@@ -1387,7 +1390,8 @@ impl Board {
 
         self.castling_rights = self.castling_stack.pop().unwrap();
         self.en_passant_square = self.en_passant_stack.pop().unwrap();
-        self.zobrist.hash = self.zobrist_stack.pop().unwrap();
+        self.zobrist_stack.pop();
+        self.zobrist.hash = *self.zobrist_stack.last().unwrap();
 
         self.color_to_move = self.color_to_move.flip();
         self.rule50 = self.rule50_stack.pop().unwrap();

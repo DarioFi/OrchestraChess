@@ -92,9 +92,9 @@ impl Engine {
             score = pv_result.0;
             let score_string;
             if score > MATING_SCORE - 100 {
-                score_string = format!("mate {}", (MATING_SCORE - score + 1) / 2);
+                score_string = format!("mate {}", (MATING_SCORE - score + 2) / 2);
             } else if score < -MATING_SCORE + 100 {
-                score_string = format!("mate {}", (-MATING_SCORE - score - 1) / 2);
+                score_string = format!("mate {}", - (score + MATING_SCORE + 3) / 2);
             } else {
                 score_string = format!("cp {}", score);
             }
@@ -217,6 +217,7 @@ impl Engine {
         let hash = self.board.zobrist.hash;
         if self.transposition_table.contains_key(&hash) {
             retrieved_hash = true;
+
             let result = self.transposition_table[&hash];
             let old_depth = result.0;
             let old_score = result.1;
@@ -234,8 +235,6 @@ impl Engine {
         } else {
             retrieved_hash = false;
         }
-
-
 
 
         if depth == 0 {
@@ -271,6 +270,7 @@ impl Engine {
             let mov = *mov;
             self.board.make_move(mov);
             let mut score;
+
             if has_first_not_been_completed {
                 score = -self.principal_variation(depth - 1, -beta, -alpha, &stop_search, true, false).0;
                 best_move = mov;
@@ -391,6 +391,10 @@ impl Engine {
 impl Engine {
     fn update_transposition_table(&mut self, depth: u64, score: i32, mov: Move, is_exact: bool) {
         let hash = self.board.zobrist.hash;
+
+        if hash == 17246610507981773303 {
+            println!("Ciao");
+        }
 
         if self.transposition_table.contains_key(&hash) {
             let res = self.transposition_table[&hash];

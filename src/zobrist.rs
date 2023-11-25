@@ -20,13 +20,14 @@ pub fn init_zobrist() -> ZobristHashHandler {
         }
     }
 
-    let hash: u64 = rng.gen();
 
-    return ZobristHashHandler {
+
+    ZobristHashHandler {
         table,
         black_to_move,
-        hash,
-    };
+        hash: 0,
+    }
+
 }
 
 fn get_index(color: COLOR, piece: PieceType) -> usize {
@@ -55,7 +56,7 @@ fn color_val(color: COLOR) -> usize {
 
 impl Board {
     pub fn init_hash(&mut self) {
-        let mut hash: u64 = self.zobrist.hash;
+        let mut hash: u64 = 0;
 
         if self.color_to_move == BLACK {
             hash ^= self.zobrist.black_to_move
@@ -78,20 +79,38 @@ impl Board {
         }
 
         self.zobrist.hash = hash;
+        self.zobrist_stack.push(hash);
     }
 
     pub(crate) fn update_hash(&mut self, mov: Move){
+        if mov.is_en_passant{
+            self.init_hash();
+            return;
+        }
+        if mov.is_castling{
+            self.init_hash();
+            return;
+        }
+
+
         let color_to_move = self.color_to_move;
         self.zobrist.hash ^= self.zobrist.black_to_move;
 
         if mov.piece_captured != PieceType::Null{
-            let ind = get_index(color_to_move.flip(), mov.piece_captured);
-            self.zobrist.hash ^= self.zobrist.table[mov.end_square as usize][ind];
+            let ind_captured = get_index(color_to_move.flip(), mov.piece_captured);
+            self.zobrist.hash ^= self.zobrist.table[mov.end_square as usize][ind_captured];
         }
 
-        let ind = get_index(color_to_move.flip(), mov.piece_moved);
-        self.zobrist.hash ^= self.zobrist.table[mov.start_square as usize][ind];
-        self.zobrist.hash ^= self.zobrist.table[mov.end_square as usize][ind];
+        let ind_moved = get_index(color_to_move, mov.piece_moved);
 
+        if mov.promotion != PieceType::Null{
+            let ind_prom = get_index(color_to_move, mov.promotion);
+            self.zobrist.hash ^= self.zobrist.table[mov.end_square as usize][ind_prom];
+        }
+
+        self.zobrist.hash ^= self.zobrist.table[mov.start_square as usize][ind_moved];
+        if mov.promotion == PieceType::Null {
+            self.zobrist.hash ^= self.zobrist.table[mov.end_square as usize][ind_moved];
+        }
     }
 }

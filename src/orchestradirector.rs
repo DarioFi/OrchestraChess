@@ -150,7 +150,7 @@ impl OrchestraDirector {
 
         let max_time_think;
         if depth == -1 {
-            depth = 20;
+            depth = 30;
             max_time_think = self.timer.max_allocable().as_millis();
         } else {
             max_time_think = 0;
