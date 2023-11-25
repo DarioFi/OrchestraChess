@@ -1,3 +1,4 @@
+use std::cmp::{max, min};
 use std::ops::{Index, IndexMut};
 
 use crate::muve::{create_move, Move};
@@ -21,6 +22,7 @@ pub struct Board {
     en_passant_square: u8,
     castling_rights: CastlingRights,
     rule50: u8,
+    moves_from_startpos: u16,
 
     moves_stack: Vec<Move>,
     zobrist_stack: Vec<u64>,
@@ -219,6 +221,7 @@ impl Board {
             en_passant_square: 0,
             castling_rights: CastlingRights(0),
             rule50: 0,
+            moves_from_startpos: 0,
             moves_stack: vec![],
             zobrist_stack: vec![],
             en_passant_stack: vec![],
@@ -238,6 +241,7 @@ impl Board {
         self.en_passant_square = 0;
         self.castling_rights = CastlingRights(0);
         self.rule50 = 0;
+        self.moves_from_startpos = 0;
         self.moves_stack = vec![];
         self.zobrist_stack = vec![];
         self.en_passant_stack = vec![];
@@ -343,8 +347,8 @@ impl Board {
             self.en_passant_square = 0;
         }
 
-        let _fifty_move_rule = parts[4];
-        let _half_move_clock = parts[5];
+        self.rule50 = parts[4].parse().unwrap();
+        self.moves_from_startpos = parts[5].parse().unwrap();
 
         self.init_hash();
         self.clean_accumulator();
@@ -1204,31 +1208,18 @@ impl Board {
 
     pub(crate) fn is_3fold(&self) -> bool { // todo: questo accumulatore non funziona, contare con l'iteratore invece rende l'engine stupido
         let hash = self.zobrist.hash;
-        let len = self.zobrist_stack.len();
-        if len < 6 || self.rule50 < 6 {
+        let stack_size = self.zobrist_stack.len();
+        let moves_to_see = min(stack_size, self.rule50 as usize);
+        if moves_to_see < 4 {
             return false;
         }
-        let prev_hash = self.zobrist_stack[len - 2];
 
         // the issue is the way 3fold works also in chess is that if a player does not claim it then the other can deviate and keep playing
         // this makes it such that only at the losing player depth the 3fold is recognized. A possible second way would be to check if the
         // last position also was a 3fold (claim)
 
-        let x = self.zobrist_stack[len - self.rule50 as usize..].iter().take(self.rule50 as usize).filter(|x| **x == hash).count() >= 2 ||
-            self.zobrist_stack[len - self.rule50 as usize..].iter().take(self.rule50 as usize).filter(|x| **x == prev_hash).count() >= 2;
-
-        // let mut counter = 0;
-        // for i in self.zobrist_stack.len() - self.rule50 as usize..self.zobrist_stack.len() {
-        //     if self.zobrist_stack[i] == hash {
-        //         counter += 1;
-        //     }
-        // }
-        // let x = counter >= 3;
-        if x {
-            true
-        } else {
-            false
-        }
+        self.zobrist_stack[stack_size - self.rule50 as usize..].iter().filter(|x| **x == hash).count() >= 2
+        // ||            self.zobrist_stack[len - self.rule50 as usize..].iter().filter(|x| **x == prev_hash).count() >= 2;
     }
 
 
@@ -1272,6 +1263,7 @@ impl Board {
         self.zobrist_stack.push(self.zobrist.hash);
         self.rule50_stack.push(self.rule50);
         self.rule50 += 1;
+        self.moves_from_startpos += 1;
 
         self.en_passant_square = 0;
 
@@ -1399,6 +1391,8 @@ impl Board {
 
         self.color_to_move = self.color_to_move.flip();
         self.rule50 = self.rule50_stack.pop().unwrap();
+        self.moves_from_startpos -= 1;
+
         let temp = self.my_pieces.clone();
         self.my_pieces = self.opponent_pieces.clone();
         self.opponent_pieces = temp;
