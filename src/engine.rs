@@ -92,9 +92,10 @@ impl Engine {
             score = pv_result.0;
             let score_string;
             if score > MATING_SCORE - 100 {
-                score_string = format!("mate {}", (MATING_SCORE - score + 2) / 2);
+                score_string = format!("mate {}", (MATING_SCORE - score + 3) / 2);
+                // score_string = format!("mate {}", score);
             } else if score < -MATING_SCORE + 100 {
-                score_string = format!("mate {}", - (score + MATING_SCORE + 3) / 2);
+                score_string = format!("mate {}", - (score + MATING_SCORE + 2) / 2);
             } else {
                 score_string = format!("cp {}", score);
             }

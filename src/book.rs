@@ -4,6 +4,7 @@ use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
 use core::option::Option::None;
 use serde::{Deserialize, Serialize};
+
 const USE_BEST_MOVE: bool = true;
 const USE_BOOK: bool = true;
 
