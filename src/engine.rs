@@ -113,7 +113,6 @@ impl Engine {
         }
 
         println!("Time elapsed {}", start_time.elapsed().as_millis());
-//2.23
         return (score, best_move);
     }
 
@@ -256,7 +255,7 @@ impl Engine {
         }
 
         let eval = self.board.static_evaluation(true);
-        if depth > self.curr_max_depth {
+        if depth >= self.curr_max_depth {
             return eval;
         }
 
@@ -312,10 +311,6 @@ impl Engine {
     fn update_transposition_table(&mut self, depth: u64, score: i32, mov: Move, is_exact: bool) {
         let hash = self.board.zobrist.hash;
 
-        if hash == 17246610507981773303 {
-            println!("Ciao");
-        }
-
         if self.transposition_table.contains_key(&hash) {
             let res = self.transposition_table[&hash];
             if res.0 >= depth {
@@ -323,7 +318,6 @@ impl Engine {
             }
         }
 
-        // self.transposition_table[&hash] = (depth, score, mov, is_exact);
         self.transposition_table.insert(hash, (depth, score, mov, is_exact));
     }
 }
