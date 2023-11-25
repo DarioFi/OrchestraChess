@@ -118,10 +118,10 @@ pub fn read_leb_128_psqt_type(stream: &mut File, out: &mut Vec<PSQTWeightType>, 
 
 #[inline(always)]
 fn linearize(piece_index: usize, is_opp: usize, piece_square: usize, king_square: usize) -> usize {
-    2 * piece_index + is_opp + 16 * (piece_square + king_square * 64)
+    2 * piece_index + is_opp + 11 * (piece_square + king_square * 64)
 }
 
-const CACHE_MAKE_INDEX_SIZE: usize = 16 * 64 * 32;
+const CACHE_MAKE_INDEX_SIZE: usize = 11 * 64 * 32;
 
 pub struct FeatureTransformer {
     bias: Vec<BiasType>,
@@ -299,8 +299,8 @@ impl FeatureTransformer {
     }
 
     pub fn make_index(&mut self, piece_index: usize, is_opp: usize, piece_square: usize, king_square: usize) -> usize {
-        self.indices[linearize(piece_index, is_opp, piece_square, king_square)]  // new
-        // self.make_index_internal(piece_index, is_opp, piece_square, king_square) // old
+        // self.indices[linearize(piece_index, is_opp, piece_square, king_square)]  // new
+        self.make_index_internal(piece_index, is_opp, piece_square, king_square) // old
     }
 }
 
