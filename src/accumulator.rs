@@ -12,25 +12,6 @@ const ROOK_IND: usize = 3;
 const QUEEN_IND: usize = 4;
 const KING_IND: usize = 5;
 
-
-// expects king and piece squares to be in pov but not yet reflected horizontally.
-pub fn make_index(piece_index: usize, is_opp: usize, piece_square: usize, king_square: usize) -> usize {
-    let mut king_file = king_square % 8;
-    let king_rank = king_square / 8;
-    let mut piece_file = piece_square % 8;
-    let piece_rank = piece_square / 8;
-    if king_file < 4 {
-        king_file ^= 7;
-        piece_file ^= 7;
-    }
-    let p_idx = piece_index * 2 + is_opp;
-    let new_piece_id = piece_rank * 8 + piece_file;
-    let new_king_id = 31 - (king_rank * 4 + (king_file - 4));
-    let halfkp_idx = new_piece_id + p_idx * 64 + new_king_id * 11 * 64;
-    // println!("{}", halfkp_idx);
-    return halfkp_idx;
-}
-
 fn change_perspective(sq: u8) -> u8 {
     let file = sq % 8;
     let rank = sq / 8;
@@ -89,8 +70,8 @@ impl Board {
             }
         }
 
-        let my_index = make_index(KING_IND, 0, sq_my_perspective as usize, my_king_square as usize);
-        let opp_index = make_index(KING_IND, 0, sq_opp_perspective as usize, opp_king_square as usize);
+        let my_index = self.nnue.feature_transformer.make_index(KING_IND, 0, sq_my_perspective as usize, my_king_square as usize);
+        let opp_index = self.nnue.feature_transformer.make_index(KING_IND, 0, sq_opp_perspective as usize, opp_king_square as usize);
 
         self.nnue.feature_transformer.add_to_accumulator(my_index, &mut my_acc);
         self.nnue.feature_transformer.add_to_accumulator(opp_index, &mut opp_acc);
@@ -111,8 +92,8 @@ impl Board {
             }
         }
 
-        let my_index = make_index(KING_IND, 0, sq_my_perspective as usize, my_king_square as usize);
-        let opp_index = make_index(KING_IND, 0, sq_opp_perspective as usize, opp_king_square as usize);
+        let my_index = self.nnue.feature_transformer.make_index(KING_IND, 0, sq_my_perspective as usize, my_king_square as usize);
+        let opp_index = self.nnue.feature_transformer.make_index(KING_IND, 0, sq_opp_perspective as usize, opp_king_square as usize);
 
         self.nnue.feature_transformer.add_to_accumulator(my_index, &mut my_acc);
         self.nnue.feature_transformer.add_to_accumulator(opp_index, &mut opp_acc);
@@ -144,8 +125,8 @@ impl Board {
                 }
             }
 
-            let my_index = make_index(index, (!is_my_bitmap) as usize, sq_my_perspective as usize, my_ks as usize);
-            let opp_index = make_index(index, is_my_bitmap as usize, sq_opp_perspective as usize, opp_ks as usize);
+            let my_index = self.nnue.feature_transformer.make_index(index, (!is_my_bitmap) as usize, sq_my_perspective as usize, my_ks as usize);
+            let opp_index = self.nnue.feature_transformer.make_index(index, is_my_bitmap as usize, sq_opp_perspective as usize, opp_ks as usize);
 
             self.nnue.feature_transformer.add_to_accumulator(my_index, my_acc);
             self.nnue.feature_transformer.add_to_accumulator(opp_index, opp_acc);
@@ -210,10 +191,10 @@ impl Board {
         }
 
         // moved piece
-        let my_from_index = make_index(piece_moved_idx, 1, from_sq_my_perspective as usize, my_ks as usize);
-        let opp_from_index = make_index(piece_moved_idx, 0, from_sq_opp_perspective as usize, opp_ks as usize);
-        let my_to_index = make_index(piece_moved_idx, 1, to_sq_my_perspective as usize, my_ks as usize);
-        let opp_to_index = make_index(piece_moved_idx, 0, to_sq_opp_perspective as usize, opp_ks as usize);
+        let my_from_index =self.nnue.feature_transformer.make_index(piece_moved_idx, 1, from_sq_my_perspective as usize, my_ks as usize);
+        let opp_from_index =self.nnue.feature_transformer.make_index(piece_moved_idx, 0, from_sq_opp_perspective as usize, opp_ks as usize);
+        let my_to_index =self.nnue.feature_transformer.make_index(piece_moved_idx, 1, to_sq_my_perspective as usize, my_ks as usize);
+        let opp_to_index =self.nnue.feature_transformer.make_index(piece_moved_idx, 0, to_sq_opp_perspective as usize, opp_ks as usize);
         self.nnue.feature_transformer.subtract_from_accumulator(my_from_index, &mut my_acc);
         self.nnue.feature_transformer.subtract_from_accumulator(opp_from_index, &mut opp_acc);
         self.nnue.feature_transformer.add_to_accumulator(my_to_index, &mut my_acc);
@@ -226,8 +207,8 @@ impl Board {
         // captured piece
         if piece_captured != PieceType::Null {
             let piece_captured_idx = piece_captured as usize - 1;
-            let my_captured_index = make_index(piece_captured_idx, 0, to_sq_my_perspective as usize, my_ks as usize);
-            let opp_captured_index = make_index(piece_captured_idx, 1, to_sq_opp_perspective as usize, opp_ks as usize);
+            let my_captured_index = self.nnue.feature_transformer.make_index(piece_captured_idx, 0, to_sq_my_perspective as usize, my_ks as usize);
+            let opp_captured_index = self.nnue.feature_transformer.make_index(piece_captured_idx, 1, to_sq_opp_perspective as usize, opp_ks as usize);
             self.nnue.feature_transformer.subtract_from_accumulator(my_captured_index, &mut my_acc);
             self.nnue.feature_transformer.subtract_from_accumulator(opp_captured_index, &mut opp_acc);
             self.nnue.feature_transformer.subtract_from_accumulator_psq(my_captured_index, &mut my_psq);

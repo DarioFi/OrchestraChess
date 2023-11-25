@@ -31,11 +31,21 @@ impl TransformSparse {
             weights.push(weights_inner);
         }
 
+        // transpose weights
+        let mut weights_transposed: Vec<Vec<i8>> = Vec::new();
+        for i in 0..in_dims {
+            let mut weights_inner = Vec::new();
+            for j in 0..out_dims {
+                weights_inner.push(weights[j][i]);
+            }
+            weights_transposed.push(weights_inner);
+        }
+
         TransformSparse {
             in_dims,
             out_dims,
             biases,
-            weights,
+            weights: weights_transposed,
         }
     }
 
@@ -60,7 +70,7 @@ impl TransformSparse {
         for i in 0..self.in_dims {
             if input[i] != 0 {
                 for j in 0..self.out_dims {
-                    output[j] += self.weights[j][i] as i32 * input[i] as i32;
+                    output[j] += self.weights[i][j] as i32 * input[i] as i32;
                 }
             }
         }

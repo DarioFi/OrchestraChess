@@ -1204,10 +1204,31 @@ impl Board {
 
     pub(crate) fn is_3fold(&self) -> bool { // todo: questo accumulatore non funziona, contare con l'iteratore invece rende l'engine stupido
         let hash = self.zobrist.hash;
-        if self.zobrist_stack.len() < 3 {
+        let len = self.zobrist_stack.len();
+        if len < 6 || self.rule50 < 6 {
             return false;
         }
-        self.zobrist_stack[self.zobrist_stack.len() - (self.rule50) as usize..].iter().filter(|x| **x == hash).count() >= 3
+        let prev_hash = self.zobrist_stack[len - 2];
+
+        // the issue is the way 3fold works also in chess is that if a player does not claim it then the other can deviate and keep playing
+        // this makes it such that only at the losing player depth the 3fold is recognized. A possible second way would be to check if the
+        // last position also was a 3fold (claim)
+
+        let x = self.zobrist_stack[len - self.rule50 as usize..].iter().take(self.rule50 as usize).filter(|x| **x == hash).count() >= 2 ||
+            self.zobrist_stack[len - self.rule50 as usize..].iter().take(self.rule50 as usize).filter(|x| **x == prev_hash).count() >= 2;
+
+        // let mut counter = 0;
+        // for i in self.zobrist_stack.len() - self.rule50 as usize..self.zobrist_stack.len() {
+        //     if self.zobrist_stack[i] == hash {
+        //         counter += 1;
+        //     }
+        // }
+        // let x = counter >= 3;
+        if x {
+            true
+        } else {
+            false
+        }
     }
 
 

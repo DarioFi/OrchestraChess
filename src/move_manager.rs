@@ -3,8 +3,8 @@ use crate::engine::MATING_SCORE;
 use crate::muve::Move;
 
 
-fn move_score(m: &Move) -> i32 {
-    match m.piece_captured {
+fn piece_score(piece: PieceType) -> i32 {
+    match piece {
         PieceType::Null => { 0 }
         PieceType::Pawn => { 100 }
         PieceType::Knight => { 300 }
@@ -13,6 +13,10 @@ fn move_score(m: &Move) -> i32 {
         PieceType::Queen => { 900 }
         PieceType::King => { MATING_SCORE }
     }
+}
+
+fn move_score_capture(m: &Move) -> i32 {
+    piece_score(m.piece_captured) + piece_score(m.promotion) - piece_score(m.piece_moved)
 }
 
 pub struct MoveManager {
@@ -43,12 +47,11 @@ impl MoveManager {
         if self.len() != l {
             self.priority_moves.push(m);
         }
-
     }
 
     pub fn sort(&mut self) {
-        self.quiet_moves.sort_by_key(|a| -move_score(a) );
-        self.capture_moves.sort_by_key(|a| -move_score(a) );
+        // self.quiet_moves.sort_by_key(|a| -move_score(a) );
+        self.capture_moves.sort_by_key(|a| -move_score_capture(a));
     }
 
     pub fn iter(&self) -> impl Iterator<Item=&Move> {
