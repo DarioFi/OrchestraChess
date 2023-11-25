@@ -117,91 +117,6 @@ impl Engine {
         return (score, best_move);
     }
 
-    /* pub fn negamax(&mut self, depth: u64, alpha: i32, beta: i32, stop_search: &Arc<Mutex<bool>>) -> (i32, Move) {
-    //     if *stop_search.lock().unwrap() {
-    //         return (0, null_move());
-    //     }
-
-
-    //     let hash = self.board.zobrist.hash;
-    //     if self.board.is_3fold() {
-    //         return (0, null_move());
-    //     }
-
-    //     if self.transposition_table.contains_key(&hash) {
-    //         let result = self.transposition_table[&hash];
-    //         let old_depth = result.0;
-    //         let old_score = result.1;
-    //         let old_move = result.2;
-    //         let old_exact = result.3;
-
-    //         if old_depth >= depth {
-    //             if old_exact || old_score >= beta {
-    //                 if old_score > MATING_SCORE - 100 {
-    //                     return (old_score - 1, old_move);
-    //                 }
-    //                 return (old_score, old_move);
-    //             }
-    //         }
-    //     }
-    //     self.node_count += 1;
-
-
-    //     if depth == 0 {
-    //         // let eval = self.quiescence_search(alpha, beta, 0);
-    //         let eval = self.board.static_evaluation();
-    //         return (eval, null_move());
-    //     }
-
-    //     let mut moves;
-    //     moves = self.board.generate_moves(false);
-    //     moves.sort();
-
-    //     let mut best_move = null_move();
-    //     let mut best_score = -MATING_SCORE;
-    //     let mut alpha = alpha;
-    //     let mut is_exact = true;
-
-
-    //     if moves.len() == 0 {
-    //         if self.board.is_check() {
-    //             return (-MATING_SCORE, null_move());
-    //         } else {
-    //             return (0, null_move());
-    //         }
-    //     }
-
-    //     for mov in moves.iter() {
-    //         let mov = *mov;
-    //         self.board.make_move(mov);
-    //         let score = -self.negamax(depth - 1, -beta, -alpha,  &stop_search).0;
-    //         self.board.unmake_move();
-
-    //         if score > best_score {
-    //             if score > MATING_SCORE - 100 {
-    //                 best_score = score - 1;
-    //                 best_move = mov;
-    //             } else {
-    //                 best_score = score;
-    //                 best_move = mov;
-    //             }
-    //         }
-    //         if best_score > alpha {
-    //             alpha = best_score;
-    //         }
-
-    //         if alpha >= beta {
-    //             is_exact = false;
-    //             break;
-    //         }
-    //     }
-
-    //     self.update_transposition_table(depth, best_score, best_move, is_exact);
-
-    //     return (best_score, best_move);
-    // }
-    */
-
 
     fn principal_variation(&mut self, depth: u64, alpha: i32, beta: i32, stop_search: &Arc<Mutex<bool>>, genuine: bool, is_root: bool) -> (i32, Move) {
         if *stop_search.lock().unwrap() {
@@ -209,6 +124,10 @@ impl Engine {
         }
         self.node_count += 1;
         let retrieved_hash: bool;
+
+        if self.board.rule50 >= 100 {
+            return (0, null_move());
+        }
 
         if self.board.is_3fold() {
             return (0, null_move());

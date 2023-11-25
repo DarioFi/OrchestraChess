@@ -21,7 +21,7 @@ pub struct Board {
     pub(crate) color_to_move: COLOR,
     en_passant_square: u8,
     castling_rights: CastlingRights,
-    rule50: u8,
+    pub rule50: u8,
     moves_from_startpos: u16,
 
     moves_stack: Vec<Move>,
