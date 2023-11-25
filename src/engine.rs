@@ -191,12 +191,12 @@ impl Engine {
             let mut score;
 
             if has_first_not_been_completed {
-                score = -self.principal_variation(depth - 1, -beta, -alpha, &stop_search, true, false).0;
+                score = -self.principal_variation(depth - 1, -beta, -alpha, &stop_search, genuine, false).0;
                 best_move = mov;
             } else {
                 score = -self.principal_variation(depth - 1, -alpha - 1, -alpha, &stop_search, false, false).0;
                 if alpha < score && score < beta {
-                    score = -self.principal_variation(depth - 1, -beta, -alpha, &stop_search, true, false).0;
+                    score = -self.principal_variation(depth - 1, -beta, -alpha, &stop_search, genuine, false).0;
                 }
             }
             self.board.unmake_move();
