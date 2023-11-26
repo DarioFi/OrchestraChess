@@ -1,5 +1,5 @@
 /target
-tree_big.json
+**/*.json
 
 **/*.uci
 **/*.pgn
