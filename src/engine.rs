@@ -124,11 +124,11 @@ impl Engine {
         self.node_count += 1;
         let retrieved_hash: bool;
 
-        if self.board.rule50 >= 100 {
+        if !is_root && self.board.rule50 >= 100 {
             return (0, null_move());
         }
 
-        if self.board.is_3fold() {
+        if (!is_root) && self.board.is_3fold() {
             return (0, null_move());
         }
 
@@ -158,7 +158,6 @@ impl Engine {
 
         if depth == 0 {
             let eval = self.quiescence_search(-MATING_SCORE, MATING_SCORE, 0);
-            // let eval = self.board.static_evaluation(true);
             return (eval, null_move());
         }
 
@@ -199,6 +198,8 @@ impl Engine {
                     score = -self.principal_variation(depth - 1, -beta, -alpha, &stop_search, genuine, false).0;
                 }
             }
+
+
             self.board.unmake_move();
 
             if *stop_search.lock().unwrap() {
@@ -243,6 +244,7 @@ impl Engine {
         self.max_selective = max(self.max_selective, depth);
 
         if self.board.is_3fold() {
+            let x = self.board.moves_stack.first().unwrap();
             return 0;
         }
 

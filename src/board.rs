@@ -24,7 +24,7 @@ pub struct Board {
     pub rule50: u8,
     moves_from_startpos: u16,
 
-    moves_stack: Vec<Move>,
+    pub(crate) moves_stack: Vec<Move>,
     pub(crate) zobrist_stack: Vec<u64>,
     en_passant_stack: Vec<u8>,
     castling_stack: Vec<CastlingRights>,
@@ -353,6 +353,7 @@ impl Board {
         self.moves_from_startpos = parts[5].parse().unwrap();
 
         self.init_hash();
+        self.zobrist_stack.push(self.zobrist.hash);
         self.clean_accumulator();
         self.refresh_accumulator();
     }
@@ -1259,11 +1260,12 @@ impl Board {
 // region Move make-unmake
 impl Board {
     pub fn make_move(&mut self, mov: Move) {
-        self.update_hash(mov);
+
+
+
         self.moves_stack.push(mov);
         self.castling_stack.push(self.castling_rights.clone());
         self.en_passant_stack.push(self.en_passant_square);
-        self.zobrist_stack.push(self.zobrist.hash);
         self.rule50_stack.push(self.rule50);
         self.rule50 += 1;
         self.moves_from_startpos += 1;
@@ -1337,6 +1339,8 @@ impl Board {
         self.opponent_pieces = temp;
 
         self.update_accumulator_on_make(mov);
+        self.update_hash(mov);
+        self.zobrist_stack.push(self.zobrist.hash);
         // (self.my_pieces, self.opponent_pieces) = (self.opponent_pieces, self.my_pieces);
 
         // todo: does this actually work + check which one is faster and decide if it is worth?

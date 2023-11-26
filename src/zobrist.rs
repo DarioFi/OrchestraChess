@@ -79,7 +79,6 @@ impl Board {
         }
 
         self.zobrist.hash = hash;
-        self.zobrist_stack.push(hash);
     }
 
     pub(crate) fn update_hash(&mut self, mov: Move){
@@ -93,18 +92,18 @@ impl Board {
         }
 
 
-        let color_to_move = self.color_to_move;
+        let color_that_played_move = self.color_to_move.flip();
         self.zobrist.hash ^= self.zobrist.black_to_move;
 
         if mov.piece_captured != PieceType::Null{
-            let ind_captured = get_index(color_to_move.flip(), mov.piece_captured);
+            let ind_captured = get_index(color_that_played_move.flip(), mov.piece_captured);
             self.zobrist.hash ^= self.zobrist.table[mov.end_square as usize][ind_captured];
         }
 
-        let ind_moved = get_index(color_to_move, mov.piece_moved);
+        let ind_moved = get_index(color_that_played_move, mov.piece_moved);
 
         if mov.promotion != PieceType::Null{
-            let ind_prom = get_index(color_to_move, mov.promotion);
+            let ind_prom = get_index(color_that_played_move, mov.promotion);
             self.zobrist.hash ^= self.zobrist.table[mov.end_square as usize][ind_prom];
         }
 
