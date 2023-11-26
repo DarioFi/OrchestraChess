@@ -1220,7 +1220,9 @@ impl Board {
         // the issue is the way 3fold works also in chess is that if a player does not claim it then the other can deviate and keep playing
         // this makes it such that only at the losing player depth the 3fold is recognized. A possible second way would be to check if the
         // last position also was a 3fold (claim)
-        let start = (stack_size - moves_to_see) + (stack_size - moves_to_see + 1) % 2;
+        let last_index = stack_size - 1;
+        let  start = (last_index - moves_to_see) + (moves_to_see) % 2;
+        assert!(start % 2 == last_index % 2);
 
         self.zobrist_stack[start..].iter().step_by(2).filter(|x| **x == hash).count() >= 2
     }
@@ -1259,9 +1261,6 @@ impl Board {
 // region Move make-unmake
 impl Board {
     pub fn make_move(&mut self, mov: Move) {
-
-
-
         self.moves_stack.push(mov);
         self.castling_stack.push(self.castling_rights.clone());
         self.en_passant_stack.push(self.en_passant_square);

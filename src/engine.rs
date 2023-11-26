@@ -209,6 +209,7 @@ impl Engine {
 
         for mov in moves.iter() {
             let mov = *mov;
+
             self.board.make_move(mov);
             let mut score;
 
