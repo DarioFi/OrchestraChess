@@ -33,15 +33,15 @@ fn main() {
     // //
     //position fen 4k3/QQ6/8/8/8/6P1/4qPP1/6K1 b - - 0 1 moves e2d1 g1h2 d1h5 h2g1 h5d1
     //     go depth
-    let mut orchestra_director = orchestradirector::new_orchestra_director();
-    orchestra_director.handle_command("position", "fen 2r5/r5k1/6pp/8/8/8/3Q1PPP/6K1 w - - 0 1");
+    // let mut orchestra_director = orchestradirector::new_orchestra_director();
+    // orchestra_director.handle_command("position", "fen r3kb1r/1pp2ppp/1p6/4P3/3nP3/3P4/PP3P1P/R1BK1B1R b kq - 2 14 moves d4b3 a1b1");
     // orchestra_director.handle_command("position", "fen 6N1/8/8/8/4K3/8/5k2/8 b - - 0 5");
     // orchestra_director.handle_command("position", "fen 6Q1/8/8/8/4K3/8/5k2/8 b - - 0 6");
     //
-    orchestra_director.handle_command("go", "depth 8");
+    // orchestra_director.handle_command("go", "depth 8");
 
 
-    exit(0);
+    // exit(0);
     let mut orchestra_director = orchestradirector::new_orchestra_director();
     loop {
         let mut message = String::new();

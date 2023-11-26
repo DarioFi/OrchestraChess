@@ -1,1 +1,7 @@
 /target
+tree_small.json
+
+**/*.uci
+**/*.pgn
+
+.DS_Store

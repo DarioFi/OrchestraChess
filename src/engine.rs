@@ -1,10 +1,10 @@
-use std::cmp::max;
 use crate::board::Board;
 use crate::muve::{Move, null_move};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use crate::book::OpeningBook;
 use crate::timer::start_timer_maximum_allocable;
+use std::cmp::{max, min};
 
 
 pub const MATING_SCORE: i32 = 250000;
@@ -124,11 +124,11 @@ impl Engine {
         self.node_count += 1;
         let retrieved_hash: bool;
 
-        if self.board.rule50 >= 100 {
+        if !is_root && self.board.rule50 >= 100 {
             return (0, null_move());
         }
 
-        if self.board.is_3fold() {
+        if (!is_root) && self.board.is_3fold() {
             return (0, null_move());
         }
 
@@ -143,12 +143,35 @@ impl Engine {
             old_move = result.2;
             let old_exact = result.3;
 
-            if old_depth >= depth {
+            if old_depth >= depth {                
                 if old_exact || old_score >= beta {
-                    if old_score > MATING_SCORE - 100 {
-                        return (old_score - 1, old_move);
+
+                    let mut is_3_fold = false;
+                    
+                    if !(old_move.is_en_passant || old_move.is_castling) {
+                        
+                        // dirty
+                        let old_hash = self.board.zobrist.hash;
+                        self.board.update_hash(old_move);
+                        let new_hash = self.board.zobrist.hash;
+                        self.board.zobrist.hash = old_hash;
+
+                        let stack_size = self.board.zobrist_stack.len();
+                        let moves_to_see = min(stack_size, self.board.rule50 as usize);
+                        if moves_to_see > 1 {
+                            let start = (stack_size - moves_to_see) + (stack_size - moves_to_see) % 2;
+                            if self.board.zobrist_stack[start..].iter().step_by(2).filter(|x| **x == new_hash).count() >= 2 {
+                                is_3_fold = true;
+                            }
+                        }
                     }
-                    return (old_score, old_move);
+
+                    if !is_3_fold {
+                        if old_score > MATING_SCORE - 100 {
+                            return (old_score - 1, old_move);
+                        }
+                        return (old_score, old_move);
+                    }
                 }
             }
         } else {
@@ -158,7 +181,6 @@ impl Engine {
 
         if depth == 0 {
             let eval = self.quiescence_search(-MATING_SCORE, MATING_SCORE, 0);
-            // let eval = self.board.static_evaluation(true);
             return (eval, null_move());
         }
 
@@ -199,6 +221,8 @@ impl Engine {
                     score = -self.principal_variation(depth - 1, -beta, -alpha, &stop_search, genuine, false).0;
                 }
             }
+
+
             self.board.unmake_move();
 
             if *stop_search.lock().unwrap() {
@@ -243,6 +267,7 @@ impl Engine {
         self.max_selective = max(self.max_selective, depth);
 
         if self.board.is_3fold() {
+            let x = self.board.moves_stack.first().unwrap();
             return 0;
         }
 

@@ -30,7 +30,7 @@ def save_tree_to_json(tree: Node, file_path: str):
 
 
 # Load games from the file
-file_name = "good_games.uci"
+file_name = "sorted_uci.uci"
 games = []
 with open(file_name, "r") as file:
     for line in file:

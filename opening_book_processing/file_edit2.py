@@ -13,7 +13,7 @@ def pgn_to_uci(pgn_moves):
     return uci_moves
 
 
-GAME_LIMIT = 10000000
+GAME_LIMIT = 100000000
 
 
 def process_pgn(pgn_file):
@@ -36,8 +36,11 @@ def process_pgn(pgn_file):
                 # Extract relevant information
                 headers = game.headers
 
-                white_elo = int(headers["WhiteElo"])
-                black_elo = int(headers["BlackElo"])
+                try:
+                    white_elo = int(headers["WhiteElo"])
+                    black_elo = int(headers["BlackElo"])
+                except KeyError:
+                    continue
                 moves = [move for move in game.mainline_moves()]
                 algebraic_moves = pgn_to_uci(moves)
                 o.write(" ".join(algebraic_moves) + "\n")
