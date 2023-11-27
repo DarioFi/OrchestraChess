@@ -1,4 +1,4 @@
-use std::cmp::{max, min};
+use std::cmp::min;
 use std::ops::{Index, IndexMut};
 
 use crate::muve::{create_move, Move};

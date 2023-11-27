@@ -268,7 +268,6 @@ impl Engine {
         self.max_selective = max(self.max_selective, depth);
 
         if self.board.is_3fold() {
-            let x = self.board.moves_stack.first().unwrap();
             return 0;
         }
 
