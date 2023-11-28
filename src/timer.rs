@@ -23,7 +23,7 @@ impl Timer {
         if self.move_time != 0 {
             return Duration::from_millis(self.move_time);
         } else {
-            return Duration::from_millis(self.msec_left / 20 + (self.msec_inc as i32 * 1 as i32) as u64);
+            return Duration::from_millis(self.msec_left / 15 + (self.msec_inc as i32 * 1 as i32) as u64);
         }
     }
 }
