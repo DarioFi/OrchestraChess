@@ -19,7 +19,7 @@ We employ a Principal Variation Search algorithm with alpha-beta pruning, embedd
 
 To provide a static evaluation of a position, we employ a neural network architecture called NNUE (Efficiently Updatable Neural Network) with HalfKAv2_hm feature set. The input is a sparse binary vector where each component is associated to a quadruple (piece type, piece color, piece square, own king square). This gets embedded to a latent space through a linear layer, and a shallow feed-forward network provides an evaluation (actually, we just described HalfKA. The input encoding of HalfKAv2_hm is slightly more involved, but the idea is the same).
 By design, the embedded input can be maintained and updated incrementally during the tree traversal, which is very efficient since making/unmaking a move can flip at most three input bits.
-Because of lack of resources, we used pretrained weights from the [Stockfish](https://github.com/official-stockfish/Stockfish) open-source project.
+Because of lack of resources, we used pretrained weights from the Stockfish open-source project.
 
 ### Transposition Table and Zobrist hash
 
