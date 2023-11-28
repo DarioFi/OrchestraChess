@@ -1,6 +1,6 @@
 # Orchestra Chess
 
-Orchestra Chess is a chess engine written from scratch in Rust, that reached 2250+ Elo rating on Lichess in blitz (98th percentile of weekly active human players). It was developed by Mattia Scardecchia and Dario Filatrella as a project for a Software Engineering course at Bocconi University, in Fall 2023.
+Orchestra Chess is a chess engine written from scratch in Rust, that reached 2300+ Elo rating on Lichess in blitz (98th percentile of weekly active human players). It was developed by Mattia Scardecchia and Dario Filatrella as a project for a Software Engineering course at Bocconi University, in Fall 2023.
 
 ## Engine
 
