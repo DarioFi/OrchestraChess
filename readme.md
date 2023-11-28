@@ -11,7 +11,7 @@ Here we describe the main components of the engine. Code can be found in the `sr
 We adopt a piece centric representation through a set-wise bitboard approach: for every color, and every piece type, we maintain a 64-bit integer that, read in binary, has ones in correspondence of all squares occupied by a piece of that type and color and zeros elsewhere. 
 This choice makes move generation very efficient, because it allows to exploit bitwise operations that are extremely efficient on modern hardware.
 
-### Principal Variation Search  --> mention quiescence search
+### Principal Variation Search
 
 We employ a Principal Variation Search algorithm with alpha-beta pruning, embedded within an iterative deepening scheme. To maximize pruning frequency, at each node of the game tree we use various heuristics to explore the most promising moves first. Furthermore, once the desired depth is reached, we perform a quiescence search, which consists in exploring a few more steps restricting attention to forcing moves only. This makes the propagation of the static evaluation through min-maxing far more reliable, mitigating the horizon effect.
 
@@ -35,7 +35,7 @@ The python scripts used to create the opening book can be found in the `opening_
 
 We implemented the common UCI protocol to be able to communicate with existing GUIs and with Lichess. Time management is achieved spawning a separate thread that updates a mutex when it thinks it's time to stop the search. The decison is made based on the remaining time and the duration of the search at the previous depth of the iterative deepening scheme.
 
-## Sources --> chess programming wiki, sebastian league, lichess repo, stockfish, nnue paper
+## Sources
 
 * [Chess Programming Wiki](https://www.chessprogramming.org/Main_Page)
 * [Lichess](https://lichess.org)
