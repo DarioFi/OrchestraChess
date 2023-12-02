@@ -6,7 +6,7 @@ use core::option::Option::None;
 use serde::{Deserialize, Serialize};
 
 const USE_BEST_MOVE: bool = true;
-const USE_BOOK: bool = true;
+const USE_BOOK: bool = false;
 
 pub struct OpeningBook {
     root: Node,

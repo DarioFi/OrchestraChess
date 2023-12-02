@@ -25,9 +25,12 @@ pub struct MoveManager {
     priority_moves: Vec<Move>,
 }
 
+const MOVE_CAP: usize = 15;
+
 impl MoveManager {
     pub fn new() -> MoveManager {
-        MoveManager { quiet_moves: vec![], capture_moves: vec![], priority_moves: vec![] }
+        MoveManager { quiet_moves: Vec::with_capacity(MOVE_CAP), capture_moves: Vec::with_capacity(MOVE_CAP), priority_moves: Vec::with_capacity(MOVE_CAP) }
+        // MoveManager { quiet_moves: vec![], capture_moves: vec![], priority_moves: vec![] }
     }
 
     pub fn add_move(&mut self, m: Move) {

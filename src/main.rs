@@ -14,10 +14,19 @@ mod nnue;
 mod accumulator;
 
 use std::io;
+use std::process::exit;
 
+// use jemallocator::Jemalloc;
+//
+// #[global_allocator]
+// static GLOBAL: Jemalloc = Jemalloc;
 
 fn main() {
     let mut orchestra_director = orchestradirector::new_orchestra_director();
+    // orchestra_director.handle_command("position", "startpos");
+    // orchestra_director.handle_command("go", "depth 6");
+    // exit(0);
+
     loop {
         let mut message = String::new();
 
