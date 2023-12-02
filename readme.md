@@ -23,7 +23,7 @@ go depth <depth>
 ```
 You can also specify a maximum time in milliseconds to spend on the analysis, instead of a max depth, by using:
 ```
-go time <time_in_millis>
+go movetime <time_in_millis>
 ```
 
 ## Engine
