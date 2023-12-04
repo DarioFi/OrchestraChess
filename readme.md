@@ -22,7 +22,7 @@ go depth <depth>
 ```
 You can pass a position by specifying the sequence of moves since the beginning of the game. For example:
 ```
-position startpos moves e2e4 e7e5 f2f4
+position startpos moves e2e4 e7e5 g1f3
 ```
 Finally, instead of asking an analysis to a given depth, like above, you can specify the amount of time that should be spent, in milliseconds:
 ```
