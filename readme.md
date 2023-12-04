@@ -20,7 +20,7 @@ You will be able to communicate with the engine through the terminal, using the 
 position fen <your_favorite_fen>
 go depth <depth>
 ```
-You can pass a position by specifying the sequence of moves since the beginning of the game. For example:
+You can also pass a position by specifying the sequence of moves since the beginning of the game, specifying starting and ending square. For example:
 ```
 position startpos moves e2e4 e7e5 g1f3
 ```
