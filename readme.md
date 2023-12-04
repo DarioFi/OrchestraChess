@@ -11,12 +11,11 @@ cd ChessBot
 dvc pull
 cargo build --release
 ```
-Now, you can run the engine with:
+Now, from the project directory, you can run the engine with:
 ```
-cd ChessBot
 ./target/release/rust-chess-bot
 ```
-This will fire up the engine, and you will be able to communicate with it through the [UCI protocol](https://www.wbec-ridderkerk.nl/html/UCIProtocol.html). For instance, you can have it analyze a position by passing it a fen, like this:
+You will be able to communicate with the engine through the terminal, using the [UCI protocol](https://www.wbec-ridderkerk.nl/html/UCIProtocol.html). For instance, you can have it analyze a position by passing it a fen, like this:
 ```
 position fen <your_favorite_fen>
 go depth <depth>
