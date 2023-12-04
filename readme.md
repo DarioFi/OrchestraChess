@@ -20,7 +20,11 @@ You will be able to communicate with the engine through the terminal, using the 
 position fen <your_favorite_fen>
 go depth <depth>
 ```
-You can also specify a maximum time in milliseconds to spend on the analysis, instead of a max depth, by using:
+You can pass a position by specifying the sequence of moves since the beginning of the game. For example:
+```
+position startpos moves e2e4 e7e5 f2f4
+```
+Finally, instead of asking an analysis to a given depth, like above, you can specify the amount of time that should be spent, in milliseconds:
 ```
 go movetime <time_in_millis>
 ```
