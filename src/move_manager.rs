@@ -81,7 +81,7 @@ impl MoveManager {
     }
 
     pub fn iter(&self) -> impl Iterator<Item=&Move> {
-        return self.priority_moves.iter().chain(self.capture_moves.iter().chain(self.quiet_moves.iter()));
+        return self.priority_moves.iter().chain(self.capture_moves.iter().chain(self.killers.iter()).chain(self.quiet_moves.iter()));
     }
 
     pub fn len(&self) -> usize {
