@@ -5,8 +5,8 @@ use rand::rngs::StdRng;
 use core::option::Option::None;
 use serde::{Deserialize, Serialize};
 
-const USE_BEST_MOVE: bool = true;
-const USE_BOOK: bool = false;
+const USE_BEST_MOVE: bool = false;
+const USE_BOOK: bool = true;
 
 pub struct OpeningBook {
     root: Node,
@@ -78,7 +78,7 @@ impl OpeningBook {
 
 
         } else {
-            let random_score = rng.gen::<i32>() % (total_score + 1);
+            let random_score = rng.gen::<i32>().rem_euclid(total_score + 1);
             let mut current_score = 0;
 
             for child in current_node.children.iter() {

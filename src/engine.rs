@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 use crate::book::OpeningBook;
 use crate::timer::start_timer_maximum_allocable;
 use std::cmp::{max, min};
+use crate::move_heuristic::MovesHeuristic;
 
 
 pub const MATING_SCORE: i32 = 250000;
@@ -20,6 +21,7 @@ pub struct Engine {
     pub book: OpeningBook,
     pub position_loaded: String,
     pub moves_loaded: String,
+    pub move_heuristic: MovesHeuristic,
     curr_max_depth: i32,
 }
 
@@ -32,6 +34,7 @@ pub fn new_engine(board: Board) -> Engine {
         book: OpeningBook::new(BOOK_FILE),
         position_loaded: "".to_string(),
         moves_loaded: "".to_string(),
+        move_heuristic: MovesHeuristic::new(),
         curr_max_depth: 0,
     }
 }
@@ -56,6 +59,7 @@ impl Engine {
         }
 
         self.transposition_table = HashMap::new();
+        self.move_heuristic = MovesHeuristic::new();
 
         let start_time = std::time::Instant::now();
         let stop_hook = Arc::new(Mutex::new(false));
@@ -202,7 +206,7 @@ impl Engine {
         let mut has_first_not_been_completed = true;
         let mut alpha_overwritten = false;
 
-        moves.sort();
+        moves.sort(&self.move_heuristic, depth as usize, self.board.moves_stack.last());
         if retrieved_hash {
             moves.add_priority_move(old_move);
         }
@@ -251,6 +255,7 @@ impl Engine {
                 alpha = best_score;
             }
             if alpha >= beta {
+                self.move_heuristic.failed_high(depth as usize, mov, self.board.moves_stack.last());
                 is_exact = false;
                 break;
             }
@@ -293,16 +298,8 @@ impl Engine {
 
 
         // we are ignoring stalemates in quiescence search!
-        // } else {
-        //     if moves.len() == 0 {
-        //         let moves_total = self.board.generate_moves(false);
-        //         if moves_total.len() == 0 {
-        //             return 0;
-        //         }
-        //     }
-        // }
 
-        moves.sort();
+        moves.sort_quiescence();
         for mov in moves.iter() {
             self.board.make_move(*mov);
             let eval = -self.quiescence_search(-beta, -alpha, depth + 1);

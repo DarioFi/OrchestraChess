@@ -1,5 +1,6 @@
 use crate::utils::PieceType;
 use crate::engine::MATING_SCORE;
+use crate::move_heuristic::MovesHeuristic;
 use crate::muve::Move;
 
 
@@ -23,13 +24,14 @@ pub struct MoveManager {
     quiet_moves: Vec<Move>,
     capture_moves: Vec<Move>,
     priority_moves: Vec<Move>,
+    killers: Vec<Move>,
 }
 
 const MOVE_CAP: usize = 15;
 
 impl MoveManager {
     pub fn new() -> MoveManager {
-        MoveManager { quiet_moves: Vec::with_capacity(MOVE_CAP), capture_moves: Vec::with_capacity(MOVE_CAP), priority_moves: Vec::with_capacity(MOVE_CAP) }
+        MoveManager { quiet_moves: Vec::with_capacity(MOVE_CAP), capture_moves: Vec::with_capacity(MOVE_CAP), priority_moves: Vec::with_capacity(MOVE_CAP), killers: Vec::with_capacity(3) }
         // MoveManager { quiet_moves: vec![], capture_moves: vec![], priority_moves: vec![] }
     }
 
@@ -52,8 +54,29 @@ impl MoveManager {
         }
     }
 
-    pub fn sort(&mut self) {
-        // self.quiet_moves.sort_by_key(|a| -move_score(a) );
+    pub fn sort(&mut self, moves_heuristic: &MovesHeuristic, depth: usize, prev_move: Option<&Move>) {
+        // self.sort_quite_with_killers(moves_heuristic.get_killers(depth));
+
+        if prev_move.is_some() {
+            // todo: add countermoves
+        }
+
+        self.capture_moves.sort_by_key(|a| -move_score_capture(a));
+    }
+
+    pub fn sort_quite_with_killers(&mut self, killers: Vec<Move>) {
+        // move all m that are both in killers and self.quite into self.killers and remove them from self.quite
+        self.killers.clear();
+        for k in killers {
+            if self.quiet_moves.contains(&k) {
+                self.killers.push(k);
+            }
+        }
+        // self.quiet_moves.retain(|x| !self.killers.contains(x));
+
+    }
+
+    pub fn sort_quiescence(&mut self) {
         self.capture_moves.sort_by_key(|a| -move_score_capture(a));
     }
 
