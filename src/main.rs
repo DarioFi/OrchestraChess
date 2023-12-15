@@ -12,6 +12,7 @@ mod book;
 mod move_manager;
 mod nnue;
 mod accumulator;
+mod move_heuristic;
 
 use std::io;
 use std::process::exit;
