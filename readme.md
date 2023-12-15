@@ -2,6 +2,33 @@
 
 Orchestra Chess is a chess engine written from scratch in Rust, that reached 2300+ Elo rating on Lichess in blitz (98th percentile of weekly active human players). It was developed by Mattia Scardecchia and Dario Filatrella as a project for a Software Engineering course at Bocconi University, in Fall 2023.
 
+## Usage
+
+To install and build the project, fire up a terminal and run:
+```
+git clone https://github.com/DarioFi/OrchestraChess.git
+cd ChessBot
+dvc pull
+cargo build --release
+```
+Now, from the project directory, you can run the engine with:
+```
+./target/release/rust-chess-bot
+```
+You will be able to communicate with the engine through the terminal, using the [UCI protocol](https://www.wbec-ridderkerk.nl/html/UCIProtocol.html). For instance, you can have it analyze a position by passing it a fen, like this:
+```
+position fen <your_favorite_fen>
+go depth <depth>
+```
+You can also pass a position by specifying the sequence of moves since the beginning of the game, specifying starting and ending square. For example:
+```
+position startpos moves e2e4 e7e5 g1f3
+```
+Finally, instead of asking an analysis to a given depth, like above, you can specify the amount of time that should be spent, in milliseconds:
+```
+go movetime <time_in_millis>
+```
+
 ## Engine
 
 Here we describe the main components of the engine. Code can be found in the `src` directory.
@@ -19,7 +46,7 @@ We employ a Principal Variation Search algorithm with alpha-beta pruning, embedd
 
 To provide a static evaluation of a position, we employ a neural network architecture called NNUE (Efficiently Updatable Neural Network) with HalfKAv2_hm feature set. The input is a sparse binary vector where each component is associated to a quadruple (piece type, piece color, piece square, own king square). This gets embedded to a latent space through a linear layer, and a shallow feed-forward network provides an evaluation (actually, we just described HalfKA. The input encoding of HalfKAv2_hm is slightly more involved, but the idea is the same).
 By design, the embedded input can be maintained and updated incrementally during the tree traversal, which is very efficient since making/unmaking a move can flip at most three input bits.
-Because of lack of resources, we used pretrained weights from the Stockfish open-source project.
+For lack of computational resources, we used pretrained weights from the Stockfish open-source project.
 
 ### Transposition Table and Zobrist hash
 
@@ -29,11 +56,11 @@ This requires being able to efficiently hash the board state. We employ a 64-bit
 ### Opening Book
 
 To save time during the opening phase, we downloaded a database of 44M games from Lichess, filtered them based on players' ratings and time control, and built a tree rooted in the starting position in which a node's children are all the positions that have been reached after that node in the filtered database. The end result is a 213Mb tree that can be efficiently queried for the most played continuation up to move 15 (although move quality obviously deteriorates with depth). For simplicity, we ignored transpositions here.
-The python scripts used to create the opening book can be found in the `opening_book_processing` directory.
+The python scripts used to create the opening book can be found in the `opening_book_processing` directory. To activate the opening book, set USE_BOOK to true in the `src/book.rs` file.
 
 ## UCI Protocol
 
-We implemented the common UCI protocol to be able to communicate with existing GUIs and with Lichess. Time management is achieved spawning a separate thread that updates a mutex when it thinks it's time to stop the search. The decison is made based on the remaining time and the duration of the search at the previous depth of the iterative deepening scheme.
+We implemented the common UCI protocol to be able to communicate with existing GUIs and with Lichess. During a game, time management is achieved spawning a separate thread that updates a mutex when it thinks it's time to stop the search. The decison is made based on the remaining time and the duration of the search at the previous depth of the iterative deepening scheme.
 
 ## Sources
 
