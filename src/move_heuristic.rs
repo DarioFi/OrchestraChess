@@ -1,3 +1,3 @@
-struct KillerMoves{
-
+struct KillerMoves {
+    x: u128,
 }
