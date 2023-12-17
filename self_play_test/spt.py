@@ -3,7 +3,7 @@ import subprocess
 import time
 from typing import List
 
-move_time = 500
+move_time = 1000
 MAX_MOVES = 150 * 2
 CUTOFF = 1800
 

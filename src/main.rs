@@ -16,13 +16,14 @@ mod move_heuristic;
 
 use std::io;
 use std::process::exit;
+use crate::tests::benchmark::test_n_nodes;
 
 
 fn main() {
-    let mut orchestra_director = orchestradirector::new_orchestra_director();
-    // orchestra_director.handle_command("position", "startpos moves a2a3 a7a6 a3a4 a6a5");
-    // orchestra_director.handle_command("go", "depth 6");
+    // test_n_nodes();
     // exit(0);
+
+    let mut orchestra_director = orchestradirector::new_orchestra_director();
 
     loop {
         let mut message = String::new();

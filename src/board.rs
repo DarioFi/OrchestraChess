@@ -16,7 +16,7 @@ pub struct Board {
     pub(crate) my_pieces: PieceBitBoards,
     pub(crate) opponent_pieces: PieceBitBoards,
 
-    utility: UtilityBitBoards,
+    pub(crate) utility: UtilityBitBoards,
 
     pub(crate) color_to_move: COLOR,
     en_passant_square: u8,
@@ -47,7 +47,7 @@ pub struct PieceBitBoards {
 }
 
 
-struct UtilityBitBoards {
+pub struct UtilityBitBoards {
     my_occupancy: u64,
     opponent_occupancy: u64,
     all_occupancy: u64,
@@ -61,13 +61,13 @@ struct UtilityBitBoards {
     pinned_nwse: u64,
     pinned_swne: u64,
 
-    sq_attacked_by_oppo: u64,
-    opponent_pawn_attacks: u64,
-    opponent_knight_attacks: u64,
-    opponent_bishop_attacks: u64,
-    opponent_rook_attacks: u64,
-    opponent_queen_attacks: u64,
-    opponent_king_attacks: u64,
+    pub(crate) sq_attacked_by_oppo: u64,
+    pub(crate) opponent_pawn_attacks: u64,
+    pub(crate) opponent_knight_attacks: u64,
+    pub(crate) opponent_bishop_attacks: u64,
+    pub(crate) opponent_rook_attacks: u64,
+    pub(crate) opponent_queen_attacks: u64,
+    pub(crate) opponent_king_attacks: u64,
 }
 
 
@@ -1212,7 +1212,7 @@ impl Board {
     pub(crate) fn is_3fold(&self) -> bool {
         let hash = self.zobrist.hash;
         let stack_size = self.zobrist_stack.len();
-        let moves_to_see = min(stack_size, self.rule50 as usize);
+        let moves_to_see = min(stack_size - 1, self.rule50 as usize);
         if moves_to_see < 4 {
             return false;
         }
@@ -1221,8 +1221,8 @@ impl Board {
         // this makes it such that only at the losing player depth the 3fold is recognized. A possible second way would be to check if the
         // last position also was a 3fold (claim)
         let last_index = stack_size - 1;
-        let  start = (last_index - moves_to_see) + (moves_to_see) % 2;
-        assert!(start % 2 == last_index % 2);
+        let start = (last_index - moves_to_see) + (moves_to_see) % 2;
+        assert_eq!(start % 2, last_index % 2);
 
         self.zobrist_stack[start..].iter().step_by(2).filter(|x| **x == hash).count() >= 2
     }

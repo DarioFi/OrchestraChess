@@ -15,7 +15,7 @@ const TIME_ELAPSED_ITERATIVE_DEEPENING: f32 = 0.5;
 
 pub struct Engine {
     pub(crate) board: Board,
-    node_count: u64,
+    pub node_count: u64,
     max_selective: i32,
     transposition_table: HashMap<u64, (u64, i32, Move, bool)>,
     pub book: OpeningBook,
@@ -78,14 +78,14 @@ impl Engine {
         for dep in 1..(depth + 1) {
             self.curr_max_depth = dep;
             let dep = dep as u64;
-            let pv_result = self.principal_variation(dep, -MATING_SCORE, MATING_SCORE, &stop_hook, true, true);
+            let pv_result = self.principal_variation(0, dep, -MATING_SCORE, MATING_SCORE, &stop_hook, true, true);
 
             if *stop_hook.lock().unwrap() {
                 if pv_result.1 == null_move() {
-                    println!("Wasted iterative");
+                    // println!("Wasted iterative");
                     break;
                 } else {
-                    println!("Used iterative");
+                    // println!("Used iterative");
                     best_move = pv_result.1;
                     score = pv_result.0;
                     break;
@@ -99,7 +99,7 @@ impl Engine {
                 score_string = format!("mate {}", (MATING_SCORE - score + 3) / 2);
                 // score_string = format!("mate {}", score);
             } else if score < -MATING_SCORE + 100 {
-                score_string = format!("mate {}", - (score + MATING_SCORE + 2) / 2);
+                score_string = format!("mate {}", -(score + MATING_SCORE + 2) / 2);
             } else {
                 score_string = format!("cp {}", score);
             }
@@ -110,7 +110,7 @@ impl Engine {
             let elapsed = start_time.elapsed().as_millis();
 
             if max_time != 0 && elapsed as f32 > max_time as f32 * TIME_ELAPSED_ITERATIVE_DEEPENING {
-                println!("Stopped iterative deepening early because previous iteration already long enough");
+                // println!("Stopped iterative deepening early because previous iteration already long enough");
                 *stop_hook.lock().unwrap() = true;
                 break;
             }
@@ -121,7 +121,7 @@ impl Engine {
     }
 
 
-    fn principal_variation(&mut self, depth: u64, alpha: i32, beta: i32, stop_search: &Arc<Mutex<bool>>, genuine: bool, is_root: bool) -> (i32, Move) {
+    fn principal_variation(&mut self, distance_from_root: u64, depth: u64, alpha: i32, beta: i32, stop_search: &Arc<Mutex<bool>>, genuine: bool, is_root: bool) -> (i32, Move) {
         if *stop_search.lock().unwrap() {
             return (0, null_move());
         }
@@ -147,13 +147,12 @@ impl Engine {
             old_move = result.2;
             let old_exact = result.3;
 
-            if old_depth >= depth {                
+            if old_depth >= depth {
                 if old_exact || old_score >= beta {
-
                     let mut is_3_fold = false;
-                    
+
                     if !(old_move.is_en_passant || old_move.is_castling) {
-                        
+
                         // dirty
                         let old_hash = self.board.zobrist.hash;
                         self.board.update_hash(old_move);
@@ -206,7 +205,7 @@ impl Engine {
         let mut has_first_not_been_completed = true;
         let mut alpha_overwritten = false;
 
-        moves.sort(&self.move_heuristic, depth as usize, self.board.moves_stack.last());
+        moves.sort(&self.move_heuristic, distance_from_root as usize, self.board.moves_stack.last(), &self.board.utility);
         if retrieved_hash {
             moves.add_priority_move(old_move);
         }
@@ -218,12 +217,12 @@ impl Engine {
             let mut score;
 
             if has_first_not_been_completed {
-                score = -self.principal_variation(depth - 1, -beta, -alpha, &stop_search, genuine, false).0;
+                score = -self.principal_variation(distance_from_root + 1, depth - 1, -beta, -alpha, &stop_search, genuine, false).0;
                 best_move = mov;
             } else {
-                score = -self.principal_variation(depth - 1, -alpha - 1, -alpha, &stop_search, false, false).0;
+                score = -self.principal_variation(distance_from_root + 1, depth - 1, -alpha - 1, -alpha, &stop_search, false, false).0;
                 if alpha < score && score < beta {
-                    score = -self.principal_variation(depth - 1, -beta, -alpha, &stop_search, genuine, false).0;
+                    score = -self.principal_variation(distance_from_root + 1, depth - 1, -beta, -alpha, &stop_search, genuine, false).0;
                 }
             }
 
@@ -255,10 +254,11 @@ impl Engine {
                 alpha = best_score;
             }
             if alpha >= beta {
-                self.move_heuristic.failed_high(depth as usize, mov, self.board.moves_stack.last());
+                self.move_heuristic.failed_high(depth, distance_from_root as usize, mov, self.board.moves_stack.last());
                 is_exact = false;
                 break;
             }
+            // self.move_heuristic.tested_move(mov, depth, distance_from_root as usize);
         }
 
         if genuine || alpha_overwritten {
@@ -299,7 +299,7 @@ impl Engine {
 
         // we are ignoring stalemates in quiescence search!
 
-        moves.sort_quiescence();
+        moves.sort_quiescence(&self.board.utility);
         for mov in moves.iter() {
             self.board.make_move(*mov);
             let eval = -self.quiescence_search(-beta, -alpha, depth + 1);
