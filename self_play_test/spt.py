@@ -6,6 +6,7 @@ from typing import List
 move_time = 1000
 MAX_MOVES = 150 * 2
 CUTOFF = 1800
+OPENING_CUTOFF = 200
 
 
 def send_command(command, engine):
@@ -54,7 +55,7 @@ def sim_game(e1, e2, n1, n2):
             sc = int(info.split("score cp ")[1].split(" ")[0])
             if abs(sc) > 20:
                 zrs_since = 0
-            if black_last_score is None and abs(sc) > 200:
+            if black_last_score is None and abs(sc) > OPENING_CUTOFF:
                 print(" ".join(moves))
                 return None  # means opening was too decisive
             black_last_score = sc
@@ -74,7 +75,7 @@ def sim_game(e1, e2, n1, n2):
             sc = int(info.split("score cp ")[1].split(" ")[0])
             if abs(sc) > 20:
                 zrs_since = 0
-            if white_last_score is None and abs(sc) > 200:
+            if white_last_score is None and abs(sc) > OPENING_CUTOFF:
                 print(" ".join(moves))
                 return None  # means opening was too decisive
             white_last_score = sc

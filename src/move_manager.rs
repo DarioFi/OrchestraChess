@@ -32,7 +32,7 @@ fn move_score_capture(m: &Move, utilities: &UtilityBitBoards) -> i32 {
 }
 
 pub struct MoveManager {
-    quiet_moves: Vec<Move>,
+    pub(crate) quiet_moves: Vec<Move>,
     capture_moves: Vec<Move>,
     priority_moves: Vec<Move>,
     killers: Vec<Move>,

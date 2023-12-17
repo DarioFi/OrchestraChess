@@ -6,10 +6,12 @@ use crate::book::OpeningBook;
 use crate::timer::start_timer_maximum_allocable;
 use std::cmp::{max, min};
 use crate::move_heuristic::MovesHeuristic;
+use crate::utils::PieceType;
 
 
 pub const MATING_SCORE: i32 = 250000;
-const BOOK_DEPTH: u64 = 20;
+const ASPIRATION_WINDOW: i32 = 50;
+const BOOK_DEPTH: u64 = 12;
 const BOOK_FILE: &str = "tree.json";
 const TIME_ELAPSED_ITERATIVE_DEEPENING: f32 = 0.5;
 
@@ -146,7 +148,6 @@ impl Engine {
             let old_score = result.1;
             old_move = result.2;
             let old_exact = result.3;
-
             if old_depth >= depth {
                 if old_exact || old_score >= beta {
                     let mut is_3_fold = false;
@@ -209,20 +210,34 @@ impl Engine {
         if retrieved_hash {
             moves.add_priority_move(old_move);
         }
-
+        let mut qm_counter = 0;
+        let qm_limit = moves.quiet_moves.len() / 2;
         for mov in moves.iter() {
             let mov = *mov;
+
+            let mut reduction = 1;
+            // if mov.piece_captured != PieceType::Null && distance_from_root < depth{
+            //     reduction = 1;
+            // }
+            if mov.piece_captured != PieceType::Null {
+                qm_counter += 1;
+            }
+            if distance_from_root > 2 && qm_counter > qm_limit && depth != 1 {
+                reduction = 2;
+            }
+
+
 
             self.board.make_move(mov);
             let mut score;
 
             if has_first_not_been_completed {
-                score = -self.principal_variation(distance_from_root + 1, depth - 1, -beta, -alpha, &stop_search, genuine, false).0;
+                score = -self.principal_variation(distance_from_root + 1, depth - reduction, -beta, -alpha, &stop_search, genuine, false).0;
                 best_move = mov;
             } else {
-                score = -self.principal_variation(distance_from_root + 1, depth - 1, -alpha - 1, -alpha, &stop_search, false, false).0;
+                score = -self.principal_variation(distance_from_root + 1, depth - reduction, -alpha - 1, -alpha, &stop_search, false, false).0;
                 if alpha < score && score < beta {
-                    score = -self.principal_variation(distance_from_root + 1, depth - 1, -beta, -alpha, &stop_search, genuine, false).0;
+                    score = -self.principal_variation(distance_from_root + 1, depth - reduction, -beta, -alpha, &stop_search, genuine, false).0;
                 }
             }
 

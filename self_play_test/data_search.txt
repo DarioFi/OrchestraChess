@@ -1,0 +1,13 @@
+Vanilla:
+
+Total nodes: 86295
+Time: 8931 ms
+
+
+LMR:
+fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1, nodes 48026
+fen 3r2k1/1p3ppp/p2P1b2/5R2/1PN1r3/6P1/P4B1P/6K1 w - - 1 30, nodes 82055
+fen 3r2k1/4Rppp/pp6/8/PP6/6P1/7P/6K1 w - - 1 37, nodes 20245
+
+Total nodes: 150326
+Time: 5666 ms
