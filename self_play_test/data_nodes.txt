@@ -1,0 +1,43 @@
+vanilla:
+
+fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1, nodes 25220
+fen r2qk2r/1p1nbppp/p2pbn2/3Np3/4P3/1N2BP2/PPPQ2PP/R3KB1R b KQkq - 4 10, nodes 38216
+fen 3r2k1/1p3ppp/p2P1b2/5R2/1PN1r3/6P1/P4B1P/6K1 w - - 1 30, nodes 26039
+fen 3r2k1/4Rppp/pp6/8/PP6/6P1/7P/6K1 w - - 1 37, nodes 8784
+
+vanilla with score for placing a piece on square attacked by a pawn:
+
+fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1, nodes 25219
+fen r2qk2r/1p1nbppp/p2pbn2/3Np3/4P3/1N2BP2/PPPQ2PP/R3KB1R b KQkq - 4 10, nodes 38255
+fen 3r2k1/1p3ppp/p2P1b2/5R2/1PN1r3/6P1/P4B1P/6K1 w - - 1 30, nodes 26000
+fen 3r2k1/4Rppp/pp6/8/PP6/6P1/7P/6K1 w - - 1 37, nodes 8784
+
+
+killer moves only on quiet moves by placing them between captures and quiet:
+
+fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1, nodes 16588
+fen r2qk2r/1p1nbppp/p2pbn2/3Np3/4P3/1N2BP2/PPPQ2PP/R3KB1R b KQkq - 4 10, nodes 38180
+fen 3r2k1/1p3ppp/p2P1b2/5R2/1PN1r3/6P1/P4B1P/6K1 w - - 1 30, nodes 25478
+fen 3r2k1/4Rppp/pp6/8/PP6/6P1/7P/6K1 w - - 1 37, nodes 8515
+
+counter move only on quiet moves:
+
+fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1, nodes 21350
+fen r2qk2r/1p1nbppp/p2pbn2/3Np3/4P3/1N2BP2/PPPQ2PP/R3KB1R b KQkq - 4 10, nodes 38143
+fen 3r2k1/1p3ppp/p2P1b2/5R2/1PN1r3/6P1/P4B1P/6K1 w - - 1 30, nodes 25485
+fen 3r2k1/4Rppp/pp6/8/PP6/6P1/7P/6K1 w - - 1 37, nodes 8693
+
+killer move + counter as above
+
+fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1, nodes 16363
+fen r2qk2r/1p1nbppp/p2pbn2/3Np3/4P3/1N2BP2/PPPQ2PP/R3KB1R b KQkq - 4 10, nodes 38170
+fen 3r2k1/1p3ppp/p2P1b2/5R2/1PN1r3/6P1/P4B1P/6K1 w - - 1 30, nodes 25096
+fen 3r2k1/4Rppp/pp6/8/PP6/6P1/7P/6K1 w - - 1 37, nodes 8367
+
+
+killer move + counter as above + history heuristic
+
+fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1, nodes 15690
+fen r2qk2r/1p1nbppp/p2pbn2/3Np3/4P3/1N2BP2/PPPQ2PP/R3KB1R b KQkq - 4 10, nodes 38032
+fen 3r2k1/1p3ppp/p2P1b2/5R2/1PN1r3/6P1/P4B1P/6K1 w - - 1 30, nodes 24794
+fen 3r2k1/4Rppp/pp6/8/PP6/6P1/7P/6K1 w - - 1 37, nodes 7816

@@ -64,7 +64,7 @@ impl OrchestraDirector {
             if w.len() > 1 {
                 self.execute_moves(w[1]);
                 self.eng.moves_loaded = w[1].to_string();
-            }else {
+            } else {
                 self.eng.moves_loaded = "".to_string();
             }
             self.eng.position_loaded = "startpos".to_string();

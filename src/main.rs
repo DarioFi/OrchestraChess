@@ -12,20 +12,18 @@ mod book;
 mod move_manager;
 mod nnue;
 mod accumulator;
+mod move_heuristic;
 
 use std::io;
 use std::process::exit;
+use crate::tests::benchmark::test_n_nodes;
 
-// use jemallocator::Jemalloc;
-//
-// #[global_allocator]
-// static GLOBAL: Jemalloc = Jemalloc;
 
 fn main() {
-    let mut orchestra_director = orchestradirector::new_orchestra_director();
-    // orchestra_director.handle_command("position", "startpos");
-    // orchestra_director.handle_command("go", "depth 6");
+    // test_n_nodes();
     // exit(0);
+
+    let mut orchestra_director = orchestradirector::new_orchestra_director();
 
     loop {
         let mut message = String::new();
