@@ -7,7 +7,7 @@ Orchestra Chess is a chess engine written from scratch in Rust, that reached 230
 To install and build the project, fire up a terminal and run:
 ```
 git clone https://github.com/DarioFi/OrchestraChess.git
-cd ChessBot
+cd OrchestraChess
 dvc pull
 cargo build --release
 ```
