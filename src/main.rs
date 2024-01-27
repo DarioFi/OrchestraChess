@@ -15,8 +15,6 @@ mod accumulator;
 mod move_heuristic;
 
 use std::io;
-use std::process::exit;
-use crate::tests::benchmark::test_n_nodes;
 
 
 fn main() {

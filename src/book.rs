@@ -10,28 +10,39 @@ const USE_BOOK: bool = true;
 
 pub struct OpeningBook {
     root: Node,
-    seed: Option<u64>
-
+    seed: Option<u64>,
 }
 
 impl OpeningBook {
     pub fn new(path_to_file: &str) -> OpeningBook {
-        // Read the JSON file into a string
-        let mut file = File::open(path_to_file).expect("Unable to open file");
-        let mut json_string = String::new();
-        file.read_to_string(&mut json_string).expect("Unable to read file");
+        if USE_BOOK {
+            // Read the JSON file into a string
+            let mut file = File::open(path_to_file).expect("Unable to open file");
+            let mut json_string = String::new();
+            file.read_to_string(&mut json_string).expect("Unable to read file");
 
-        // Deserialize the JSON string into a Node tree
-        let deserialized_root: Node = serde_json::from_str(&json_string).expect("Unable to deserialize JSON");
-        OpeningBook {
-            root: deserialized_root,
-            // seed: Option::from(11122001_u64)
-            seed: None
+            // Deserialize the JSON string into a Node tree
+            let deserialized_root: Node = serde_json::from_str(&json_string).expect("Unable to deserialize JSON");
+            OpeningBook {
+                root: deserialized_root,
+                // seed: Option::from(11122001_u64)
+                seed: None,
+            }
+        }
+        else {
+            OpeningBook {
+                root: Node {
+                    mov: "a1a1".to_string(),
+                    score: 0,
+                    children: vec![],
+                },
+                seed: None,
+            }
         }
     }
 
     pub fn query(&self, moves: &str) -> Option<String> {
-        if !USE_BOOK{
+        if !USE_BOOK {
             return None;
         }
         let mut current_node = &self.root;
@@ -71,12 +82,10 @@ impl OpeningBook {
                     best_move = &child.mov;
                 }
             }
-            if best_score == -1{
+            if best_score == -1 {
                 return None;
             }
             return Option::from(best_move.to_string());
-
-
         } else {
             let random_score = rng.gen::<i32>().rem_euclid(total_score + 1);
             let mut current_score = 0;
@@ -97,6 +106,7 @@ impl OpeningBook {
 #[serde(rename_all = "PascalCase")]
 pub struct Node {
     pub mov: String,
-    pub score: i32,  // number of times this continuation has been played in the database.
-    pub children: Vec<Node>, 
+    pub score: i32,
+    // number of times this continuation has been played in the database.
+    pub children: Vec<Node>,
 }
