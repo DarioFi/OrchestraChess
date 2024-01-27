@@ -1,8 +1,7 @@
+use crate::nnue::read_utilities::read_u32;
 use std::fs::File;
 use std::io::Read;
-use crate::nnue::read_utilities::read_u32;
 // use unroll::unroll_for_loops;
-
 
 pub const TRANSFORMED_FEATURE_DIMENSIONS: usize = 2560;
 pub const HALF_DIMENSIONS: usize = 2560;
@@ -57,7 +56,7 @@ pub fn read_leb_128_bias_type(stream: &mut File, out: &mut Vec<BiasType>, count:
                         result
                     } else {
                         result | !((1 << shift) - 1)
-                    }
+                    },
                 );
                 break;
             }
@@ -101,11 +100,13 @@ pub fn read_leb_128_psqt_type(stream: &mut File, out: &mut Vec<PSQTWeightType>, 
             shift += 7;
 
             if (byte & 0x80) == 0 {
-                out.push(if std::mem::size_of::<PSQTWeightType>() * 8 <= shift || (byte & 0x40) == 0 {
-                    result
-                } else {
-                    result | !((1 << shift) - 1)
-                });
+                out.push(
+                    if std::mem::size_of::<PSQTWeightType>() * 8 <= shift || (byte & 0x40) == 0 {
+                        result
+                    } else {
+                        result | !((1 << shift) - 1)
+                    },
+                );
                 break;
             }
         }
@@ -131,9 +132,8 @@ pub struct FeatureTransformer {
     pub opp_acc_stack: Vec<[BiasType; TRANSFORMED_FEATURE_DIMENSIONS]>,
     pub my_psq_acc_stack: Vec<[PSQTWeightType; PSQT_BUCKETS]>,
     pub opp_psq_acc_stack: Vec<[PSQTWeightType; PSQT_BUCKETS]>,
-    indices: [usize; CACHE_MAKE_INDEX_SIZE],
+    indices: Vec<usize>,
 }
-
 
 // we will also update the feature transformer here
 
@@ -143,15 +143,17 @@ impl FeatureTransformer {
         read_leb_128_bias_type(stream, &mut bias, HALF_DIMENSIONS);
 
         let mut weights_linear: Vec<WeightType> = Vec::new();
-        read_leb_128_bias_type(stream, &mut weights_linear, HALF_DIMENSIONS * INPUT_DIMENSIONS);
+        read_leb_128_bias_type(
+            stream,
+            &mut weights_linear,
+            HALF_DIMENSIONS * INPUT_DIMENSIONS,
+        );
 
         let mut psqtweight: Vec<PSQTWeightType> = Vec::new();
         read_leb_128_psqt_type(stream, &mut psqtweight, PSQT_BUCKETS * INPUT_DIMENSIONS);
 
-
         let mut weights: Vec<Vec<WeightType>> = Vec::new();
         let mut psqtweights: Vec<Vec<PSQTWeightType>> = Vec::new();
-
 
         // what are we doing exactly here ???
         // check dimensions and whether we are reading in the right order (i dont think so)
@@ -182,7 +184,7 @@ impl FeatureTransformer {
             opp_acc_stack: vec![],
             my_psq_acc_stack: vec![],
             opp_psq_acc_stack: vec![],
-            indices: [0_usize; CACHE_MAKE_INDEX_SIZE],
+            indices: vec![0_usize; CACHE_MAKE_INDEX_SIZE],
         };
         x.create_indices_for_make();
         x
@@ -197,7 +199,7 @@ impl FeatureTransformer {
             opp_acc_stack: vec![],
             my_psq_acc_stack: vec![],
             opp_psq_acc_stack: vec![],
-            indices: [0_usize; CACHE_MAKE_INDEX_SIZE],
+            indices: vec![0_usize; CACHE_MAKE_INDEX_SIZE],
         }
     }
 
@@ -228,7 +230,6 @@ impl FeatureTransformer {
         (x, result)
     }
 
-
     // #[inline(always)]
     // #[unroll_for_loops]
     pub(crate) fn add_to_accumulator(&self, index: usize, acc: &mut [BiasType; HALF_DIMENSIONS]) {
@@ -239,7 +240,11 @@ impl FeatureTransformer {
 
     // #[inline(always)]
     // #[unroll_for_loops]
-    pub(crate) fn subtract_from_accumulator(&self, index: usize, acc: &mut [BiasType; HALF_DIMENSIONS]) {
+    pub(crate) fn subtract_from_accumulator(
+        &self,
+        index: usize,
+        acc: &mut [BiasType; HALF_DIMENSIONS],
+    ) {
         for i in 0..TRANSFORMED_FEATURE_DIMENSIONS {
             acc[i] -= self.weights[index][i];
         }
@@ -252,19 +257,33 @@ impl FeatureTransformer {
         }
         bias
     }
-    pub(crate) fn add_to_accumulator_psq(&self, index: usize, acc: &mut [PSQTWeightType; PSQT_BUCKETS]) {
+    pub(crate) fn add_to_accumulator_psq(
+        &self,
+        index: usize,
+        acc: &mut [PSQTWeightType; PSQT_BUCKETS],
+    ) {
         for i in 0..PSQT_BUCKETS {
             acc[i] += self.psqt_weights[index][i];
         }
     }
 
-    pub(crate) fn subtract_from_accumulator_psq(&self, index: usize, acc: &mut [PSQTWeightType; PSQT_BUCKETS]) {
+    pub(crate) fn subtract_from_accumulator_psq(
+        &self,
+        index: usize,
+        acc: &mut [PSQTWeightType; PSQT_BUCKETS],
+    ) {
         for i in 0..PSQT_BUCKETS {
             acc[i] -= self.psqt_weights[index][i];
         }
     }
 
-    fn make_index_internal(&self, piece_index: usize, is_opp: usize, piece_square: usize, king_square: usize) -> usize {
+    fn make_index_internal(
+        &self,
+        piece_index: usize,
+        is_opp: usize,
+        piece_square: usize,
+        king_square: usize,
+    ) -> usize {
         let mut king_file = king_square % 8;
         let king_rank = king_square / 8;
         let mut piece_file = piece_square % 8;
@@ -289,7 +308,12 @@ impl FeatureTransformer {
                 }
                 for piece_square in 0..64 {
                     for king_square in 0..32 {
-                        let idx = self.make_index_internal(piece_index, is_opp, piece_square, king_square);
+                        let idx = self.make_index_internal(
+                            piece_index,
+                            is_opp,
+                            piece_square,
+                            king_square,
+                        );
                         let ind = linearize(piece_index, is_opp, piece_square, king_square);
                         self.indices[ind] = idx;
                     }
@@ -298,12 +322,17 @@ impl FeatureTransformer {
         }
     }
 
-    pub fn make_index(&mut self, piece_index: usize, is_opp: usize, piece_square: usize, king_square: usize) -> usize {
+    pub fn make_index(
+        &mut self,
+        piece_index: usize,
+        is_opp: usize,
+        piece_square: usize,
+        king_square: usize,
+    ) -> usize {
         // self.indices[linearize(piece_index, is_opp, piece_square, king_square)]  // new
-        self.make_index_internal(piece_index, is_opp, piece_square, king_square) // old
+        self.make_index_internal(piece_index, is_opp, piece_square, king_square)
+        // old
     }
 }
 
-
 // expects king and piece squares to be in pov but not yet reflected horizontally.
-
