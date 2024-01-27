@@ -7,10 +7,12 @@ Orchestra Chess is a chess engine written from scratch in Rust, that reached 230
 To install and build the project, fire up a terminal and run:
 ```
 git clone https://github.com/DarioFi/OrchestraChess.git
-cd ChessBot
+cd OrchestraChess
 dvc pull
 cargo build --release
 ```
+For maximum performance, you can set the environment variable ```RUSTFLAGS``` to ```'-C target-cpu=native'``` before compilation.
+
 Now, from the project directory, you can run the engine with:
 ```
 ./target/release/rust-chess-bot
@@ -40,7 +42,7 @@ This choice makes move generation very efficient, because it allows to exploit b
 
 ### Principal Variation Search
 
-We employ a Principal Variation Search algorithm with alpha-beta pruning, embedded within an iterative deepening scheme. To maximize pruning frequency, at each node of the game tree we use various heuristics to explore the most promising moves first. Furthermore, once the desired depth is reached, we perform a quiescence search, which consists in exploring a few more steps restricting attention to forcing moves only. This makes the propagation of the static evaluation through min-maxing far more reliable, mitigating the horizon effect.
+We employ a Principal Variation Search algorithm with alpha-beta pruning, embedded within an iterative deepening scheme. To maximize pruning frequency, at each node of the game tree we use various heuristics (including killer moves, history heuristic and countermove heuristic) to explore the most promising moves first. Furthermore, once the desired depth is reached, we perform a quiescence search, which consists in exploring a few more steps restricting attention to forcing moves only. This makes the propagation of the static evaluation through min-maxing far more reliable, mitigating the horizon effect.
 
 ### Efficiently Updatable Neural Network
 
