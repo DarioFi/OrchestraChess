@@ -255,6 +255,12 @@ impl Board {
         self.reset_board_state();
 
         let parts: Vec<&str> = fen.split(" ").collect();
+
+        if parts.len() == 0 {
+            // is panic the best way to handle this?
+            panic!("FEN string is empty");
+        }
+
         let pieces_part = parts[0];
         let mut rank = 7;
         let mut file = 0;

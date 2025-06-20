@@ -9,7 +9,7 @@ use crate::move_heuristic::MovesHeuristic;
 
 
 pub const MATING_SCORE: i32 = 250000;
-const BOOK_DEPTH: u64 = 20;
+const BOOK_DEPTH: u64 = 12;
 const BOOK_FILE: &str = "tree.json";
 const TIME_ELAPSED_ITERATIVE_DEEPENING: f32 = 0.5;
 
